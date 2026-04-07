@@ -21,8 +21,9 @@
 
 set -euo pipefail
 
-VIBEOS_VERSION="0.1.0"
+VIBEOS_VERSION="0.2.0"
 VIBEOS_DIR="${HOME}/.vibeos"
+VIBEOS_REPO="https://github.com/Matswm86/vibeos.git"
 CLAUDE_DIR="${HOME}/.claude"
 
 # ── Colors ──────────────────────────────────────────────────
@@ -38,6 +39,37 @@ success() { echo -e "${GREEN}[✓]${NC} $*"; }
 warn()    { echo -e "${YELLOW}[!]${NC} $*"; }
 error()   { echo -e "${RED}[✗]${NC} $*"; exit 1; }
 header()  { echo -e "\n${BOLD}$*${NC}"; }
+
+# ── Resolve SCRIPT_DIR (handles curl-pipe and local run) ───
+# When run via `curl ... | bash`, BASH_SOURCE is empty or /dev/stdin.
+# In that case, clone the repo so templates and onboarding are available.
+if [[ -z "${BASH_SOURCE[0]:-}" ]] || [[ "${BASH_SOURCE[0]}" == "/dev/stdin" ]] || [[ "${BASH_SOURCE[0]}" == "bash" ]]; then
+    PIPED_MODE=true
+    if [[ -d "${VIBEOS_DIR}/.git" ]]; then
+        info "Updating VibeOS repo at ${VIBEOS_DIR}..."
+        git -C "${VIBEOS_DIR}" pull --quiet 2>/dev/null || true
+    else
+        info "Cloning VibeOS repo to ${VIBEOS_DIR}..."
+        git clone --depth=1 "${VIBEOS_REPO}" "${VIBEOS_DIR}"
+    fi
+    SCRIPT_DIR="${VIBEOS_DIR}"
+else
+    PIPED_MODE=false
+    SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+fi
+
+# TTY-safe prompt: in pipe mode, read from /dev/tty if available
+ask_user() {
+    local prompt="$1" default="${2:-}"
+    if [[ -t 0 ]]; then
+        read -rp "$prompt" REPLY
+    elif [[ -e /dev/tty ]]; then
+        read -rp "$prompt" REPLY </dev/tty
+    else
+        REPLY="${default}"
+    fi
+    echo "${REPLY:-${default}}"
+}
 
 # ── 0. Hardware detection ───────────────────────────────────
 header "=== VibeOS ${VIBEOS_VERSION} — Hardware Detection ==="
@@ -179,7 +211,6 @@ success "gh CLI $(gh --version 2>/dev/null | head -1)"
 
 # ── Deploy starter templates ─────────────────────────────────
 header "Deploying starter templates"
-SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 mkdir -p "${CLAUDE_DIR}"
 
 if [[ -f "${SCRIPT_DIR}/templates/CLAUDE.md" ]] && [[ ! -f "${HOME}/CLAUDE.md" ]]; then
@@ -219,17 +250,16 @@ echo -e "${BOLD}============================================================${NC
 
 # ── Onboarding agent ────────────────────────────────────────
 echo ""
-read -rp "Run the guided onboarding agent? [Y/n] " RUN_ONBOARD
-RUN_ONBOARD="${RUN_ONBOARD:-Y}"
+RUN_ONBOARD=$(ask_user "Run the guided onboarding agent? [Y/n] " "Y")
 
 if [[ "${RUN_ONBOARD}" =~ ^[Yy]$ ]]; then
     if [[ -d "${SCRIPT_DIR}/onboarding" ]]; then
         info "Starting onboarding agent (Ollama + ${OLLAMA_ONBOARD_MODEL})..."
-        python3 -m onboarding --model "${OLLAMA_ONBOARD_MODEL}" \
+        (cd "${SCRIPT_DIR}" && python3 -m onboarding --model "${OLLAMA_ONBOARD_MODEL}") \
             || warn "Onboarding agent exited. You can re-run it anytime:"
         echo "    cd ${SCRIPT_DIR} && python3 -m onboarding"
     else
-        warn "Onboarding directory not found. Skipping."
+        warn "Onboarding directory not found at ${SCRIPT_DIR}/onboarding. Skipping."
     fi
 else
     echo ""

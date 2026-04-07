@@ -57,6 +57,23 @@ The onboarding model (Gemma3 4B) runs on CPU-only. Claude Code itself requires n
 
 ---
 
+## Onboarding agent
+
+After installation, VibeOS offers a guided onboarding experience powered by Ollama (runs locally, no API key needed). It walks you through:
+
+1. Hardware summary and recommendations
+2. Experience-level detection (adapts tone)
+3. Claude Code authentication
+4. MCP server configuration and verification
+5. Full system check
+6. Handoff to Claude Code
+
+The onboarding agent runs automatically after `install.sh`. To run it again:
+
+```bash
+cd ~/.vibeos && python3 -m onboarding
+```
+
 ## After install
 
 ```bash
@@ -95,7 +112,8 @@ Or use [VibeOS Managed MCP](https://github.com/Matswm86/vibeos) — hosted Qdran
 ## Roadmap
 
 - [x] Stage 1: Generic installer
-- [ ] Stage 2: Ollama onboarding agent (guided first-boot experience)
+- [x] Stage 2: Ollama onboarding agent (guided first-boot experience)
+- [ ] Stage 1.5: Managed MCP as a Service (hosted vector + graph memory)
 - [ ] Stage 3: Custom ISO (Pop!\_OS with Stage 1+2 pre-baked)
 
 ---
