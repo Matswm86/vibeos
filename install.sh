@@ -216,3 +216,24 @@ echo ""
 echo ""
 echo "  Docs: https://github.com/Matswm86/vibeos"
 echo -e "${BOLD}============================================================${NC}"
+
+# ── Onboarding agent ────────────────────────────────────────
+echo ""
+read -rp "Run the guided onboarding agent? [Y/n] " RUN_ONBOARD
+RUN_ONBOARD="${RUN_ONBOARD:-Y}"
+
+if [[ "${RUN_ONBOARD}" =~ ^[Yy]$ ]]; then
+    if [[ -d "${SCRIPT_DIR}/onboarding" ]]; then
+        info "Starting onboarding agent (Ollama + ${OLLAMA_ONBOARD_MODEL})..."
+        python3 -m onboarding --model "${OLLAMA_ONBOARD_MODEL}" \
+            || warn "Onboarding agent exited. You can re-run it anytime:"
+        echo "    cd ${SCRIPT_DIR} && python3 -m onboarding"
+    else
+        warn "Onboarding directory not found. Skipping."
+    fi
+else
+    echo ""
+    echo "  No problem! Run onboarding later:"
+    echo "    cd ${SCRIPT_DIR} && python3 -m onboarding"
+    echo ""
+fi
