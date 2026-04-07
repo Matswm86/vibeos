@@ -1,0 +1,9 @@
+{
+  "env": {
+    "MCP_TIMEOUT": "300000"
+  },
+  "permissions": {
+    "allow": [],
+    "deny": []
+  }
+}
