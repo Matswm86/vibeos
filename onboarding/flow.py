@@ -289,9 +289,9 @@ def run_handoff(agent: OllamaAgent, hw: HardwareInfo, experience: str) -> None:
         "Keep it to one or two sentences max."
     )
     print()
-    # VibeClippy's signature "let loose" line — kept as a hard-coded string so
+    # Vibbey's signature "let loose" line — kept as a hard-coded string so
     # it always shows regardless of how the Ollama agent rephrases the handoff.
-    print(f"  {YELLOW}{BOLD}📎 VibeClippy:{NC} {BOLD}Looks like you're about to Vibe hard.{NC}")
+    print(f"  {YELLOW}{BOLD}📎 Vibbey:{NC} {BOLD}Looks like you're about to Vibe hard.{NC}")
     print(f"  {YELLOW}{BOLD}            {NC} {BOLD}Would you like to continue? ;){NC}")
     print()
     print(f"  {GREEN}{BOLD}Ready to go! Run:{NC}")

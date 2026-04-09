@@ -1,13 +1,13 @@
-# VibeClippy — visual reference
+# Vibbey — visual reference
 
 ## `concept.jpg`
 
 Inspiration mockup shared by Mats on 2026-04-09 / integrated on 2026-04-10.
 
-- A 3D paperclip character (VibeClippy) in a retro "VibeOS Assistant" window
+- A 3D paperclip character (Vibbey) in a retro "VibeOS Assistant" window
 - Synthwave / terminal-dark aesthetic, cyan + yellow accents
 - Speech bubble in the classic Clippy style:
-  > *"Hi! I'm VibeClippy, your nostalgic local-AI guide! Looks like you're
+  > *"Hi! I'm Vibbey, your nostalgic local-AI guide! Looks like you're
   > almost set up. Should we configure your memory graph now? [Yes / Later]"*
 
 ## How Phase 1 should use it

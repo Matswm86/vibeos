@@ -26,7 +26,7 @@
 
 set -euo pipefail
 
-VIBEOS_VERSION="0.3.1"
+VIBEOS_VERSION="0.3.2"
 VIBEOS_DIR="${HOME}/.vibeos"
 VIBEOS_REPO="https://github.com/Matswm86/vibeos.git"
 CLAUDE_DIR="${HOME}/.claude"
@@ -369,7 +369,7 @@ fi
 # ── Let loose ──────────────────────────────────────────────
 # Clippy's final line before handing the user over to Claude Code itself.
 echo ""
-echo -e "${BOLD}${YELLOW}  📎 VibeClippy:${NC} ${BOLD}Looks like you're about to Vibe hard.${NC}"
+echo -e "${BOLD}${YELLOW}  📎 Vibbey:${NC} ${BOLD}Looks like you're about to Vibe hard.${NC}"
 echo -e "${BOLD}${YELLOW}              ${NC} ${BOLD}Would you like to continue? ;)${NC}"
 echo ""
 echo -e "      ${GREEN}→  vibe${NC}       ${BOLD}(start Claude Code)${NC}"

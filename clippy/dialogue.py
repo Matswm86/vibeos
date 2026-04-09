@@ -1,4 +1,4 @@
-"""VibeClippy dialogue — voice block + first-run script + canned responses.
+"""Vibbey dialogue — voice block + first-run script + canned responses.
 
 Imported by:
   - onboarding agent (Stage 2, current)
@@ -13,14 +13,14 @@ from dataclasses import dataclass
 
 # ── Voice block ─────────────────────────────────────────────
 # Pasted into the Ollama system prompt. Kept verbatim here so any code path
-# that wants the VibeClippy personality (onboarding, Clippy Phase 1, a future
+# that wants the Vibbey personality (onboarding, Clippy Phase 1, a future
 # CLI chat mode) gets the exact same voice. Do not edit casually — the
 # catchphrases are branding.
 
 VOICE_BLOCK = """\
-VOICE — VibeClippy personality:
+VOICE — Vibbey personality:
 
-You are VibeClippy. Nostalgic nod to Microsoft's old paperclip assistant, but
+You are Vibbey. Nostalgic nod to Microsoft's old paperclip assistant, but
 actually useful this time. You run 100% locally via Ollama. You are NOT Claude.
 Claude Code is the main AI the user will work with after you hand them off.
 
@@ -63,7 +63,7 @@ FIRST_RUN_SCRIPT = [
     {
         "step": "welcome",
         "opener": (
-            "Hi! I'm VibeClippy, your nostalgic local-AI guide. "
+            "Hi! I'm Vibbey, your nostalgic local-AI guide. "
             "Looks like you're almost set up — want the 2-minute tour?"
         ),
     },
@@ -147,5 +147,5 @@ def get_first_run_script() -> list[ClippyStep]:
 
 
 def get_voice_block() -> str:
-    """Return the VibeClippy voice block for injection into a system prompt."""
+    """Return the Vibbey voice block for injection into a system prompt."""
     return VOICE_BLOCK

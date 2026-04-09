@@ -8,7 +8,11 @@ One command turns a fresh Pop!\_OS install into a fully configured Claude Code w
 curl -sSL https://raw.githubusercontent.com/Matswm86/vibeos/main/install.sh | bash
 ```
 
-After that, an Ollama-powered onboarding agent walks you through first-boot setup automatically. Coming soon: **Clippy** — your nostalgic local-AI guide, because VibeOS should be a little bit fun.
+After that, **Vibbey** — your nostalgic local-AI guide — walks you through first-boot setup automatically. Vibbey runs 100% locally on Ollama (no API key needed), gets Claude Code authenticated, checks your MCP stack, and then hands you off with the line:
+
+> *"Looks like you're about to Vibe hard. Would you like to continue? ;)"*
+
+Coming soon: **Vibbey Phase 1** — the same character, but rendered as a real 3D paperclip in the browser via Three.js. Clippy, but it actually works now.
 
 ---
 
@@ -60,24 +64,26 @@ The onboarding model (Gemma3 4B) runs on CPU-only. Claude Code itself requires n
 
 ---
 
-## Onboarding agent
+## Meet Vibbey
 
-After installation, VibeOS **automatically** launches a guided onboarding experience powered by Ollama (runs locally, no API key needed). It walks you through:
+After installation, VibeOS **automatically** launches a guided onboarding experience powered by **Vibbey**, a local Ollama agent (runs on Gemma3 4B — no API key, no cloud round-trip). Vibbey is VibeOS's onboarding character: nostalgic nod to Microsoft's old paperclip, self-aware, slightly cheeky, and actually useful this time.
+
+Vibbey walks you through:
 
 1. Hardware summary and recommendations
-2. Experience-level detection (adapts tone)
+2. Experience-level detection (beginner / intermediate / advanced — adapts tone)
 3. Claude Code authentication
 4. MCP server configuration and verification
 5. Full system check
-6. Handoff to Claude Code
+6. Handoff to Claude Code with the signature *"Looks like you're about to Vibe hard"* line
 
-No prompts, no choices — just run `install.sh` and follow along. To run it again manually:
+No prompts, no choices — `install.sh` auto-launches Vibbey the moment the install finishes (it even falls back to `/dev/tty` when you ran the installer via `curl | bash`, so the interactive flow still works). To run it again manually:
 
 ```bash
 cd ~/.vibeos && python3 -m onboarding
 ```
 
-To skip onboarding (for CI, Docker tests, or scripted installs):
+To skip Vibbey (for CI, Docker tests, or scripted installs):
 
 ```bash
 VIBEOS_NO_ONBOARDING=1 ./install.sh
@@ -121,10 +127,11 @@ Or use [VibeOS Managed MCP](https://github.com/Matswm86/vibeos) — hosted Qdran
 ## Roadmap
 
 - [x] Stage 1: Generic installer
-- [x] Stage 2: Ollama onboarding agent (guided first-boot experience)
+- [x] Stage 2: Vibbey — Ollama onboarding agent (guided first-boot experience)
 - [x] Stage 2.5: Minimal MCP stack (filesystem removed in v0.3, auto-onboarding)
-- [ ] **Stage 3: Clippy** — nostalgic 3D assistant character (real GLB model + Three.js + local Ollama). Pops up automatically after install, guides users through first boot, answers questions. "Clippy, but it actually works now." See [`plans/vibeos-clippy.md`](../../plans/vibeos-clippy.md).
-- [ ] Stage 4: Live USB / custom ISO (Pop!_OS + VibeOS + Clippy pre-baked, auto-launches on boot)
+- [x] Stage 2.6: install.sh hardening (v0.3.1) — `/dev/tty` curl-pipe fallback, dual memory-location docs, `vibe` alias
+- [ ] **Stage 3: Vibbey Phase 1** — nostalgic 3D assistant character (real GLB model + Three.js + local Ollama in the browser). Same voice as the onboarding agent, just rendered as an actual paperclip this time. Pops up automatically after install, guides users through first boot, answers questions. "Clippy, but it actually works now." See [`plans/vibeos-clippy.md`](../../plans/vibeos-clippy.md).
+- [ ] Stage 4: Live USB / custom ISO (Pop!_OS + VibeOS + Vibbey pre-baked, auto-launches on boot)
 
 ---
 
