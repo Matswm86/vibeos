@@ -7,10 +7,6 @@
         "MEMORY_FILE_PATH": "${HOME}/.claude-memory"
       }
     },
-    "filesystem": {
-      "command": "npx",
-      "args": ["-y", "@modelcontextprotocol/server-filesystem", "${HOME}"]
-    },
     "github": {
       "command": "npx",
       "args": ["-y", "@modelcontextprotocol/server-github"],

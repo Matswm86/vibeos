@@ -21,7 +21,7 @@
 
 set -euo pipefail
 
-VIBEOS_VERSION="0.2.0"
+VIBEOS_VERSION="0.3.0"
 VIBEOS_DIR="${HOME}/.vibeos"
 VIBEOS_REPO="https://github.com/Matswm86/vibeos.git"
 CLAUDE_DIR="${HOME}/.claude"
@@ -175,16 +175,16 @@ fi
 header "[5/7] MCP servers"
 info "Installing default MCP servers..."
 
+# Minimal default stack — Claude Code's native Read/Write/Edit/Glob/Grep
+# cover filesystem ops, so we don't ship server-filesystem (redundant).
 npm install -g \
     @modelcontextprotocol/server-memory \
-    @modelcontextprotocol/server-filesystem \
     @modelcontextprotocol/server-github \
     2>/dev/null
 
 success "MCP servers installed:"
-success "  • memory    — SQLite knowledge graph at ~/.claude-memory"
-success "  • filesystem — local file access"
-success "  • github    — repository operations (needs GITHUB_TOKEN)"
+success "  • memory  — SQLite knowledge graph at ~/.claude-memory"
+success "  • github  — repository operations (needs GITHUB_TOKEN)"
 
 # ── 6. Claude Code ──────────────────────────────────────────
 header "[6/7] Claude Code"
@@ -249,21 +249,16 @@ echo "  Docs: https://github.com/Matswm86/vibeos"
 echo -e "${BOLD}============================================================${NC}"
 
 # ── Onboarding agent ────────────────────────────────────────
+# Runs automatically by default. Set VIBEOS_NO_ONBOARDING=1 to skip
+# (useful for CI, Docker tests, or scripted installs).
 echo ""
-RUN_ONBOARD=$(ask_user "Run the guided onboarding agent? [Y/n] " "Y")
-
-if [[ "${RUN_ONBOARD}" =~ ^[Yy]$ ]]; then
-    if [[ -d "${SCRIPT_DIR}/onboarding" ]]; then
-        info "Starting onboarding agent (Ollama + ${OLLAMA_ONBOARD_MODEL})..."
-        (cd "${SCRIPT_DIR}" && python3 -m onboarding --model "${OLLAMA_ONBOARD_MODEL}") \
-            || warn "Onboarding agent exited. You can re-run it anytime:"
-        echo "    cd ${SCRIPT_DIR} && python3 -m onboarding"
-    else
-        warn "Onboarding directory not found at ${SCRIPT_DIR}/onboarding. Skipping."
-    fi
+if [[ "${VIBEOS_NO_ONBOARDING:-0}" == "1" ]]; then
+    info "VIBEOS_NO_ONBOARDING=1 set — skipping onboarding agent."
+    echo "  Run it later:  cd ${SCRIPT_DIR} && python3 -m onboarding"
+elif [[ -d "${SCRIPT_DIR}/onboarding" ]]; then
+    info "Starting onboarding agent (Ollama + ${OLLAMA_ONBOARD_MODEL})..."
+    (cd "${SCRIPT_DIR}" && python3 -m onboarding --model "${OLLAMA_ONBOARD_MODEL}") \
+        || warn "Onboarding agent exited early. Re-run anytime: cd ${SCRIPT_DIR} && python3 -m onboarding"
 else
-    echo ""
-    echo "  No problem! Run onboarding later:"
-    echo "    cd ${SCRIPT_DIR} && python3 -m onboarding"
-    echo ""
+    warn "Onboarding directory not found at ${SCRIPT_DIR}/onboarding. Skipping."
 fi

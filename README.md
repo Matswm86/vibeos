@@ -1,12 +1,14 @@
 # VibeOS
 
-**AI-native development environment for Linux.**
+**AI-native development environment for Linux. Free. Open source. Fun.**
 
-One command turns a fresh Pop!\_OS install into a fully configured Claude Code workspace — with persistent memory, local AI models, and the MCP servers you actually need.
+One command turns a fresh Pop!\_OS install into a fully configured Claude Code workspace — with persistent memory, local AI models, and just the MCP servers you actually need.
 
 ```bash
 curl -sSL https://raw.githubusercontent.com/Matswm86/vibeos/main/install.sh | bash
 ```
+
+After that, an Ollama-powered onboarding agent walks you through first-boot setup automatically. Coming soon: **Clippy** — your nostalgic local-AI guide, because VibeOS should be a little bit fun.
 
 ---
 
@@ -21,13 +23,14 @@ curl -sSL https://raw.githubusercontent.com/Matswm86/vibeos/main/install.sh | ba
 | Claude Code | latest | Primary AI assistant |
 | GitHub CLI | latest | Repository operations |
 
-**Default MCP stack** (zero infrastructure required):
+**Default MCP stack** — minimal by design, zero infrastructure required:
 
 | MCP Server | Backend | Purpose |
 |-----------|---------|---------|
 | `memory` | SQLite | Persistent knowledge graph at `~/.claude-memory` |
-| `filesystem` | local | File read/write |
-| `github` | API | Repository operations |
+| `github` | API | Repository operations (needs `GITHUB_TOKEN`) |
+
+> **Note**: `filesystem` MCP was removed in v0.3 — Claude Code's native `Read` / `Write` / `Edit` / `Glob` / `Grep` tools cover the same ground without the tool-name duplication. Add it back manually if you prefer the MCP flow.
 
 ---
 
@@ -59,7 +62,7 @@ The onboarding model (Gemma3 4B) runs on CPU-only. Claude Code itself requires n
 
 ## Onboarding agent
 
-After installation, VibeOS offers a guided onboarding experience powered by Ollama (runs locally, no API key needed). It walks you through:
+After installation, VibeOS **automatically** launches a guided onboarding experience powered by Ollama (runs locally, no API key needed). It walks you through:
 
 1. Hardware summary and recommendations
 2. Experience-level detection (adapts tone)
@@ -68,10 +71,16 @@ After installation, VibeOS offers a guided onboarding experience powered by Olla
 5. Full system check
 6. Handoff to Claude Code
 
-The onboarding agent runs automatically after `install.sh`. To run it again:
+No prompts, no choices — just run `install.sh` and follow along. To run it again manually:
 
 ```bash
 cd ~/.vibeos && python3 -m onboarding
+```
+
+To skip onboarding (for CI, Docker tests, or scripted installs):
+
+```bash
+VIBEOS_NO_ONBOARDING=1 ./install.sh
 ```
 
 ## After install
@@ -113,8 +122,9 @@ Or use [VibeOS Managed MCP](https://github.com/Matswm86/vibeos) — hosted Qdran
 
 - [x] Stage 1: Generic installer
 - [x] Stage 2: Ollama onboarding agent (guided first-boot experience)
-- [ ] Stage 1.5: Managed MCP as a Service (hosted vector + graph memory)
-- [ ] Stage 3: Custom ISO (Pop!\_OS with Stage 1+2 pre-baked)
+- [x] Stage 2.5: Minimal MCP stack (filesystem removed in v0.3, auto-onboarding)
+- [ ] **Stage 3: Clippy** — nostalgic 3D assistant character (real GLB model + Three.js + local Ollama). Pops up automatically after install, guides users through first boot, answers questions. "Clippy, but it actually works now." See [`plans/vibeos-clippy.md`](../../plans/vibeos-clippy.md).
+- [ ] Stage 4: Live USB / custom ISO (Pop!_OS + VibeOS + Clippy pre-baked, auto-launches on boot)
 
 ---
 

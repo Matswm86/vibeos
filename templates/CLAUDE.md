@@ -20,7 +20,6 @@
 | Server | Purpose |
 |--------|---------|
 | memory | Persistent knowledge graph (SQLite) |
-| filesystem | Local file read/write |
 | github | Repository operations |
 
 ## Project layout
