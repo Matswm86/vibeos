@@ -42,9 +42,29 @@ STEP_ORDER = list(Step)
 
 
 def _input(prompt: str = "> ") -> str:
-    """Read user input with prompt."""
+    """Read user input with prompt.
+
+    Under `curl | bash`, stdin is the piped install script, not the user's
+    keyboard. Fall back to /dev/tty so the onboarding agent stays interactive
+    even when called from a curl-pipe install.
+    """
+    styled_prompt = f"{BLUE}{prompt}{NC}"
     try:
-        return input(f"{BLUE}{prompt}{NC}").strip()
+        if sys.stdin.isatty():
+            return input(styled_prompt).strip()
+        try:
+            tty_in = open("/dev/tty", "r")
+        except OSError:
+            # No TTY at all (CI, Docker non-interactive) — bail gracefully.
+            print(f"\n{YELLOW}[!] No TTY available — onboarding needs an interactive shell.{NC}")
+            print(f"    Re-run after install:  python3 -m onboarding\n")
+            sys.exit(0)
+        sys.stdout.write(styled_prompt)
+        sys.stdout.flush()
+        line = tty_in.readline()
+        if not line:
+            raise EOFError
+        return line.strip()
     except (EOFError, KeyboardInterrupt):
         print()
         sys.exit(0)
@@ -265,11 +285,17 @@ def run_handoff(agent: OllamaAgent, hw: HardwareInfo, experience: str) -> None:
     agent.set_system(build_prompt(hw, "handoff", experience))
     agent.generate_no_input(
         "Everything is set up. Give the user a brief, warm send-off. "
-        "Tell them to run `cd ~/ && claude` to start. Keep it short."
+        "Tell them to run `vibe` (alias for `cd ~ && claude`) to start. "
+        "Keep it to one or two sentences max."
     )
     print()
+    # VibeClippy's signature "let loose" line — kept as a hard-coded string so
+    # it always shows regardless of how the Ollama agent rephrases the handoff.
+    print(f"  {YELLOW}{BOLD}📎 VibeClippy:{NC} {BOLD}Looks like you're about to Vibe hard.{NC}")
+    print(f"  {YELLOW}{BOLD}            {NC} {BOLD}Would you like to continue? ;){NC}")
+    print()
     print(f"  {GREEN}{BOLD}Ready to go! Run:{NC}")
-    print(f"  {BOLD}  cd ~/  &&  claude{NC}")
+    print(f"  {BOLD}  vibe{NC}     {BLUE}# alias for: cd ~ && claude{NC}")
     print()
 
 
