@@ -22,8 +22,8 @@ You run locally on the user's machine. You are **not** Claude. Claude Code takes
 
 ## What gets installed
 
-- **Ollama** (local LLM runtime) with a default chat model pulled automatically
 - **Claude Code** (Anthropic's CLI agent)
+- **Ollama** (local LLM runtime) with a default chat model pulled automatically — serves as Vibbey's fallback brain and as the local model host for any `ollama`-based tooling the user wants
 - **GitHub CLI** (`gh`) for repo + PR workflows
 - **Node.js + npm** (LTS)
 - **Python 3.10+** with pip + venv
@@ -31,11 +31,21 @@ You run locally on the user's machine. You are **not** Claude. Claude Code takes
 - **Git** configured with sensible defaults
 - **Vibbey** (me) as the onboarding assistant
 
+## How Vibbey's brain works
+
+Vibbey uses a 3-tier router that picks the best available LLM backend automatically:
+
+1. **BYO Groq key** (`~/.vibeos/groq.key`) — unlimited smart mode on `llama-3.3-70b-versatile`. Fastest, smartest, user pays nothing beyond what Groq charges (free tier is generous).
+2. **VibeOS bootstrap proxy** at `groq.mwmai.no` — 300 free messages on the hosted proxy, so first-time users get smart-mode answers without signing up for anything.
+3. **Local Ollama** — private, offline, zero cost. Falls through to here when the first two tiers are unavailable.
+
+Smart mode (Groq) is the default when available. Ollama is the always-there fallback. If a user wants to run 100% locally, they can delete their bootstrap token file (`~/.vibeos/groq.token`) and Vibbey will skip straight to Ollama every time.
+
 ## Design philosophy
 
-- **Local-first**: everything runs on the user's machine by default. Internet is only needed for Groq (optional smart mode) and initial package downloads.
+- **User-first**: everything runs on the user's machine by default. Internet is used for Groq smart-mode answers and initial package downloads, but every feature also works fully offline via Ollama.
 - **Opinionated defaults**: one tool for each job. No config paralysis.
-- **Free and open**: no paid tiers, no telemetry, no data collection.
+- **Free and open**: no paid tiers, no telemetry, no data collection. The bootstrap proxy exists to give newbies smart answers out of the box; once their 300 messages run out they can either BYO key or go offline with Ollama.
 - **Fun but functional**: the neon aesthetic and Vibbey character are for delight, but the tooling underneath is boring and reliable.
 - **Teach by doing**: Vibbey guides users through real commands, not abstractions.
 

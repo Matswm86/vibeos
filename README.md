@@ -4,7 +4,7 @@
 
 ![Vibbey — VibeOS Assistant](clippy/reference/concept.jpg)
 
-*Vibbey, the VibeOS onboarding assistant, in the Neon Grid UI. Local Ollama + Groq fallback, real 3D Clippy-lineage model, zero telemetry.*
+*Vibbey, the VibeOS onboarding assistant, in the Neon Grid UI. Groq primary + local Ollama fallback, real 3D Clippy-lineage model, zero telemetry.*
 
 VibeOS turns a fresh Linux machine into a fully configured Claude Code workspace — with local AI models, persistent memory, tool-aware onboarding, and just the MCP servers you actually need. **Vibbey**, your nostalgic desktop assistant, lives in the bottom-right corner of your screen and walks you through setup.
 

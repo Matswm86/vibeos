@@ -50,9 +50,12 @@
       <div class="modal-body">
         <h3>About Vibbey</h3>
         <p>
-          Vibbey is the VibeOS onboarding assistant. She runs 100% locally via
-          Ollama (gemma3:4b by default). She is not Claude. Claude Code takes
-          over once you&rsquo;re set up.
+          Vibbey is the VibeOS onboarding assistant. She uses Groq
+          (<code>llama-3.3-70b-versatile</code>) as her primary brain for
+          fast, smart answers, and falls back to local Ollama
+          (<code>gemma3:4b</code> by default) when Groq is unavailable or
+          you&rsquo;ve opted out of cloud mode. She is not Claude &mdash;
+          Claude Code takes over once you&rsquo;re set up.
         </p>
         <p>
           3D model: <strong>Rigged Microsoft Clippy/Clippit</strong> by
