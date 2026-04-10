@@ -4,19 +4,38 @@
 
 ![Vibbey — VibeOS Assistant](clippy/reference/concept.jpg)
 
-*Vibbey, the VibeOS onboarding assistant, in the Neon Grid UI. Local Ollama, real 3D Clippy-lineage model, zero cloud round-trips.*
+*Vibbey, the VibeOS onboarding assistant, in the Neon Grid UI. Local Ollama + Groq fallback, real 3D Clippy-lineage model, zero telemetry.*
 
-One command turns a fresh Ubuntu / Pop!\_OS install into a fully configured Claude Code workspace — with persistent memory, local AI models, and just the MCP servers you actually need.
+VibeOS turns a fresh Linux machine into a fully configured Claude Code workspace — with local AI models, persistent memory, tool-aware onboarding, and just the MCP servers you actually need. **Vibbey**, your nostalgic desktop assistant, lives in the bottom-right corner of your screen and walks you through setup.
+
+## Choose your path
+
+### 🐧 Path A — "I already have Linux"
+
+One command on your existing Ubuntu, Pop!\_OS, Debian, Mint, or Kubuntu install:
 
 ```bash
 curl -sSL https://raw.githubusercontent.com/Matswm86/vibeos/main/install.sh | bash
 ```
 
-After that, **Vibbey** — your nostalgic local-AI guide — pops up as a floating desktop window and walks you through first-boot setup automatically. Vibbey runs 100% locally on Ollama (no API key needed), gets Claude Code authenticated, checks your MCP stack, and hands you off with the line:
+Takes ~10 minutes (apt + npm + Ollama model pull). After it finishes, Vibbey pops up as a floating desktop widget and walks you through first-boot setup. Vibbey runs on Groq cloud (smart, fast) with local Ollama fallback (private, offline) and greets you with:
 
 > *"Looks like you're about to Vibe hard. Would you like to continue? ;)"*
 
-Phase B shipped 2026-04-10 (v0.3.2+): Vibbey is a real webkit2gtk desktop window with a 3D Clippy-lineage model (via Three.js + GLTFLoader), chat-capable via a local Ollama proxy, with auto-detect of whichever model you have pulled (prefers `gemma3:4b`, falls back to `llama3.2:3b` etc.). Stage 4 — full OS rebrand + bootable ISO — is next.
+**Status**: shipped, v0.3.2+. Stable.
+
+### 💿 Path B — "Start from scratch"
+
+Download `vibeos-0.4.0.iso`, flash it to a USB with [balenaEtcher](https://www.balena.io/etcher/), boot your machine from the USB, and land in a fully-themed VibeOS desktop. Zero terminal steps. Ideal for users who have never installed Linux and want the "just works" experience.
+
+What you get:
+
+- 🎨 Full Neon Grid rebrand — custom GRUB menu, Plymouth splash, SDDM login, KDE Plasma theme, fonts, wallpapers
+- 🤖 Vibbey anchored to the bottom-right of your desktop on first login (layer-shell, no window chrome)
+- 🧠 Everything from Path A preinstalled: Claude Code, Ollama, Docker, GitHub CLI, Node.js, Python, Git
+- 🔑 Hybrid Groq + Ollama with 300 free bootstrap messages, then bring-your-own-key
+
+**Status**: actively building. Stage 4 tracked in [`plans/vibeos-stage4.md`](https://github.com/Matswm86/MWM-AI/blob/main/plans/vibeos-stage4.md). Base distro: Kubuntu 22.04 LTS + KDE Plasma. Hosted at `iso.mwmai.no` once shipped.
 
 ---
 
@@ -63,9 +82,11 @@ The onboarding model (Gemma3 4B) runs on CPU-only. Claude Code itself requires n
 
 ## What VibeOS is (and will be)
 
-**Today (v0.3.2)** — an installer + configuration layer on top of Ubuntu / Pop!\_OS. Everything downloads at install time, so you always get the latest Claude Code and latest MCPs. Vibbey runs as a webkit2gtk desktop window after the install finishes.
+**Path A today (v0.3.2+)** — an installer + configuration layer on top of any Debian/Ubuntu-family distro. Everything downloads at install time, so you always get the latest Claude Code and latest MCPs. Vibbey runs as a chrome-stripped webkit2gtk widget after the install finishes.
 
-**Next (v0.4.0, Stage 4)** — a bootable `.iso` image with a full VibeOS rebrand: custom GRUB, Plymouth boot splash, GDM login theme, Neon Grid GTK theme (forked Yaru), custom icons, cursors, fonts (Orbitron / JetBrains Mono / VT323), Tron-grid wallpapers, and Vibbey auto-launching on first login. Flash with balenaEtcher, boot from USB, and you land in a running Claude Code session with Vibbey greeting you — zero terminal steps.
+**Path B in active development (v0.4.0, Stage 4)** — a bootable `.iso` image based on **Kubuntu 22.04 LTS (KDE Plasma)** with a full VibeOS rebrand: custom GRUB, Plymouth boot splash, SDDM login theme, VibeOS-Neon Plasma theme + Aurorae window decorations + Kvantum for GTK apps, custom icons, cursors, fonts (Orbitron / JetBrains Mono / VT323), Tron-grid wallpapers, and Vibbey auto-launching on first login **as a true layer-shell desktop widget** (no window chrome, no Alt-Tab entry, anchored to the bottom-right corner).
+
+Why Kubuntu + KDE and not GNOME or COSMIC? We tested. KDE's KWin is currently the only widely-deployed Linux compositor with **mature, rendered layer-shell support**, which is the Wayland protocol that lets Vibbey be a true desktop widget instead of a window. GNOME Mutter rejects layer-shell, and COSMIC (Pop!\_OS's new compositor) accepts the protocol but doesn't yet render GTK3 layer surfaces visually. Kubuntu gets us working integration today.
 
 **Not bundling Claude Code.** It's proprietary Anthropic software. The installer downloads it directly from Anthropic, same as Chrome or VS Code installers.
 
@@ -73,26 +94,30 @@ The onboarding model (Gemma3 4B) runs on CPU-only. Claude Code itself requires n
 
 ## Meet Vibbey
 
-Vibbey is VibeOS's onboarding character: nostalgic nod to Microsoft's old paperclip, self-aware, slightly cheeky, and actually useful this time. She runs on **local Ollama** (Gemma3 4B by default — no API key, no cloud round-trip, no model-training leak).
+Vibbey is VibeOS's onboarding character: nostalgic nod to Microsoft's old paperclip, self-aware, slightly cheeky, and actually useful this time. She knows your OS, install state, and her own roadmap — and she can run safe shell commands on your behalf with your confirmation.
 
-She lives in a **floating webkit2gtk desktop window** sized 420x560, always-on-top, with the VibeOS Neon Grid palette (magenta + cyan + violet, Tron-grid background). A real 3D paperclip model rendered via Three.js + GLTFLoader does a gentle idle bob while she chats. If webkit2gtk isn't available, she falls back to opening in your system browser.
+**Brain** — Vibbey routes chats through three tiers, automatically falling back:
 
-Vibbey walks you through:
+1. **Your own Groq key** (if you have one at `~/.vibeos/groq.key`) → unlimited smart mode on `llama-3.3-70b-versatile`
+2. **VibeOS bootstrap proxy** (`~/.vibeos/groq.token`) → 300 free messages on the hosted proxy at `groq.mwmai.no`, so newbies get smart mode without signing up
+3. **Local Ollama** (`gemma3:4b` default, auto-detects whatever you have pulled) → private, offline, no cost
 
-1. Hardware summary and recommendations
-2. Experience-level detection (beginner / intermediate / advanced — adapts tone)
-3. Claude Code authentication
-4. MCP server configuration and verification
-5. Full system check
-6. Handoff to Claude Code with the signature *"Looks like you're about to Vibe hard"* line
+**Knowledge** — at server startup she loads a static knowledge pack from `clippy/knowledge/` (identity, common commands, troubleshooting) straight into her system prompt, so she can answer "how do I open a terminal" or "how do I auth GitHub CLI" without searching the web.
 
-`install.sh` auto-launches Vibbey the moment the install finishes. To run her again manually from any shell:
+**Memory** — persists across sessions in `~/.vibeos/vibbey-memory.json` (mode 0600). Stores user profile, chat history (last 50 exchanges), learned facts, and a cached install-state snapshot. Wipe it with `rm` any time.
+
+**Tool use** — Vibbey can run ~15 allowlisted read-only commands (`claude --version`, `gh auth status`, `ollama list`, `docker info`, `free -h`, `nvidia-smi`, `cat /etc/os-release`, etc.) via `POST /api/run`. Every execution requires user confirmation in the chat bubble first. No writes, no sudo, no network calls outside Groq/Ollama.
+
+**UI** — she lives in a floating webkit2gtk widget anchored to the bottom-right of your desktop via the Wayland layer-shell protocol (on KDE Plasma and other compositors that support it) or as a chrome-stripped toplevel on X11/XWayland. The 3D Clippy-lineage model renders via Three.js + GLTFLoader with neon magenta + cyan rim lighting and a gentle idle bob.
+
+To run Vibbey manually from any shell:
 
 ```bash
-python3 -m clippy
+python3 -m clippy              # full-chrome window (dev/debug)
+python3 -m clippy.widget_mode  # chrome-stripped desktop widget (target)
 ```
 
-(The `clippy` module contains Vibbey's launcher, server, Three.js scene, and voice. The directory name is a nod to the lineage — the character is Vibbey.)
+(The `clippy` module contains Vibbey's launcher, server, Three.js scene, knowledge pack, memory store, tool-use allowlist, Groq proxy, and voice. The directory name is a nod to the lineage — the character is Vibbey.)
 
 To skip Vibbey (for CI, Docker tests, or scripted installs):
 
@@ -142,7 +167,8 @@ Or use [VibeOS Managed MCP](https://github.com/Matswm86/vibeos) — hosted Qdran
 - [x] Stage 2.5: Minimal MCP stack (filesystem removed in v0.3, auto-onboarding)
 - [x] Stage 2.6: install.sh hardening (v0.3.1) — `/dev/tty` curl-pipe fallback, dual memory-location docs, `vibe` alias
 - [x] **Stage 3: Vibbey Phase B** (v0.3.2) — real 3D Clippy-lineage model in a webkit2gtk desktop window, Three.js + GLTFLoader, local Ollama chat proxy, model auto-detect, python3 auto-reexec. "Clippy, but it actually works now."
-- [ ] **Stage 4: VibeOS ISO + full OS rebrand** — bootable `.iso` with custom GRUB, Plymouth, GDM, Neon Grid GTK theme (forked Yaru), icons, cursors, fonts, wallpapers, and Vibbey auto-launching on first login. Ubuntu 22.04 LTS base, hosted at `iso.mwmai.no`. See the full plan in the companion workspace.
+- [x] **Stage 3.5: Vibbey brain upgrade** (2026-04-10) — Groq + Ollama hybrid routing (BYO key → bootstrap proxy → local fallback), static knowledge pack injected into system prompt, persistent memory at `~/.vibeos/vibbey-memory.json`, tool-use allowlist via `POST /api/run` with user confirmation, widget-mode chrome-stripped launcher. Vibbey now knows her OS, install state, and roadmap — and can execute safe commands.
+- [ ] **Stage 4: Kubuntu-based VibeOS ISO + full OS rebrand** — bootable `.iso` based on Kubuntu 22.04 LTS (KDE Plasma), with custom GRUB, Plymouth, SDDM, VibeOS-Neon Plasma theme + Aurorae + Kvantum, icons, cursors, fonts, wallpapers, and Vibbey auto-launching as a layer-shell desktop widget on first login. Hosted at `iso.mwmai.no`. Plan: [`plans/vibeos-stage4.md`](https://github.com/Matswm86/MWM-AI/blob/main/plans/vibeos-stage4.md).
 
 ---
 

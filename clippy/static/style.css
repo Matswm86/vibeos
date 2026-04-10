@@ -5,14 +5,21 @@
   --vbo-pink: #FF71CE;
   --vbo-cyan: #01F9FF;
   --vbo-violet: #9D4EDD;
-  --vbo-bg-0: #0B0218;
-  --vbo-bg-1: #1A0B2E;
-  --vbo-bg-2: #2D1B4E;
-  --vbo-fg: #F8F0FF;
-  --vbo-muted: #B5A6D9;
+  --vbo-bg-0: #05020E;
+  --vbo-bg-1: #0E0823;
+  --vbo-bg-2: #1C1438;
+  --vbo-fg: #FFF7D8;
+  --vbo-muted: #C9BEEE;
   --vbo-yellow: #FFE400;
+  --vbo-yellow-warm: #FFC430;
   --vbo-mint: #05FFA1;
-  --vbo-grid: rgba(1, 249, 255, 0.22);
+  --vbo-grid: rgba(1, 249, 255, 0.20);
+  /* Frame + accent roles — set per-concept: cyan frame dominant, yellow
+     character glow, magenta for outer halo + highlights only. */
+  --vbo-frame: var(--vbo-cyan);
+  --vbo-frame-glow: rgba(1, 249, 255, 0.45);
+  --vbo-halo: rgba(255, 46, 207, 0.22);
+  --vbo-char-glow: rgba(255, 196, 48, 0.55);
 
   --font-display: "Orbitron", "Rajdhani", system-ui, sans-serif;
   --font-body: "Inter", system-ui, sans-serif;
@@ -33,11 +40,11 @@ html, body {
   display: flex;
   flex-direction: column;
   height: 100vh;
-  border: 1px solid var(--vbo-magenta);
+  border: 1px solid var(--vbo-frame);
   box-shadow:
-    0 0 12px var(--vbo-magenta),
-    0 0 40px rgba(255, 46, 207, 0.3),
-    inset 0 0 60px rgba(1, 249, 255, 0.06);
+    0 0 14px var(--vbo-frame-glow),
+    0 0 48px var(--vbo-halo),
+    inset 0 0 70px rgba(255, 196, 48, 0.04);
   position: relative;
 }
 
@@ -49,7 +56,8 @@ html, body {
   gap: 10px;
   padding: 10px 14px;
   background: linear-gradient(90deg, var(--vbo-bg-1), var(--vbo-bg-2));
-  border-bottom: 1px solid var(--vbo-cyan);
+  border-bottom: 1px solid var(--vbo-frame);
+  box-shadow: 0 1px 12px var(--vbo-frame-glow);
 }
 
 #titlebar .brand {
@@ -87,7 +95,13 @@ html, body {
       var(--vbo-grid) 39px,
       var(--vbo-grid) 40px
     ),
-    radial-gradient(ellipse at center, var(--vbo-bg-2) 0%, var(--vbo-bg-0) 80%);
+    radial-gradient(
+      ellipse at center 55%,
+      var(--vbo-char-glow) 0%,
+      rgba(255, 196, 48, 0.15) 25%,
+      var(--vbo-bg-2) 60%,
+      var(--vbo-bg-0) 95%
+    );
 }
 
 #scene {
@@ -104,14 +118,15 @@ html, body {
 #speech-bubble {
   padding: 12px 14px;
   background: var(--vbo-bg-1);
-  border-top: 1px solid var(--vbo-cyan);
-  box-shadow: 0 -2px 12px rgba(1, 249, 255, 0.25);
+  border-top: 1px solid var(--vbo-frame);
+  box-shadow: 0 -2px 14px var(--vbo-frame-glow);
   font-size: 13px;
-  line-height: 1.45;
+  line-height: 1.5;
   min-height: 68px;
   max-height: 140px;
   overflow-y: auto;
   color: var(--vbo-fg);
+  font-family: var(--font-mono);
   transition: opacity 0.2s;
 }
 
@@ -254,3 +269,101 @@ footer {
 .modal-body button:hover {
   box-shadow: 0 0 8px var(--vbo-magenta);
 }
+
+/* ══════════════════════════════════════════════════════════════
+   WIDGET MODE — chrome-stripped floating desktop widget
+   Triggered by <html class="widget-mode"> set from a ?widget=1
+   URL param. Launcher: clippy.widget_mode
+   ══════════════════════════════════════════════════════════════ */
+
+html.widget-mode,
+html.widget-mode body {
+  background: transparent !important;
+}
+
+html.widget-mode #app {
+  border: none !important;
+  box-shadow: none !important;
+  background: transparent !important;
+  /* Column layout: scene fills, bubble floats, chat pill at bottom */
+  gap: 0;
+}
+
+/* Hide everything that looks like program-window chrome */
+html.widget-mode #titlebar,
+html.widget-mode footer {
+  display: none !important;
+}
+
+/* 3D scene fills almost the whole widget, transparent so the character
+   appears to float on the desktop */
+html.widget-mode #scene-container {
+  background: transparent !important;
+  flex: 1 1 auto;
+}
+
+/* Speech bubble becomes a floating rounded bubble anchored over the scene —
+   cyan frame with warm yellow text, matching the concept mockup. */
+html.widget-mode #speech-bubble {
+  position: absolute;
+  left: 14px;
+  right: 14px;
+  top: 14px;
+  max-height: 120px;
+  padding: 12px 16px;
+  background: rgba(5, 2, 14, 0.82);
+  border: 1px solid var(--vbo-frame);
+  border-radius: 16px;
+  box-shadow:
+    0 10px 30px var(--vbo-frame-glow),
+    0 0 44px var(--vbo-halo),
+    inset 0 1px 0 rgba(255, 255, 255, 0.05);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+  z-index: 5;
+  pointer-events: none;
+  font-size: 12px;
+  color: var(--vbo-fg);
+}
+
+/* Chat becomes a compact pill at the bottom, translucent, cyan-framed */
+html.widget-mode #chat {
+  position: absolute;
+  left: 14px;
+  right: 14px;
+  bottom: 14px;
+  padding: 6px 8px;
+  background: rgba(5, 2, 14, 0.82);
+  border: 1px solid var(--vbo-frame);
+  border-radius: 999px;
+  box-shadow:
+    0 8px 24px var(--vbo-frame-glow),
+    0 0 30px var(--vbo-halo);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+  z-index: 6;
+}
+
+html.widget-mode #chat-input {
+  background: transparent;
+  border: none;
+  box-shadow: none;
+  padding: 6px 10px;
+  font-size: 12px;
+}
+
+html.widget-mode #chat-input:focus {
+  box-shadow: none;
+}
+
+html.widget-mode #chat-send {
+  padding: 6px 14px;
+  font-size: 10px;
+  border-radius: 999px;
+}
+
+/* Hide about modal in widget mode — it'd blanket the whole desktop */
+html.widget-mode #about-modal {
+  display: none !important;
+}
+

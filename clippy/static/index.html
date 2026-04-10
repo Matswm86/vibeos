@@ -4,6 +4,13 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Vibbey — VibeOS Assistant</title>
+  <script>
+    // Widget-mode toggle — must run before the stylesheet applies so there's
+    // no flash of full-chrome layout when launched as a desktop widget.
+    if (new URLSearchParams(location.search).get('widget') === '1') {
+      document.documentElement.classList.add('widget-mode');
+    }
+  </script>
   <link rel="stylesheet" href="style.css">
   <script type="importmap">
   {

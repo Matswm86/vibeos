@@ -139,15 +139,48 @@ function showBubble(text) {
 
 const SYSTEM_PROMPT = (
   "You are Vibbey, VibeOS's friendly Clippy-lineage Linux assistant. " +
-  "You run locally via Ollama. You are not Claude. Claude Code takes over " +
-  "after onboarding. Keep replies to 2-3 sentences. Be warm, slightly cheeky, " +
-  "never play corporate. Never use walls of text."
+  "You are not Claude. Claude Code takes over after onboarding. Keep replies " +
+  "to 2-3 sentences. Be warm, slightly cheeky, never corporate. Never use " +
+  "walls of text. When you want to run a system command, include " +
+  "[[RUN: tool_id]] or [[RUN: tool_id arg]] on its own line in your reply — " +
+  "the UI will ask the user to confirm before executing."
 );
 
+// ── Tier detection + tool registry ─────────────────────────
+// Fetched on load from /api/tier: current backend (byo_key/bootstrap/ollama)
+// + list of allowlisted tools. Used for the status footer + confirming
+// [[RUN: ...]] markers against the real allowlist before prompting the user.
+let ACTIVE_TIER = 'unknown';
+let AVAILABLE_TOOLS = new Map();  // id → {description, accepts_arg}
+
+async function detectTier() {
+  try {
+    const resp = await fetch('/api/tier');
+    if (!resp.ok) return;
+    const data = await resp.json();
+    ACTIVE_TIER = data.tier || 'unknown';
+    AVAILABLE_TOOLS = new Map((data.tools || []).map((t) => [t.id, t]));
+    const tierLabel = {
+      byo_key: `groq · ${data.default_groq_model || 'llama-3.3-70b'}`,
+      bootstrap: `groq · bootstrap`,
+      ollama: `ollama · local`,
+      unknown: 'detecting…',
+    }[ACTIVE_TIER] || ACTIVE_TIER;
+    if (statusEl) {
+      statusEl.textContent = `online · ${tierLabel}`;
+    }
+    console.log(`[vibbey] tier=${ACTIVE_TIER}, ${AVAILABLE_TOOLS.size} tools available`);
+  } catch (e) {
+    console.warn('[vibbey] tier detect failed', e);
+  }
+}
+
+detectTier();
+
 // ── Model auto-detect ──────────────────────────────────────
-// Fresh VibeOS ISOs pull gemma3:4b via install.sh, but dev workstations
-// often have different models. Query /api/models (proxied to Ollama's
-// /api/tags), skip embedding-only models, pick the first chat candidate.
+// Ollama fallback model selection. Used for the `model` field in /api/chat
+// payloads; the server ignores it when Groq is active. Fresh VibeOS ISOs
+// pull gemma3:4b via install.sh; dev workstations often have others.
 let ACTIVE_MODEL = 'gemma3:4b';
 const EMBED_MARKERS = ['bge-', 'embed', 'nomic-embed'];
 
@@ -184,48 +217,175 @@ async function detectModel() {
 
 detectModel();
 
+// ── Tool-use marker parsing ────────────────────────────────
+// Vibbey signals command execution by embedding [[RUN: tool_id]] or
+// [[RUN: tool_id arg]] in her reply. We extract the first marker, strip it
+// from the visible text, and prompt the user for confirmation before
+// actually running it via /api/run.
+const RUN_MARKER_RE = /\[\[RUN:\s*([a-z_][a-z0-9_]*)(?:\s+([^\]]+?))?\s*\]\]/i;
+
+function parseRunMarker(text) {
+  const m = RUN_MARKER_RE.exec(text);
+  if (!m) return null;
+  const toolId = m[1];
+  const arg = m[2] ? m[2].trim() : null;
+  return {
+    toolId,
+    arg,
+    match: m[0],
+    cleanText: text.replace(m[0], '').trim(),
+  };
+}
+
+async function runTool(toolId, arg) {
+  const resp = await fetch('/api/run', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ tool_id: toolId, arg }),
+  });
+  return await resp.json();
+}
+
+function formatToolResult(result) {
+  if (result.error) {
+    return `[[RESULT: error=${result.error} detail=${result.detail || '?'}]]`;
+  }
+  const stdout = (result.stdout || '').trim();
+  const stderr = (result.stderr || '').trim();
+  const exit = result.exit_code;
+  let body = `exit=${exit}`;
+  if (stdout) body += `\nstdout:\n${stdout}`;
+  if (stderr) body += `\nstderr:\n${stderr}`;
+  return `[[RESULT: ${result.tool_id}\n${body}]]`;
+}
+
+// Pending tool confirmation — set when Vibbey asks to run something,
+// consumed by the chat input's "yes" / "run" response.
+let PENDING_TOOL = null;
+
+// Rolling conversation history on the frontend — so tool-use results can
+// feed back into the next /api/chat call as a user message. Capped at ~20
+// entries to avoid sending huge histories; server memory handles long-term
+// persistence across sessions.
+const CONVERSATION = [{ role: 'system', content: SYSTEM_PROMPT }];
+const MAX_FRONTEND_HISTORY = 20;
+
+function pushConversation(role, content) {
+  CONVERSATION.push({ role, content });
+  // Keep system message + last N turns
+  if (CONVERSATION.length > MAX_FRONTEND_HISTORY + 1) {
+    const sys = CONVERSATION[0];
+    CONVERSATION.splice(0, CONVERSATION.length - MAX_FRONTEND_HISTORY);
+    CONVERSATION.unshift(sys);
+  }
+}
+
+async function postChat(messages) {
+  const resp = await fetch('/api/chat', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ model: ACTIVE_MODEL, messages }),
+  });
+  if (!resp.ok) {
+    const err = await resp.json().catch(() => ({}));
+    const e = new Error(err.detail || err.error || `HTTP ${resp.status}`);
+    e.kind = err.error;
+    throw e;
+  }
+  return await resp.json();
+}
+
+function describeChatError(e) {
+  if (e.kind === 'ollama_unreachable') {
+    return 'Ollama is down. Start it with: `ollama serve`';
+  }
+  if (e.kind === 'ollama_error') {
+    let hint = e.message || 'Ollama rejected the request';
+    if (hint.includes('not found')) {
+      hint += `  (try: \`ollama pull ${ACTIVE_MODEL}\`)`;
+    }
+    return hint;
+  }
+  return e.message || 'something broke';
+}
+
+async function handleVibbeyReply(data) {
+  const reply = (data?.message?.content || '').trim() || '(empty reply)';
+  pushConversation('assistant', reply);
+
+  const marker = parseRunMarker(reply);
+  if (!marker) {
+    showBubble(reply);
+    return;
+  }
+
+  const tool = AVAILABLE_TOOLS.get(marker.toolId);
+  if (!tool) {
+    // Vibbey hallucinated a tool that's not in the allowlist — show the
+    // clean text and a short warning so the user knows.
+    showBubble(
+      `${marker.cleanText}\n\n(I wanted to run \`${marker.toolId}\` but it's not in my allowlist.)`
+    );
+    return;
+  }
+
+  // Stage the confirmation. Vibbey says what she wants to run, input field
+  // gets repurposed to "y / yes / run" = go, anything else = cancel.
+  PENDING_TOOL = { toolId: marker.toolId, arg: marker.arg, description: tool.description };
+  const argSuffix = marker.arg ? ` ${marker.arg}` : '';
+  showBubble(
+    `${marker.cleanText}\n\n[confirm]: run \`${marker.toolId}${argSuffix}\` ` +
+    `(${tool.description})? Reply **y** to run, anything else cancels.`
+  );
+}
+
 async function sendChat() {
   const msg = inputEl.value.trim();
   if (!msg) return;
   inputEl.value = '';
   sendEl.disabled = true;
-  showBubble('…');
 
-  try {
-    const resp = await fetch('/api/chat', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        model: ACTIVE_MODEL,
-        messages: [
-          { role: 'system', content: SYSTEM_PROMPT },
-          { role: 'user', content: msg },
-        ],
-      }),
-    });
+  // Confirmation for a pending tool execution
+  if (PENDING_TOOL) {
+    const confirm = /^(y|yes|run|ok|go)$/i.test(msg);
+    const pending = PENDING_TOOL;
+    PENDING_TOOL = null;
 
-    if (!resp.ok) {
-      const err = await resp.json().catch(() => ({}));
-      let hint;
-      if (err.error === 'ollama_unreachable') {
-        hint = 'Ollama is down. Start it with: `ollama serve`';
-      } else if (err.error === 'ollama_error') {
-        hint = `${err.detail || 'Ollama rejected the request'}`;
-        if ((err.detail || '').includes('not found')) {
-          hint += `  (try: \`ollama pull ${ACTIVE_MODEL}\`)`;
-        }
-      } else {
-        hint = err.detail || err.error || 'something broke';
-      }
-      showBubble(`Hmm, ${hint}`);
+    if (!confirm) {
+      pushConversation('user', `cancelled: ${pending.toolId}`);
+      showBubble(`Cancelled. What else can I help with?`);
+      sendEl.disabled = false;
+      inputEl.focus();
       return;
     }
 
-    const data = await resp.json();
-    const reply = data?.message?.content?.trim() || '(empty reply)';
-    showBubble(reply);
+    showBubble(`Running \`${pending.toolId}\`…`);
+    try {
+      const result = await runTool(pending.toolId, pending.arg);
+      const formatted = formatToolResult(result);
+      pushConversation('user', formatted);
+
+      // Feed the result back to Vibbey for interpretation
+      showBubble('…');
+      const next = await postChat(CONVERSATION);
+      await handleVibbeyReply(next);
+    } catch (e) {
+      showBubble(`Tool run failed: ${e.message}`);
+    } finally {
+      sendEl.disabled = false;
+      inputEl.focus();
+    }
+    return;
+  }
+
+  // Normal chat turn
+  pushConversation('user', msg);
+  showBubble('…');
+  try {
+    const data = await postChat(CONVERSATION);
+    await handleVibbeyReply(data);
   } catch (e) {
-    showBubble(`Network error: ${e.message}`);
+    showBubble(`Hmm, ${describeChatError(e)}`);
   } finally {
     sendEl.disabled = false;
     inputEl.focus();

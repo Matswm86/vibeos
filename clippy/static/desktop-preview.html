@@ -1,0 +1,468 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>VibeOS Desktop Preview — Neon Grid</title>
+  <style>
+    /* ──────────────────────────────────────────────────────────
+       VibeOS Desktop Theme Preview
+       A full-screen mockup of what the themed Pop!_OS / COSMIC
+       desktop looks like with the Neon Grid palette applied.
+       View full-screen in browser (F11) for the intended effect.
+       ────────────────────────────────────────────────────────── */
+
+    :root {
+      --vbo-magenta: #FF2ECF;
+      --vbo-pink: #FF71CE;
+      --vbo-cyan: #01F9FF;
+      --vbo-cyan-dim: #00B5BB;
+      --vbo-violet: #9D4EDD;
+      --vbo-yellow: #FFE400;
+      --vbo-yellow-warm: #FFC430;
+      --vbo-bg-0: #05020E;
+      --vbo-bg-1: #0E0823;
+      --vbo-bg-2: #1C1438;
+      --vbo-fg: #FFF7D8;
+      --vbo-muted: #C9BEEE;
+      --vbo-mint: #05FFA1;
+
+      --font-display: "Orbitron", "Rajdhani", system-ui, sans-serif;
+      --font-body: "Inter", system-ui, sans-serif;
+      --font-mono: "JetBrains Mono", "Fira Code", monospace;
+    }
+
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+
+    html, body {
+      height: 100%;
+      width: 100%;
+      font-family: var(--font-body);
+      color: var(--vbo-fg);
+      overflow: hidden;
+      user-select: none;
+    }
+
+    /* ── Wallpaper ─────────────────────────────────────────── */
+    body {
+      /* Synthwave sunset gradient + Tron grid lines + vignette */
+      background:
+        radial-gradient(ellipse at 50% 120%,
+          rgba(255, 46, 207, 0.35) 0%,
+          rgba(255, 46, 207, 0.08) 30%,
+          transparent 55%),
+        linear-gradient(180deg,
+          #0A0118 0%,
+          #140530 35%,
+          #2B0A56 60%,
+          #1A0433 80%,
+          #05020E 100%),
+        radial-gradient(circle at 85% 15%,
+          rgba(255, 228, 0, 0.15) 0%,
+          transparent 25%);
+      position: relative;
+    }
+
+    /* Animated grid lines over the wallpaper — subtle */
+    body::before {
+      content: "";
+      position: absolute;
+      inset: 0;
+      background:
+        repeating-linear-gradient(
+          90deg,
+          transparent 0,
+          transparent 79px,
+          rgba(1, 249, 255, 0.07) 79px,
+          rgba(1, 249, 255, 0.07) 80px
+        ),
+        repeating-linear-gradient(
+          0deg,
+          transparent 0,
+          transparent 79px,
+          rgba(1, 249, 255, 0.06) 79px,
+          rgba(1, 249, 255, 0.06) 80px
+        );
+      pointer-events: none;
+      z-index: 1;
+    }
+
+    /* Horizon line (synthwave staple) */
+    body::after {
+      content: "";
+      position: absolute;
+      left: 0;
+      right: 0;
+      top: 62%;
+      height: 2px;
+      background: linear-gradient(90deg,
+        transparent 0%,
+        var(--vbo-cyan) 20%,
+        var(--vbo-magenta) 50%,
+        var(--vbo-cyan) 80%,
+        transparent 100%);
+      box-shadow: 0 0 24px var(--vbo-cyan), 0 0 48px var(--vbo-magenta);
+      pointer-events: none;
+      z-index: 1;
+    }
+
+    /* ── Top panel (COSMIC-style status bar) ─────────────── */
+    .panel-top {
+      position: absolute;
+      top: 0;
+      left: 0;
+      right: 0;
+      height: 32px;
+      background: linear-gradient(180deg,
+        rgba(14, 8, 35, 0.92),
+        rgba(14, 8, 35, 0.78));
+      border-bottom: 1px solid var(--vbo-cyan);
+      box-shadow: 0 2px 18px rgba(1, 249, 255, 0.35);
+      display: flex;
+      align-items: center;
+      padding: 0 18px;
+      font-family: var(--font-mono);
+      font-size: 11px;
+      color: var(--vbo-fg);
+      z-index: 10;
+      backdrop-filter: blur(12px);
+    }
+
+    .panel-top .workspace {
+      font-family: var(--font-display);
+      font-weight: 700;
+      color: var(--vbo-yellow);
+      text-shadow: 0 0 8px var(--vbo-yellow);
+      letter-spacing: 0.15em;
+      font-size: 12px;
+    }
+
+    .panel-top .spacer { flex: 1; }
+
+    .panel-top .indicators {
+      display: flex;
+      gap: 18px;
+      color: var(--vbo-muted);
+    }
+    .panel-top .indicators span {
+      color: var(--vbo-cyan);
+    }
+    .panel-top .clock {
+      color: var(--vbo-yellow);
+      font-family: var(--font-display);
+      letter-spacing: 0.1em;
+      text-shadow: 0 0 6px var(--vbo-yellow);
+    }
+
+    /* ── Dock (bottom-center) ─────────────────────────────── */
+    .dock {
+      position: absolute;
+      bottom: 18px;
+      left: 50%;
+      transform: translateX(-50%);
+      height: 58px;
+      padding: 0 14px;
+      background: rgba(14, 8, 35, 0.88);
+      border: 1px solid var(--vbo-cyan);
+      border-radius: 14px;
+      box-shadow:
+        0 0 24px rgba(1, 249, 255, 0.35),
+        0 0 48px rgba(255, 46, 207, 0.2),
+        inset 0 1px 0 rgba(255, 255, 255, 0.06);
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      z-index: 8;
+      backdrop-filter: blur(14px);
+    }
+    .dock-icon {
+      width: 44px;
+      height: 44px;
+      border-radius: 10px;
+      background: linear-gradient(135deg,
+        rgba(255, 46, 207, 0.25),
+        rgba(1, 249, 255, 0.2));
+      border: 1px solid rgba(1, 249, 255, 0.4);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 20px;
+      box-shadow: 0 0 10px rgba(1, 249, 255, 0.25);
+      transition: transform 0.15s, box-shadow 0.15s;
+    }
+    .dock-icon:hover {
+      transform: translateY(-4px);
+      box-shadow: 0 0 18px var(--vbo-cyan);
+    }
+    .dock-icon.active {
+      border-color: var(--vbo-yellow);
+      box-shadow:
+        0 0 12px var(--vbo-yellow),
+        inset 0 0 10px rgba(255, 228, 0, 0.2);
+    }
+    .dock-sep {
+      width: 1px;
+      height: 32px;
+      background: linear-gradient(180deg,
+        transparent,
+        var(--vbo-violet),
+        transparent);
+    }
+
+    /* ── Fake terminal window (open on desktop) ──────────── */
+    .window {
+      position: absolute;
+      top: 90px;
+      left: 120px;
+      width: 640px;
+      height: 400px;
+      background: rgba(5, 2, 14, 0.92);
+      border: 1px solid var(--vbo-cyan);
+      border-radius: 12px;
+      box-shadow:
+        0 0 24px rgba(1, 249, 255, 0.35),
+        0 0 64px rgba(255, 46, 207, 0.18),
+        0 24px 48px rgba(0, 0, 0, 0.6);
+      z-index: 5;
+      overflow: hidden;
+      backdrop-filter: blur(4px);
+    }
+    .window-titlebar {
+      height: 32px;
+      background: linear-gradient(90deg,
+        rgba(14, 8, 35, 0.98),
+        rgba(28, 20, 56, 0.98));
+      border-bottom: 1px solid var(--vbo-cyan);
+      box-shadow: 0 1px 12px rgba(1, 249, 255, 0.3);
+      display: flex;
+      align-items: center;
+      padding: 0 12px;
+      font-family: var(--font-display);
+      font-size: 11px;
+      letter-spacing: 0.1em;
+      color: var(--vbo-yellow);
+      text-shadow: 0 0 6px var(--vbo-yellow);
+    }
+    .window-titlebar .dots {
+      display: flex;
+      gap: 7px;
+      margin-right: 14px;
+    }
+    .window-titlebar .dots span {
+      width: 11px;
+      height: 11px;
+      border-radius: 50%;
+      border: 1px solid rgba(255, 255, 255, 0.15);
+    }
+    .window-titlebar .dots .d1 { background: var(--vbo-magenta); box-shadow: 0 0 6px var(--vbo-magenta); }
+    .window-titlebar .dots .d2 { background: var(--vbo-yellow); box-shadow: 0 0 6px var(--vbo-yellow); }
+    .window-titlebar .dots .d3 { background: var(--vbo-mint); box-shadow: 0 0 6px var(--vbo-mint); }
+
+    .window-body {
+      padding: 14px 18px;
+      font-family: var(--font-mono);
+      font-size: 12px;
+      line-height: 1.6;
+      color: var(--vbo-fg);
+    }
+    .window-body .prompt { color: var(--vbo-cyan); }
+    .window-body .user { color: var(--vbo-yellow); }
+    .window-body .host { color: var(--vbo-magenta); }
+    .window-body .dir { color: var(--vbo-mint); }
+    .window-body .ok { color: var(--vbo-mint); }
+    .window-body .info { color: var(--vbo-cyan); }
+    .window-body .warn { color: var(--vbo-yellow); }
+    .window-body .dim { color: var(--vbo-muted); }
+    .window-body .cursor {
+      display: inline-block;
+      width: 8px;
+      height: 14px;
+      background: var(--vbo-yellow);
+      box-shadow: 0 0 6px var(--vbo-yellow);
+      vertical-align: middle;
+      animation: blink 1s step-end infinite;
+    }
+    @keyframes blink {
+      50% { opacity: 0; }
+    }
+
+    /* ── Vibbey corner widget (mockup — same size as real) ── */
+    .vibbey-corner {
+      position: absolute;
+      bottom: 82px;
+      right: 24px;
+      width: 360px;
+      height: 480px;
+      z-index: 9;
+      pointer-events: none;
+      display: flex;
+      align-items: flex-end;
+      justify-content: center;
+    }
+    .vibbey-glow {
+      position: absolute;
+      width: 320px;
+      height: 320px;
+      border-radius: 50%;
+      background: radial-gradient(
+        circle at center 60%,
+        rgba(255, 196, 48, 0.55) 0%,
+        rgba(255, 196, 48, 0.15) 30%,
+        rgba(255, 46, 207, 0.08) 55%,
+        transparent 80%);
+      filter: blur(6px);
+      bottom: 40px;
+    }
+    .vibbey-char {
+      position: relative;
+      font-size: 220px;
+      line-height: 1;
+      color: var(--vbo-yellow);
+      text-shadow:
+        0 0 20px var(--vbo-yellow),
+        0 0 40px var(--vbo-yellow-warm),
+        0 0 80px var(--vbo-magenta),
+        0 0 120px rgba(255, 46, 207, 0.4);
+      transform: translateY(20px);
+      filter: saturate(1.3);
+    }
+
+    .vibbey-bubble {
+      position: absolute;
+      left: 10px;
+      right: 10px;
+      top: 10px;
+      padding: 14px 18px;
+      background: rgba(5, 2, 14, 0.82);
+      border: 1px solid var(--vbo-cyan);
+      border-radius: 16px;
+      box-shadow:
+        0 10px 30px rgba(1, 249, 255, 0.35),
+        0 0 44px rgba(255, 46, 207, 0.22),
+        inset 0 1px 0 rgba(255, 255, 255, 0.05);
+      backdrop-filter: blur(8px);
+      font-family: var(--font-mono);
+      font-size: 12px;
+      line-height: 1.5;
+      color: var(--vbo-fg);
+    }
+    .vibbey-bubble .name {
+      color: var(--vbo-yellow);
+      font-family: var(--font-display);
+      font-size: 10px;
+      letter-spacing: 0.18em;
+      display: block;
+      margin-bottom: 4px;
+      text-shadow: 0 0 6px var(--vbo-yellow);
+    }
+
+    .vibbey-pill {
+      position: absolute;
+      left: 14px;
+      right: 14px;
+      bottom: 14px;
+      height: 34px;
+      padding: 0 14px;
+      background: rgba(5, 2, 14, 0.82);
+      border: 1px solid var(--vbo-cyan);
+      border-radius: 999px;
+      box-shadow:
+        0 8px 24px rgba(1, 249, 255, 0.3),
+        0 0 30px rgba(255, 46, 207, 0.2);
+      backdrop-filter: blur(8px);
+      display: flex;
+      align-items: center;
+      font-family: var(--font-mono);
+      font-size: 11px;
+      color: var(--vbo-muted);
+    }
+    .vibbey-pill::before {
+      content: "›";
+      color: var(--vbo-cyan);
+      margin-right: 8px;
+      font-weight: 700;
+      font-size: 14px;
+    }
+
+    /* ── Label strip (annotation) ────────────────────────── */
+    .label-strip {
+      position: absolute;
+      top: 48px;
+      left: 18px;
+      font-family: var(--font-display);
+      font-size: 9px;
+      letter-spacing: 0.2em;
+      color: var(--vbo-cyan);
+      text-shadow: 0 0 8px var(--vbo-cyan);
+      z-index: 20;
+    }
+    .label-strip span { color: var(--vbo-muted); margin-left: 6px; }
+  </style>
+</head>
+<body>
+  <!-- Top panel -->
+  <div class="panel-top">
+    <span class="workspace">▸ VIBEOS 0.4.0</span>
+    <span style="margin-left: 14px; color: var(--vbo-muted);">Activities</span>
+    <span style="margin-left: 18px; color: var(--vbo-muted);">Terminal</span>
+    <div class="spacer"></div>
+    <div class="indicators">
+      <div>net <span>●</span></div>
+      <div>vol <span>72%</span></div>
+      <div>bat <span>93%</span></div>
+      <div class="clock">21:47</div>
+    </div>
+  </div>
+
+  <!-- Annotation strip -->
+  <div class="label-strip">PREVIEW <span>— Neon Grid palette applied to COSMIC shell</span></div>
+
+  <!-- Terminal window -->
+  <div class="window">
+    <div class="window-titlebar">
+      <div class="dots"><span class="d1"></span><span class="d2"></span><span class="d3"></span></div>
+      &gt; TERMINAL — mats@vibeos
+    </div>
+    <div class="window-body">
+      <div><span class="user">mats</span><span class="dim">@</span><span class="host">vibeos</span> <span class="dir">~/projects</span> <span class="prompt">›</span> claude --version</div>
+      <div class="ok">claude-code 1.3.2  (Opus 4.6 · 1M context)</div>
+      <div style="height: 6px;"></div>
+      <div><span class="user">mats</span><span class="dim">@</span><span class="host">vibeos</span> <span class="dir">~/projects</span> <span class="prompt">›</span> ollama list</div>
+      <div><span class="info">NAME             SIZE    MODIFIED</span></div>
+      <div><span class="ok">gemma3:4b        2.6 GB</span>  <span class="dim">3 days ago</span></div>
+      <div><span class="ok">llama3.2:3b      2.0 GB</span>  <span class="dim">1 week ago</span></div>
+      <div><span class="ok">bge-m3:latest    1.2 GB</span>  <span class="dim">1 week ago</span></div>
+      <div style="height: 6px;"></div>
+      <div><span class="user">mats</span><span class="dim">@</span><span class="host">vibeos</span> <span class="dir">~/projects</span> <span class="prompt">›</span> systemctl --user status vibeos-first-run</div>
+      <div><span class="warn">●</span> vibeos-first-run.service <span class="dim">— Vibbey onboarding</span></div>
+      <div>     Loaded: loaded <span class="dim">(/etc/systemd/user/vibeos-first-run.service; enabled)</span></div>
+      <div>     Active: <span class="ok">active (running)</span> since 21:44:18</div>
+      <div>     Status: "Vibbey online · gemma3:4b"</div>
+      <div style="height: 6px;"></div>
+      <div><span class="user">mats</span><span class="dim">@</span><span class="host">vibeos</span> <span class="dir">~/projects</span> <span class="prompt">›</span> <span class="cursor"></span></div>
+    </div>
+  </div>
+
+  <!-- Vibbey corner widget mockup -->
+  <div class="vibbey-corner">
+    <div class="vibbey-glow"></div>
+    <div class="vibbey-char">📎</div>
+    <div class="vibbey-bubble">
+      <span class="name">VIBBEY</span>
+      Hi! I'm Vibbey, your nostalgic local-AI guide. Looks like Ollama is running and Claude Code is installed — want the 2-minute tour?
+    </div>
+    <div class="vibbey-pill">Ask Vibbey anything…</div>
+  </div>
+
+  <!-- Dock -->
+  <div class="dock">
+    <div class="dock-icon">🦊</div>
+    <div class="dock-icon active">⚡</div>
+    <div class="dock-icon">📁</div>
+    <div class="dock-icon">💬</div>
+    <div class="dock-sep"></div>
+    <div class="dock-icon">🎨</div>
+    <div class="dock-icon">⚙️</div>
+  </div>
+</body>
+</html>
