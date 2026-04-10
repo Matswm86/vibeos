@@ -11,7 +11,7 @@
 
 The model is rigged (1 skeleton, 7 meshes, 58 nodes) but ships with **zero baked animation clips**. VibeOS animates it programmatically via root-transform bob and sway in `clippy/static/main.js`. Proper bone animations (waves, head tilts, "thinking" poses) are v0.5 work.
 
-Embedded textures were stripped from the original Sketchfab export (7.75 MB → 1.13 MB of mesh data only) following the `feedback_audit_glb_embedded_textures.md` lesson from the MWM-AI workspace. This is intentional — the flat-shaded model is lit in Three.js with strong magenta + cyan directional lights so it reads as a "neon statue," which matches the VibeOS Neon Grid aesthetic.
+Embedded textures were stripped from the original Sketchfab export (7.75 MB → 1.13 MB of mesh data only). This is intentional and necessary: GLBs rendered with `MeshBasicMaterial` in Three.js still decode embedded textures into hundreds of megabytes of GPU memory at load time, which can OOM a browser tab on modest hardware. The stripped, flat-shaded model is lit programmatically with strong magenta + cyan directional lights so it reads as a "neon statue," which matches the VibeOS Neon Grid aesthetic.
 
 ### Attribution obligation
 

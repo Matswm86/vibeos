@@ -35,7 +35,7 @@ What you get:
 - 🧠 Everything from Path A preinstalled: Claude Code, Ollama, Docker, GitHub CLI, Node.js, Python, Git
 - 🔑 Hybrid Groq + Ollama with 300 free bootstrap messages, then bring-your-own-key
 
-**Status**: actively building. Stage 4 tracked in [`plans/vibeos-stage4.md`](https://github.com/Matswm86/MWM-AI/blob/main/plans/vibeos-stage4.md). Base distro: Kubuntu 22.04 LTS + KDE Plasma. Hosted at `iso.mwmai.no` once shipped.
+**Status**: actively building. Stage 4 in progress — base distro Kubuntu 22.04 LTS + KDE Plasma, full Neon Grid rebrand (theme, fonts, wallpapers, GRUB, Plymouth, SDDM), Vibbey auto-launching as a layer-shell desktop widget on first login. ISO will be hosted at `iso.mwmai.no` once shipped.
 
 ---
 
@@ -156,7 +156,7 @@ Add hosted vector + graph memory for cross-session persistence and semantic sear
 docker run -p 6333:6333 qdrant/qdrant
 ```
 
-Or use [VibeOS Managed MCP](https://github.com/Matswm86/vibeos) — hosted Qdrant, Neo4j, and mem0 endpoints you drop into your `settings.json`. No infrastructure to run.
+Or skip Docker entirely and point your `settings.json` at any hosted MCP provider — the VibeOS installer doesn't lock you into a particular vector/graph backend.
 
 ---
 
@@ -168,7 +168,7 @@ Or use [VibeOS Managed MCP](https://github.com/Matswm86/vibeos) — hosted Qdran
 - [x] Stage 2.6: install.sh hardening (v0.3.1) — `/dev/tty` curl-pipe fallback, dual memory-location docs, `vibe` alias
 - [x] **Stage 3: Vibbey Phase B** (v0.3.2) — real 3D Clippy-lineage model in a webkit2gtk desktop window, Three.js + GLTFLoader, local Ollama chat proxy, model auto-detect, python3 auto-reexec. "Clippy, but it actually works now."
 - [x] **Stage 3.5: Vibbey brain upgrade** (2026-04-10) — Groq + Ollama hybrid routing (BYO key → bootstrap proxy → local fallback), static knowledge pack injected into system prompt, persistent memory at `~/.vibeos/vibbey-memory.json`, tool-use allowlist via `POST /api/run` with user confirmation, widget-mode chrome-stripped launcher. Vibbey now knows her OS, install state, and roadmap — and can execute safe commands.
-- [ ] **Stage 4: Kubuntu-based VibeOS ISO + full OS rebrand** — bootable `.iso` based on Kubuntu 22.04 LTS (KDE Plasma), with custom GRUB, Plymouth, SDDM, VibeOS-Neon Plasma theme + Aurorae + Kvantum, icons, cursors, fonts, wallpapers, and Vibbey auto-launching as a layer-shell desktop widget on first login. Hosted at `iso.mwmai.no`. Plan: [`plans/vibeos-stage4.md`](https://github.com/Matswm86/MWM-AI/blob/main/plans/vibeos-stage4.md).
+- [ ] **Stage 4: Kubuntu-based VibeOS ISO + full OS rebrand** — bootable `.iso` based on Kubuntu 22.04 LTS (KDE Plasma), with custom GRUB, Plymouth, SDDM, VibeOS-Neon Plasma theme + Aurorae + Kvantum, icons, cursors, fonts, wallpapers, and Vibbey auto-launching as a layer-shell desktop widget on first login. ISO hosted at `iso.mwmai.no` once shipped.
 
 ---
 

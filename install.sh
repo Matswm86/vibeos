@@ -312,7 +312,8 @@ if [[ -f "${SCRIPT_DIR}/templates/.mcp.json" ]]; then
 fi
 
 # memory_location.md — explain the single-location rule once, at install time,
-# so VibeOS users never stumble into the dual-memory drift we hit in MWM-AI.
+# so VibeOS users never stumble into dual-memory drift between MCP's knowledge
+# graph and Claude Code's per-project auto-memory.
 cat > "${CLAUDE_DIR}/memory_location.md" <<'EOF'
 # Memory — single-location rule
 
