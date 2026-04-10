@@ -311,7 +311,25 @@ ok "skel configs installed"
 # Step 6 — set Plymouth + GRUB defaults
 # =============================================================
 say "step 6 — activate Plymouth + GRUB + SDDM themes"
-plymouth-set-default-theme vibeos || warn "plymouth-set-default-theme failed"
+# Jammy's `plymouth` package does NOT ship /usr/sbin/plymouth-set-default-theme
+# (confirmed 2026-04-11 during first live Cubic run). Try the helper first; fall
+# back to driving update-alternatives directly, which is literally what the
+# helper does internally minus the initramfs rebuild.
+VIBEOS_PLY=/usr/share/plymouth/themes/vibeos/vibeos.plymouth
+if command -v plymouth-set-default-theme >/dev/null 2>&1; then
+    plymouth-set-default-theme vibeos || warn "plymouth-set-default-theme failed"
+elif [ -f "$VIBEOS_PLY" ]; then
+    # Alternative already exists on jammy — we just need to register + set
+    update-alternatives --install \
+        /usr/share/plymouth/themes/default.plymouth \
+        default.plymouth \
+        "$VIBEOS_PLY" 100 2>/dev/null || true
+    update-alternatives --set default.plymouth "$VIBEOS_PLY" 2>/dev/null || \
+        warn "update-alternatives --set failed"
+    ok "plymouth alternative set via update-alternatives fallback"
+else
+    warn "Plymouth theme file $VIBEOS_PLY missing — theme install likely failed"
+fi
 update-initramfs -u -k all || warn "initramfs update failed (may be ok in chroot)"
 ok "plymouth set"
 
