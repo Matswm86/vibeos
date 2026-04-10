@@ -27,8 +27,8 @@ const camera = new THREE.PerspectiveCamera(
   0.1,
   100,
 );
-camera.position.set(0, 1.2, 3.2);
-camera.lookAt(0, 1, 0);
+camera.position.set(0, 1.5, 3.2);
+camera.lookAt(0, 1.35, 0);
 
 const renderer = new THREE.WebGLRenderer({ canvas, antialias: true, alpha: true });
 renderer.setSize(container.clientWidth, container.clientHeight);
@@ -54,6 +54,14 @@ scene.add(topFill);
 
 // ── Model load ─────────────────────────────────────────────
 let clippyRoot = null;
+// Captured at load time so the idle animation can bob around a stable anchor
+// instead of clobbering the hand-placed Y coordinate every frame.
+let clippyBaseY = 0;
+
+// Vibbey's vertical offset in world space. Positive = floats higher in the
+// view, keeping her head up in the 3D scene and away from the text panel.
+const VIBBEY_LIFT = 0.55;
+
 const loader = new GLTFLoader();
 
 loader.load(
@@ -71,8 +79,10 @@ loader.load(
 
     clippyRoot.scale.setScalar(scale);
     clippyRoot.position.x -= center.x * scale;
-    clippyRoot.position.y -= center.y * scale - targetHeight / 2;
+    clippyRoot.position.y -= center.y * scale - targetHeight / 2 - VIBBEY_LIFT;
     clippyRoot.position.z -= center.z * scale;
+
+    clippyBaseY = clippyRoot.position.y;
 
     scene.add(clippyRoot);
 
@@ -103,7 +113,7 @@ function animate() {
   requestAnimationFrame(animate);
   const t = clock.getElapsedTime();
   if (clippyRoot) {
-    clippyRoot.position.y = -0.05 + Math.sin(t * 1.2) * 0.045;
+    clippyRoot.position.y = clippyBaseY + Math.sin(t * 1.2) * 0.045;
     clippyRoot.rotation.y = Math.sin(t * 0.55) * 0.18;
     clippyRoot.rotation.z = Math.sin(t * 0.9) * 0.03;
   }
