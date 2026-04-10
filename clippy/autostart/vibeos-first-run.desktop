@@ -1,0 +1,11 @@
+[Desktop Entry]
+Type=Application
+Name=VibeOS First Run — Vibbey
+Comment=Launch the Vibbey onboarding assistant once per user
+Exec=sh -c 'test -e "$HOME/.vibeos/first-run-complete" || (cd "${VIBEOS_DIR:-/opt/vibeos}" && python3 -m clippy)'
+OnlyShowIn=GNOME;Unity;XFCE;Cinnamon;MATE;
+X-GNOME-Autostart-enabled=true
+Terminal=false
+Icon=user-info
+StartupNotify=false
+Categories=Utility;

@@ -1,0 +1,21 @@
+[Unit]
+Description=VibeOS First Run — Vibbey desktop assistant
+Documentation=https://github.com/Matswm86/vibeos
+# Skip entirely if Vibbey has already completed onboarding on this account.
+ConditionPathExists=!%h/.vibeos/first-run-complete
+# Only start once the graphical session is up (we open a window).
+After=graphical-session.target
+PartOf=graphical-session.target
+
+[Service]
+Type=simple
+Environment=VIBEOS_DIR=/opt/vibeos
+WorkingDirectory=/opt/vibeos
+ExecStart=/usr/bin/python3 -m clippy
+Restart=no
+# Vibbey is interactive; a failed launch is not a reason to spam logs.
+StandardOutput=journal
+StandardError=journal
+
+[Install]
+WantedBy=graphical-session.target

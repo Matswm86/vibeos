@@ -1,0 +1,272 @@
+/* VibeOS Neon Grid — Vibbey window styling */
+
+:root {
+  --vbo-magenta: #FF2ECF;
+  --vbo-pink: #FF71CE;
+  --vbo-cyan: #01F9FF;
+  --vbo-violet: #9D4EDD;
+  --vbo-bg-0: #0B0218;
+  --vbo-bg-1: #1A0B2E;
+  --vbo-bg-2: #2D1B4E;
+  --vbo-fg: #F8F0FF;
+  --vbo-muted: #B5A6D9;
+  --vbo-yellow: #FFE400;
+  --vbo-mint: #05FFA1;
+  --vbo-grid: rgba(1, 249, 255, 0.22);
+
+  --font-display: "Orbitron", "Rajdhani", system-ui, sans-serif;
+  --font-body: "Inter", system-ui, sans-serif;
+  --font-mono: "JetBrains Mono", "Fira Code", monospace;
+}
+
+* { box-sizing: border-box; margin: 0; padding: 0; }
+
+html, body {
+  height: 100%;
+  font-family: var(--font-body);
+  color: var(--vbo-fg);
+  background: radial-gradient(ellipse at top, var(--vbo-bg-1), var(--vbo-bg-0));
+  overflow: hidden;
+}
+
+#app {
+  display: flex;
+  flex-direction: column;
+  height: 100vh;
+  border: 1px solid var(--vbo-magenta);
+  box-shadow:
+    0 0 12px var(--vbo-magenta),
+    0 0 40px rgba(255, 46, 207, 0.3),
+    inset 0 0 60px rgba(1, 249, 255, 0.06);
+  position: relative;
+}
+
+/* ── Title bar ───────────────────────────────────────────── */
+
+#titlebar {
+  display: flex;
+  align-items: baseline;
+  gap: 10px;
+  padding: 10px 14px;
+  background: linear-gradient(90deg, var(--vbo-bg-1), var(--vbo-bg-2));
+  border-bottom: 1px solid var(--vbo-cyan);
+}
+
+#titlebar .brand {
+  font-family: var(--font-display);
+  font-weight: 700;
+  font-size: 15px;
+  color: var(--vbo-yellow);
+  text-shadow: 0 0 6px var(--vbo-yellow);
+}
+
+#titlebar .tagline {
+  font-size: 10px;
+  color: var(--vbo-muted);
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+}
+
+/* ── 3D scene container ──────────────────────────────────── */
+
+#scene-container {
+  flex: 1;
+  position: relative;
+  background:
+    repeating-linear-gradient(
+      0deg,
+      transparent 0,
+      transparent 39px,
+      var(--vbo-grid) 39px,
+      var(--vbo-grid) 40px
+    ),
+    repeating-linear-gradient(
+      90deg,
+      transparent 0,
+      transparent 39px,
+      var(--vbo-grid) 39px,
+      var(--vbo-grid) 40px
+    ),
+    radial-gradient(ellipse at center, var(--vbo-bg-2) 0%, var(--vbo-bg-0) 80%);
+}
+
+#scene {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+}
+
+/* ── Speech bubble ───────────────────────────────────────── */
+
+#speech-bubble {
+  position: absolute;
+  bottom: 136px;
+  left: 14px;
+  right: 14px;
+  padding: 12px 14px;
+  background: var(--vbo-bg-1);
+  border: 1px solid var(--vbo-cyan);
+  border-radius: 12px;
+  box-shadow: 0 0 10px var(--vbo-cyan);
+  font-size: 13px;
+  line-height: 1.45;
+  max-height: 130px;
+  overflow-y: auto;
+  color: var(--vbo-fg);
+  transition: opacity 0.2s;
+}
+
+#speech-bubble::after {
+  content: "";
+  position: absolute;
+  bottom: -8px;
+  left: 58%;
+  width: 14px;
+  height: 14px;
+  background: var(--vbo-bg-1);
+  border-right: 1px solid var(--vbo-cyan);
+  border-bottom: 1px solid var(--vbo-cyan);
+  transform: rotate(45deg);
+  box-shadow: 2px 2px 6px rgba(1, 249, 255, 0.4);
+}
+
+#speech-bubble.hidden { opacity: 0; pointer-events: none; }
+
+/* ── Chat input ──────────────────────────────────────────── */
+
+#chat {
+  display: flex;
+  gap: 8px;
+  padding: 10px 12px;
+  background: var(--vbo-bg-1);
+  border-top: 1px solid var(--vbo-magenta);
+}
+
+#chat-input {
+  flex: 1;
+  padding: 9px 12px;
+  background: var(--vbo-bg-0);
+  color: var(--vbo-fg);
+  border: 1px solid var(--vbo-violet);
+  border-radius: 6px;
+  font-family: var(--font-mono);
+  font-size: 12px;
+  outline: none;
+  transition: border-color 0.15s, box-shadow 0.15s;
+}
+
+#chat-input:focus {
+  border-color: var(--vbo-cyan);
+  box-shadow: 0 0 8px var(--vbo-cyan);
+}
+
+#chat-send {
+  padding: 9px 16px;
+  background: linear-gradient(135deg, var(--vbo-magenta), var(--vbo-violet));
+  color: var(--vbo-fg);
+  border: 1px solid var(--vbo-pink);
+  border-radius: 6px;
+  font-family: var(--font-display);
+  font-weight: 600;
+  font-size: 11px;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  cursor: pointer;
+  transition: transform 0.1s, box-shadow 0.15s;
+}
+
+#chat-send:hover {
+  box-shadow: 0 0 12px var(--vbo-magenta);
+  transform: translateY(-1px);
+}
+
+#chat-send:active { transform: translateY(0); }
+#chat-send:disabled { opacity: 0.4; cursor: not-allowed; }
+
+/* ── Footer ──────────────────────────────────────────────── */
+
+footer {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 6px 12px;
+  background: var(--vbo-bg-0);
+  border-top: 1px solid var(--vbo-violet);
+  font-family: var(--font-mono);
+  font-size: 10px;
+  color: var(--vbo-muted);
+}
+
+#status.online { color: var(--vbo-mint); }
+#status.error { color: var(--vbo-magenta); }
+
+#about-link {
+  cursor: pointer;
+  color: var(--vbo-cyan);
+  text-decoration: underline;
+}
+
+/* ── About modal ─────────────────────────────────────────── */
+
+#about-modal {
+  position: absolute;
+  inset: 0;
+  background: rgba(11, 2, 24, 0.85);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 10;
+  transition: opacity 0.15s;
+}
+
+#about-modal.hidden {
+  opacity: 0;
+  pointer-events: none;
+}
+
+.modal-body {
+  max-width: 340px;
+  padding: 20px 22px;
+  background: var(--vbo-bg-1);
+  border: 1px solid var(--vbo-cyan);
+  border-radius: 10px;
+  box-shadow: 0 0 20px var(--vbo-magenta);
+  font-size: 12px;
+  line-height: 1.5;
+}
+
+.modal-body h3 {
+  font-family: var(--font-display);
+  color: var(--vbo-yellow);
+  margin-bottom: 10px;
+  font-size: 14px;
+}
+
+.modal-body p {
+  margin-bottom: 10px;
+  color: var(--vbo-fg);
+}
+
+.modal-body .muted {
+  color: var(--vbo-muted);
+  font-style: italic;
+}
+
+.modal-body button {
+  margin-top: 6px;
+  padding: 6px 14px;
+  background: var(--vbo-violet);
+  color: var(--vbo-fg);
+  border: 1px solid var(--vbo-pink);
+  border-radius: 5px;
+  font-family: var(--font-display);
+  font-size: 11px;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  cursor: pointer;
+}
+
+.modal-body button:hover {
+  box-shadow: 0 0 8px var(--vbo-magenta);
+}

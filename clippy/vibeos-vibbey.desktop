@@ -1,0 +1,11 @@
+[Desktop Entry]
+Type=Application
+Name=Vibbey
+GenericName=VibeOS Assistant
+Comment=Launch the Vibbey local-AI assistant
+Exec=sh -c 'cd "${VIBEOS_DIR:-/opt/vibeos}" && python3 -m clippy'
+Terminal=false
+Icon=user-info
+StartupNotify=true
+Categories=Utility;Development;
+Keywords=vibbey;clippy;assistant;ollama;vibeos;

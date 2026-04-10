@@ -1,0 +1,63 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Vibbey — VibeOS Assistant</title>
+  <link rel="stylesheet" href="style.css">
+  <script type="importmap">
+  {
+    "imports": {
+      "three": "https://unpkg.com/three@0.162.0/build/three.module.js",
+      "three/addons/": "https://unpkg.com/three@0.162.0/examples/jsm/"
+    }
+  }
+  </script>
+</head>
+<body>
+  <div id="app">
+    <header id="titlebar">
+      <span class="brand">&#128206; Vibbey</span>
+      <span class="tagline">VibeOS Assistant</span>
+    </header>
+
+    <div id="scene-container">
+      <canvas id="scene"></canvas>
+    </div>
+
+    <div id="speech-bubble" class="hidden">
+      <div id="bubble-text"></div>
+    </div>
+
+    <div id="chat">
+      <input type="text" id="chat-input" placeholder="Ask Vibbey..." autocomplete="off" autofocus>
+      <button id="chat-send">Send</button>
+    </div>
+
+    <footer>
+      <span id="status">Waking up&hellip;</span>
+      <span id="about-link" title="About Vibbey">About</span>
+    </footer>
+
+    <div id="about-modal" class="hidden">
+      <div class="modal-body">
+        <h3>About Vibbey</h3>
+        <p>
+          Vibbey is the VibeOS onboarding assistant. She runs 100% locally via
+          Ollama (gemma3:4b by default). She is not Claude. Claude Code takes
+          over once you&rsquo;re set up.
+        </p>
+        <p>
+          3D model: <strong>Rigged Microsoft Clippy/Clippit</strong> by
+          Freedumbanimates on Sketchfab, used under the Sketchfab Standard
+          license.
+        </p>
+        <p class="muted">VibeOS &mdash; free, open source, and a little bit fun.</p>
+        <button id="about-close">Close</button>
+      </div>
+    </div>
+  </div>
+
+  <script type="module" src="main.js"></script>
+</body>
+</html>
