@@ -134,6 +134,46 @@ const SYSTEM_PROMPT = (
   "never play corporate. Never use walls of text."
 );
 
+// ── Model auto-detect ──────────────────────────────────────
+// Fresh VibeOS ISOs pull gemma3:4b via install.sh, but dev workstations
+// often have different models. Query /api/models (proxied to Ollama's
+// /api/tags), skip embedding-only models, pick the first chat candidate.
+let ACTIVE_MODEL = 'gemma3:4b';
+const EMBED_MARKERS = ['bge-', 'embed', 'nomic-embed'];
+
+function isChatCapable(name) {
+  const lower = (name || '').toLowerCase();
+  return !EMBED_MARKERS.some((marker) => lower.includes(marker));
+}
+
+async function detectModel() {
+  try {
+    const resp = await fetch('/api/models');
+    if (!resp.ok) {
+      console.warn('[vibbey] /api/models returned', resp.status);
+      return;
+    }
+    const data = await resp.json();
+    const models = data.models || [];
+    const chatModels = models.filter((m) => isChatCapable(m.name));
+    if (chatModels.length === 0) {
+      console.warn('[vibbey] no chat-capable models pulled — chat will fail');
+      return;
+    }
+    // Prefer gemma3:4b if present (matches install.sh default), else first.
+    const gemma = chatModels.find((m) => (m.name || '').startsWith('gemma3'));
+    ACTIVE_MODEL = (gemma || chatModels[0]).name;
+    console.log(`[vibbey] using model: ${ACTIVE_MODEL}`);
+    if (statusEl.classList.contains('online')) {
+      statusEl.textContent = `online · ${ACTIVE_MODEL}`;
+    }
+  } catch (e) {
+    console.warn('[vibbey] model detect failed, using fallback', e);
+  }
+}
+
+detectModel();
+
 async function sendChat() {
   const msg = inputEl.value.trim();
   if (!msg) return;
@@ -146,7 +186,7 @@ async function sendChat() {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
-        model: 'gemma3:4b',
+        model: ACTIVE_MODEL,
         messages: [
           { role: 'system', content: SYSTEM_PROMPT },
           { role: 'user', content: msg },
@@ -156,9 +196,18 @@ async function sendChat() {
 
     if (!resp.ok) {
       const err = await resp.json().catch(() => ({}));
-      showBubble(
-        `Hmm, ${err.error || 'something broke'}. Is Ollama running? Try: ollama serve`
-      );
+      let hint;
+      if (err.error === 'ollama_unreachable') {
+        hint = 'Ollama is down. Start it with: `ollama serve`';
+      } else if (err.error === 'ollama_error') {
+        hint = `${err.detail || 'Ollama rejected the request'}`;
+        if ((err.detail || '').includes('not found')) {
+          hint += `  (try: \`ollama pull ${ACTIVE_MODEL}\`)`;
+        }
+      } else {
+        hint = err.detail || err.error || 'something broke';
+      }
+      showBubble(`Hmm, ${hint}`);
       return;
     }
 

@@ -22,7 +22,8 @@ from pathlib import Path
 CLIPPY_DIR = Path(__file__).resolve().parent
 STATIC_DIR = CLIPPY_DIR / "static"
 GLB_PATH = CLIPPY_DIR.parent / "clippy.glb"
-OLLAMA_URL = "http://localhost:11434/api/chat"
+OLLAMA_CHAT_URL = "http://localhost:11434/api/chat"
+OLLAMA_TAGS_URL = "http://localhost:11434/api/tags"
 
 PORT_CANDIDATES = [8765, 8766, 8767, 8768, 8769, 8770]
 
@@ -55,6 +56,9 @@ class VibbeyHandler(SimpleHTTPRequestHandler):
         if self.path == "/clippy.glb":
             self._serve_glb()
             return
+        if self.path == "/api/models":
+            self._proxy_ollama_tags()
+            return
         super().do_GET()
 
     def do_POST(self):
@@ -62,6 +66,17 @@ class VibbeyHandler(SimpleHTTPRequestHandler):
             self._proxy_ollama_chat()
             return
         self.send_error(404, "Not Found")
+
+    def _send_json(self, code: int, body: bytes) -> None:
+        self.send_response(code)
+        self.send_header("Content-Type", "application/json")
+        self.send_header("Content-Length", str(len(body)))
+        self.end_headers()
+        self.wfile.write(body)
+
+    def _send_error_json(self, code: int, kind: str, detail: str) -> None:
+        body = json.dumps({"error": kind, "detail": detail}).encode()
+        self._send_json(code, body)
 
     def _serve_glb(self) -> None:
         if not GLB_PATH.exists():
@@ -80,6 +95,10 @@ class VibbeyHandler(SimpleHTTPRequestHandler):
 
         MVP is non-streaming. Streaming (newline-delimited JSON from Ollama)
         is a v0.5 upgrade — see plans/vibeos-stage4.md Phase B risks.
+
+        Error handling splits HTTPError (Ollama returned an error like 404
+        "model not found") from URLError (can't reach Ollama at all) so the
+        UI can tell the user what actually went wrong.
         """
         try:
             length = int(self.headers.get("Content-Length", "0"))
@@ -94,26 +113,38 @@ class VibbeyHandler(SimpleHTTPRequestHandler):
 
         try:
             req = urllib.request.Request(
-                OLLAMA_URL,
+                OLLAMA_CHAT_URL,
                 data=json.dumps(payload).encode(),
                 headers={"Content-Type": "application/json"},
             )
             with urllib.request.urlopen(req, timeout=120) as resp:
                 body = resp.read()
-            self.send_response(200)
-            self.send_header("Content-Type", "application/json")
-            self.send_header("Content-Length", str(len(body)))
-            self.end_headers()
-            self.wfile.write(body)
+            self._send_json(200, body)
+        except urllib.error.HTTPError as exc:
+            # Ollama replied with an error (most commonly: model not found)
+            detail_bytes = exc.read() if hasattr(exc, "read") else b""
+            try:
+                detail = json.loads(detail_bytes).get("error", detail_bytes.decode())
+            except (ValueError, json.JSONDecodeError):
+                detail = detail_bytes.decode("utf-8", errors="replace") or str(exc)
+            self._send_error_json(exc.code, "ollama_error", detail)
         except urllib.error.URLError as exc:
-            msg = json.dumps(
-                {"error": "ollama_unreachable", "detail": str(exc)}
-            ).encode()
-            self.send_response(502)
-            self.send_header("Content-Type", "application/json")
-            self.send_header("Content-Length", str(len(msg)))
-            self.end_headers()
-            self.wfile.write(msg)
+            self._send_error_json(502, "ollama_unreachable", str(exc))
+
+    def _proxy_ollama_tags(self) -> None:
+        """Expose Ollama's /api/tags so the frontend can pick a chat model."""
+        try:
+            req = urllib.request.Request(OLLAMA_TAGS_URL)
+            with urllib.request.urlopen(req, timeout=10) as resp:
+                body = resp.read()
+            self._send_json(200, body)
+        except urllib.error.HTTPError as exc:
+            detail_bytes = exc.read() if hasattr(exc, "read") else b""
+            self._send_error_json(
+                exc.code, "ollama_error", detail_bytes.decode("utf-8", errors="replace")
+            )
+        except urllib.error.URLError as exc:
+            self._send_error_json(502, "ollama_unreachable", str(exc))
 
 
 def start_server(port: int | None = None) -> tuple[ThreadingHTTPServer, int]:
