@@ -2,17 +2,21 @@
 
 **AI-native development environment for Linux. Free. Open source. Fun.**
 
-One command turns a fresh Pop!\_OS install into a fully configured Claude Code workspace — with persistent memory, local AI models, and just the MCP servers you actually need.
+![Vibbey — VibeOS Assistant](clippy/reference/concept.jpg)
+
+*Vibbey, the VibeOS onboarding assistant, in the Neon Grid UI. Local Ollama, real 3D Clippy-lineage model, zero cloud round-trips.*
+
+One command turns a fresh Ubuntu / Pop!\_OS install into a fully configured Claude Code workspace — with persistent memory, local AI models, and just the MCP servers you actually need.
 
 ```bash
 curl -sSL https://raw.githubusercontent.com/Matswm86/vibeos/main/install.sh | bash
 ```
 
-After that, **Vibbey** — your nostalgic local-AI guide — walks you through first-boot setup automatically. Vibbey runs 100% locally on Ollama (no API key needed), gets Claude Code authenticated, checks your MCP stack, and then hands you off with the line:
+After that, **Vibbey** — your nostalgic local-AI guide — pops up as a floating desktop window and walks you through first-boot setup automatically. Vibbey runs 100% locally on Ollama (no API key needed), gets Claude Code authenticated, checks your MCP stack, and hands you off with the line:
 
 > *"Looks like you're about to Vibe hard. Would you like to continue? ;)"*
 
-Coming soon: **Vibbey Phase 1** — the same character, but rendered as a real 3D paperclip in the browser via Three.js. Clippy, but it actually works now.
+Phase B shipped 2026-04-10 (v0.3.2+): Vibbey is a real webkit2gtk desktop window with a 3D Clippy-lineage model (via Three.js + GLTFLoader), chat-capable via a local Ollama proxy, with auto-detect of whichever model you have pulled (prefers `gemma3:4b`, falls back to `llama3.2:3b` etc.). Stage 4 — full OS rebrand + bootable ISO — is next.
 
 ---
 
@@ -20,12 +24,13 @@ Coming soon: **Vibbey Phase 1** — the same character, but rendered as a real 3
 
 | Component | Version | Purpose |
 |-----------|---------|---------|
-| Python | 3.11 | MCP servers, tooling |
+| Python | 3.10+ (distro default) | MCP servers, Vibbey, tooling |
 | Node.js | 22 LTS | Claude Code, npm MCPs |
 | Docker | latest | Optional local services |
-| Ollama | latest | Local AI models |
+| Ollama | latest | Local AI models (Vibbey + your own) |
 | Claude Code | latest | Primary AI assistant |
 | GitHub CLI | latest | Repository operations |
+| WebKit2 + GTK | system | Vibbey desktop window (falls back to system browser) |
 
 **Default MCP stack** — minimal by design, zero infrastructure required:
 
@@ -56,17 +61,21 @@ The onboarding model (Gemma3 4B) runs on CPU-only. Claude Code itself requires n
 
 ---
 
-## What VibeOS is not
+## What VibeOS is (and will be)
 
-- Not a Linux distro. It's an installer + configuration layer on top of Pop!\_OS (or any Ubuntu-based system).
-- Not a static image. Everything downloads at install time — you always get the latest Claude Code, latest MCPs.
-- Not bundling Claude Code. It's proprietary Anthropic software. The installer downloads it directly from Anthropic, same as Chrome or VS Code installers.
+**Today (v0.3.2)** — an installer + configuration layer on top of Ubuntu / Pop!\_OS. Everything downloads at install time, so you always get the latest Claude Code and latest MCPs. Vibbey runs as a webkit2gtk desktop window after the install finishes.
+
+**Next (v0.4.0, Stage 4)** — a bootable `.iso` image with a full VibeOS rebrand: custom GRUB, Plymouth boot splash, GDM login theme, Neon Grid GTK theme (forked Yaru), custom icons, cursors, fonts (Orbitron / JetBrains Mono / VT323), Tron-grid wallpapers, and Vibbey auto-launching on first login. Flash with balenaEtcher, boot from USB, and you land in a running Claude Code session with Vibbey greeting you — zero terminal steps.
+
+**Not bundling Claude Code.** It's proprietary Anthropic software. The installer downloads it directly from Anthropic, same as Chrome or VS Code installers.
 
 ---
 
 ## Meet Vibbey
 
-After installation, VibeOS **automatically** launches a guided onboarding experience powered by **Vibbey**, a local Ollama agent (runs on Gemma3 4B — no API key, no cloud round-trip). Vibbey is VibeOS's onboarding character: nostalgic nod to Microsoft's old paperclip, self-aware, slightly cheeky, and actually useful this time.
+Vibbey is VibeOS's onboarding character: nostalgic nod to Microsoft's old paperclip, self-aware, slightly cheeky, and actually useful this time. She runs on **local Ollama** (Gemma3 4B by default — no API key, no cloud round-trip, no model-training leak).
+
+She lives in a **floating webkit2gtk desktop window** sized 420x560, always-on-top, with the VibeOS Neon Grid palette (magenta + cyan + violet, Tron-grid background). A real 3D paperclip model rendered via Three.js + GLTFLoader does a gentle idle bob while she chats. If webkit2gtk isn't available, she falls back to opening in your system browser.
 
 Vibbey walks you through:
 
@@ -77,11 +86,13 @@ Vibbey walks you through:
 5. Full system check
 6. Handoff to Claude Code with the signature *"Looks like you're about to Vibe hard"* line
 
-No prompts, no choices — `install.sh` auto-launches Vibbey the moment the install finishes (it even falls back to `/dev/tty` when you ran the installer via `curl | bash`, so the interactive flow still works). To run it again manually:
+`install.sh` auto-launches Vibbey the moment the install finishes. To run her again manually from any shell:
 
 ```bash
-cd ~/.vibeos && python3 -m onboarding
+python3 -m clippy
 ```
+
+(The `clippy` module contains Vibbey's launcher, server, Three.js scene, and voice. The directory name is a nod to the lineage — the character is Vibbey.)
 
 To skip Vibbey (for CI, Docker tests, or scripted installs):
 
@@ -130,8 +141,8 @@ Or use [VibeOS Managed MCP](https://github.com/Matswm86/vibeos) — hosted Qdran
 - [x] Stage 2: Vibbey — Ollama onboarding agent (guided first-boot experience)
 - [x] Stage 2.5: Minimal MCP stack (filesystem removed in v0.3, auto-onboarding)
 - [x] Stage 2.6: install.sh hardening (v0.3.1) — `/dev/tty` curl-pipe fallback, dual memory-location docs, `vibe` alias
-- [ ] **Stage 3: Vibbey Phase 1** — nostalgic 3D assistant character (real GLB model + Three.js + local Ollama in the browser). Same voice as the onboarding agent, just rendered as an actual paperclip this time. Pops up automatically after install, guides users through first boot, answers questions. "Clippy, but it actually works now." See [`plans/vibeos-clippy.md`](../../plans/vibeos-clippy.md).
-- [ ] Stage 4: Live USB / custom ISO (Pop!_OS + VibeOS + Vibbey pre-baked, auto-launches on boot)
+- [x] **Stage 3: Vibbey Phase B** (v0.3.2) — real 3D Clippy-lineage model in a webkit2gtk desktop window, Three.js + GLTFLoader, local Ollama chat proxy, model auto-detect, python3 auto-reexec. "Clippy, but it actually works now."
+- [ ] **Stage 4: VibeOS ISO + full OS rebrand** — bootable `.iso` with custom GRUB, Plymouth, GDM, Neon Grid GTK theme (forked Yaru), icons, cursors, fonts, wallpapers, and Vibbey auto-launching on first login. Ubuntu 22.04 LTS base, hosted at `iso.mwmai.no`. See the full plan in the companion workspace.
 
 ---
 
@@ -152,3 +163,8 @@ chmod +x install.sh
 ## License
 
 MIT — see [LICENSE](LICENSE).
+
+### Third-party assets
+
+- **`clippy.glb`** — "Rigged Microsoft Clippy/Clippit" by [Freedumbanimates](https://sketchfab.com/Freedumbanimates) on Sketchfab, used under the [Sketchfab Standard](https://sketchfab.com/licenses) license. Textures were stripped for size; Vibbey animates the rig via Three.js root-transform. Full attribution in [`clippy/ATTRIBUTION.md`](clippy/ATTRIBUTION.md).
+- **Concept image** (`clippy/reference/concept.jpg`) — visual direction reference for Phase 1 / Stage 4; Mats Mjåtvedt, 2026-04.
