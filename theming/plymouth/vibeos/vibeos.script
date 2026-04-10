@@ -6,10 +6,21 @@ Window.SetBackgroundTopColor(0.043, 0.008, 0.094);     # #0B0218 near-black
 Window.SetBackgroundBottomColor(0.102, 0.043, 0.180);  # #1A0B2E midnight
 
 logo.image = Image("vibeos-logo.png");                 # centered wordmark
-logo.sprite = Sprite(logo.image);
-logo.x = Window.GetWidth()  / 2 - logo.image.GetWidth()  / 2;
-logo.y = Window.GetHeight() / 2 - logo.image.GetHeight() / 2 - 32;
-logo.sprite.SetPosition(logo.x, logo.y, 0);
+# Null-safe: if the PNG is missing (chroot-inject skipped raster step), fall
+# back to Plymouth's text renderer so boot still shows a branded surface.
+if (logo.image) {
+    logo.sprite = Sprite(logo.image);
+    logo.x = Window.GetWidth()  / 2 - logo.image.GetWidth()  / 2;
+    logo.y = Window.GetHeight() / 2 - logo.image.GetHeight() / 2 - 32;
+    logo.sprite.SetPosition(logo.x, logo.y, 0);
+} else {
+    logo.image = Image.Text("VibeOS", 1.0, 0.18, 0.81, 1.0, "Orbitron Bold 72");
+    logo.sprite = Sprite(logo.image);
+    logo.sprite.SetPosition(
+        Window.GetWidth()  / 2 - logo.image.GetWidth()  / 2,
+        Window.GetHeight() / 2 - logo.image.GetHeight() / 2 - 32,
+        0);
+}
 
 progress_dot.image = Image("progress-dot.png");        # single 16x16 cyan dot, drawn 6x along an arc
 progress_dots = [];
@@ -21,16 +32,18 @@ fun refresh_callback() {
     pulse = 0.6 + 0.2 * (Math.Sin(t * 2.6) + 1);       # 0.6..1.0
     logo.sprite.SetOpacity(pulse);
 
-    # rotate progress dots around center
-    angle = t * 1.4;                                   # rad/s
-    for (i = 0; i < 6; i++) {
-        if (i >= progress_dots.length)
-            progress_dots[i] = Sprite(progress_dot.image);
-        a = angle + i * (Math.Pi * 2 / 6);
-        px = (Window.GetWidth() / 2) + Math.Cos(a) * 48 - 8;
-        py = (Window.GetHeight() / 2) + Math.Sin(a) * 48 + 72;
-        progress_dots[i].SetPosition(px, py, 10);
-        progress_dots[i].SetOpacity(0.35 + 0.65 * ((i + 1) / 6));
+    # rotate progress dots around center (only if the dot image loaded)
+    if (progress_dot.image) {
+        angle = t * 1.4;                               # rad/s
+        for (i = 0; i < 6; i++) {
+            if (i >= progress_dots.length)
+                progress_dots[i] = Sprite(progress_dot.image);
+            a = angle + i * (Math.Pi * 2 / 6);
+            px = (Window.GetWidth() / 2) + Math.Cos(a) * 48 - 8;
+            py = (Window.GetHeight() / 2) + Math.Sin(a) * 48 + 72;
+            progress_dots[i].SetPosition(px, py, 10);
+            progress_dots[i].SetOpacity(0.35 + 0.65 * ((i + 1) / 6));
+        }
     }
 }
 

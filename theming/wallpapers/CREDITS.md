@@ -1,28 +1,29 @@
 # VibeOS Wallpaper Credits
 
-All wallpapers in this directory must be **cc0** or **CC-BY** licensed.
-Mandatory fields per entry: `filename`, `title`, `author`, `license`, `source URL`, `sha256`.
+All wallpapers in this directory are **synthetically generated** by
+`scripts/generate_wallpapers.py` via Pillow. No external assets are
+bundled; every pixel is produced by a deterministic script from the
+VibeOS Neon Grid palette.
 
-## Shipping set (to be fetched by `scripts/fetch-wallpapers.sh`)
+## License
 
-| Filename | Title | Author | License | Source |
+Creative Commons Zero (CC0 / public domain). You may use, modify, and
+redistribute these wallpapers for any purpose without attribution.
+
+## Provenance
+
+| File | Base palette | Grid color | Grid step | Accent |
 |---|---|---|---|---|
-| `01-neon-grid.jpg` | Synthwave Grid | Pixabay user `garageband` | cc0 (Pixabay Content License) | https://pixabay.com/photos/synthwave-retro-neon-grid-7045559/ |
-| `02-tron-horizon.jpg` | Tron Horizon | Pixabay user `kalhh` | cc0 (Pixabay Content License) | https://pixabay.com/illustrations/grid-futuristic-abstract-cyber-6551050/ |
-| `03-sunset-palms.jpg` | Vaporwave Palms | Pixabay user `geralt` | cc0 (Pixabay Content License) | https://pixabay.com/illustrations/synthwave-retrowave-neon-purple-4764625/ |
-| `04-orbital-grid.jpg` | Orbital Grid | Wallhaven (tagged cc0) | cc0 | https://wallhaven.cc/tag/99916 |
-| `05-neon-city.jpg` | Neon City | Unsplash | Unsplash License (unrestricted) | https://unsplash.com/photos/XIfYmH90P7Q |
+| 01-neon-grid.jpg | midnight → near-black | cyan | 64 px | magenta |
+| 02-tron-horizon.jpg | plum → near-black | cyan | 80 px | cyan |
+| 03-sunset-wave.jpg | midnight → near-black | magenta | 72 px | hot pink |
+| 04-orbital-grid.jpg | plum → midnight | violet | 48 px | cyan |
+| 05-neon-void.jpg | near-black → black | cyan | 96 px | mint |
 
-## Default
+## Regenerating
 
-`vibeos-default.png` is a symlink to `01-neon-grid.jpg` (or the highest-rated entry).
-Set at ISO build time.
+```bash
+bash scripts/fetch-wallpapers.sh
+```
 
-## Audit discipline
-
-Before shipping any ISO, every entry here must:
-1. Still resolve at its source URL (URLs rot)
-2. Still carry the license claimed (Pixabay license has changed twice)
-3. Have a recorded sha256 in this file
-
-`scripts/fetch-wallpapers.sh` writes the sha256 back into this table on successful fetch.
+Output is deterministic; sha256 files record expected checksums.

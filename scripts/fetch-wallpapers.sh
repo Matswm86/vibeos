@@ -1,8 +1,13 @@
 #!/usr/bin/env bash
-# Fetch VibeOS default wallpaper set.
+# Generate VibeOS synthetic wallpaper set (pure Python / Pillow).
 #
-# Policy: every file must be cc0 or CC-BY. URLs below are curated; if any 404s
-# or changes license, fix CREDITS.md *before* re-running.
+# Why synthetic instead of curated downloads:
+#   - Pixabay/Unsplash hotlink-block with 403s as of 2026-04
+#   - The Neon Grid palette is trivially synthesizable
+#   - No network dependency → reproducible + offline-friendly
+#   - cc0 by construction (we authored it)
+#
+# Requires: python3 + Pillow (PIL). Pop!_OS 24.04 ships with both.
 #
 # Run from repo root: bash scripts/fetch-wallpapers.sh
 
@@ -10,45 +15,63 @@ set -euo pipefail
 
 REPO_ROOT="$(cd "$(dirname "$0")/.." && pwd)"
 WP_DIR="$REPO_ROOT/theming/wallpapers"
-
 mkdir -p "$WP_DIR"
 
 say() { printf '  \e[35m→\e[0m %s\n' "$*"; }
-warn() { printf '  \e[33m!\e[0m %s\n' "$*" >&2; }
+die() { printf '  \e[31m✗\e[0m %s\n' "$*" >&2; exit 1; }
 
-# Pixabay direct-download URLs need a user-agent; they also redirect through a CDN.
-USER_AGENT="Mozilla/5.0 (X11; Linux x86_64) VibeOS-fetch/0.4.0"
+python3 -c "from PIL import Image" 2>/dev/null || \
+    die "Pillow (python3-pil) missing — apt install python3-pil"
 
-fetch() {
-    local filename="$1" url="$2"
-    if [ -s "$WP_DIR/$filename" ]; then
-        say "$filename already present — skip"
-        return 0
-    fi
-    say "fetching $filename"
-    if ! curl -fsSL -A "$USER_AGENT" -o "$WP_DIR/$filename.tmp" "$url"; then
-        warn "failed to fetch $filename from $url"
-        rm -f "$WP_DIR/$filename.tmp"
-        return 1
-    fi
-    mv "$WP_DIR/$filename.tmp" "$WP_DIR/$filename"
-    sha256sum "$WP_DIR/$filename" | awk '{print $1}' > "$WP_DIR/${filename}.sha256"
-}
+say "generating synthetic Neon Grid wallpapers via Pillow"
+python3 "$REPO_ROOT/scripts/generate_wallpapers.py" "$WP_DIR"
 
-# Curated set — update CREDITS.md if anything here changes
-fetch "01-neon-grid.jpg"   "https://cdn.pixabay.com/photo/2022/03/28/11/04/synthwave-7097045_1280.jpg"
-fetch "02-tron-horizon.jpg" "https://cdn.pixabay.com/photo/2021/08/10/18/40/background-6538474_1280.jpg"
-fetch "03-sunset-palms.jpg" "https://cdn.pixabay.com/photo/2020/01/24/21/33/retrowave-4791345_1280.jpg"
-fetch "04-orbital-grid.jpg" "https://cdn.pixabay.com/photo/2019/04/21/14/35/background-4144828_1280.jpg"
-fetch "05-neon-city.jpg"    "https://cdn.pixabay.com/photo/2022/01/11/21/48/cyberpunk-6931562_1280.jpg"
+# Write sha256 for each output
+for f in "$WP_DIR"/*.jpg; do
+    [ -f "$f" ] || continue
+    sha256sum "$f" | awk '{print $1}' > "${f}.sha256"
+done
 
-if [ -s "$WP_DIR/01-neon-grid.jpg" ]; then
+# Default symlink
+if [ -f "$WP_DIR/01-neon-grid.jpg" ]; then
     ( cd "$WP_DIR" && ln -sf "01-neon-grid.jpg" "vibeos-default.jpg" )
-    say "default linked to 01-neon-grid.jpg"
 fi
 
-printf '\n\e[36msummary:\e[0m\n'
-find "$WP_DIR" -maxdepth 1 -type f \( -iname '*.jpg' -o -iname '*.png' \) | wc -l | xargs printf '  %s wallpapers on disk\n'
-du -sh "$WP_DIR" 2>/dev/null | awk '{printf "  %s total\n", $1}'
+# CREDITS
+cat > "$WP_DIR/CREDITS.md" <<'EOF'
+# VibeOS Wallpaper Credits
 
-warn "URLs rot quickly — if anything 404'd, update CREDITS.md before rerunning"
+All wallpapers in this directory are **synthetically generated** by
+`scripts/generate_wallpapers.py` via Pillow. No external assets are
+bundled; every pixel is produced by a deterministic script from the
+VibeOS Neon Grid palette.
+
+## License
+
+Creative Commons Zero (CC0 / public domain). You may use, modify, and
+redistribute these wallpapers for any purpose without attribution.
+
+## Provenance
+
+| File | Base palette | Grid color | Grid step | Accent |
+|---|---|---|---|---|
+| 01-neon-grid.jpg | midnight → near-black | cyan | 64 px | magenta |
+| 02-tron-horizon.jpg | plum → near-black | cyan | 80 px | cyan |
+| 03-sunset-wave.jpg | midnight → near-black | magenta | 72 px | hot pink |
+| 04-orbital-grid.jpg | plum → midnight | violet | 48 px | cyan |
+| 05-neon-void.jpg | near-black → black | cyan | 96 px | mint |
+
+## Regenerating
+
+```bash
+bash scripts/fetch-wallpapers.sh
+```
+
+Output is deterministic; sha256 files record expected checksums.
+EOF
+
+printf '\n\e[36msummary:\e[0m\n'
+COUNT=$(find "$WP_DIR" -maxdepth 1 -type f -iname '*.jpg' | wc -l)
+SIZE=$(du -sh "$WP_DIR" 2>/dev/null | awk '{print $1}')
+printf '  %s wallpapers\n' "$COUNT"
+printf '  %s total\n' "$SIZE"

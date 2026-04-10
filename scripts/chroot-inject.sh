@@ -77,18 +77,45 @@ mkdir -p /usr/share/aurorae/themes
 cp -r "$THEMING/plasma/aurorae/themes/VibeOS-Neon" /usr/share/aurorae/themes/
 ok "aurorae decoration"
 
-# Kvantum — fork + recolor KvGnomeDark into VibeOS-Neon
+# Kvantum — auto-detect upstream source from fallback chain, recolor in place
 mkdir -p /usr/share/Kvantum/VibeOS-Neon
 install -Dm644 \
     "$THEMING/plasma/Kvantum/VibeOS-Neon/VibeOS-Neon.kvconfig" \
     /usr/share/Kvantum/VibeOS-Neon/VibeOS-Neon.kvconfig
-if [ -f /usr/share/Kvantum/KvGnomeDark/KvGnomeDark.svg ]; then
+# kvantum-recolor.py (no-arg form) walks a fallback chain:
+#   KvGnomeDark → KvFlatDark → KvAdapta → KvFlat → KvDarkRed → KvCurvesDark → KvOxygen
+# It writes to <repo>/theming/plasma/Kvantum/VibeOS-Neon/VibeOS-Neon.svg by default.
+# We redirect output straight to /usr/share via the 2-arg form once the source is known.
+KV_SRC=$(python3 -c "
+from scripts.kvantum_recolor_lookup import find_source
+p = find_source()
+print(p if p else '')
+" 2>/dev/null || true)
+# Fallback: inline Python, no sibling module needed
+if [ -z "$KV_SRC" ]; then
+    KV_SRC=$(python3 -c "
+import pathlib
+candidates = [
+    '/usr/share/Kvantum/KvGnomeDark/KvGnomeDark.svg',
+    '/usr/share/Kvantum/KvFlatDark/KvFlatDark.svg',
+    '/usr/share/Kvantum/KvAdapta/KvAdapta.svg',
+    '/usr/share/Kvantum/KvFlat/KvFlat.svg',
+    '/usr/share/Kvantum/KvDarkRed/KvDarkRed.svg',
+    '/usr/share/Kvantum/KvCurvesDark/KvCurvesDark.svg',
+    '/usr/share/Kvantum/KvOxygen/KvOxygen.svg',
+]
+for c in candidates:
+    if pathlib.Path(c).exists():
+        print(c); break
+")
+fi
+if [ -n "$KV_SRC" ] && [ -f "$KV_SRC" ]; then
     python3 "$REPO/scripts/kvantum-recolor.py" \
-        /usr/share/Kvantum/KvGnomeDark/KvGnomeDark.svg \
+        "$KV_SRC" \
         /usr/share/Kvantum/VibeOS-Neon/VibeOS-Neon.svg
-    ok "kvantum recolored"
+    ok "kvantum recolored from $(basename $(dirname "$KV_SRC"))"
 else
-    warn "KvGnomeDark base SVG missing — Kvantum theme will render default until fixed"
+    warn "no Kvantum upstream source found — install qt5-style-kvantum-themes or theme will render stock"
 fi
 
 # Konsole profile + colorscheme
@@ -147,6 +174,96 @@ if command -v rsvg-convert >/dev/null 2>&1; then
     rsvg-convert -w 256 -h 256 "$THEMING/os-release/vibeos-logo.svg" \
         -o /usr/share/pixmaps/vibeos-logo.png
     ok "logo PNG rasterized"
+fi
+
+# =============================================================
+# Step 3.5 — rasterize stub PNGs for Plymouth / GRUB / SDDM
+# =============================================================
+say "step 3.5 — rasterize boot-stage stub PNGs"
+
+SRC_SVG="$THEMING/os-release/vibeos-logo.svg"
+if ! command -v rsvg-convert >/dev/null 2>&1; then
+    warn "rsvg-convert missing — skipping raster generation. Install librsvg2-bin"
+elif ! command -v convert >/dev/null 2>&1; then
+    warn "ImageMagick convert missing — skipping raster generation. Install imagemagick"
+else
+    # --- Plymouth: vibeos-logo.png (wordmark centered) + progress-dot.png ---
+    PLY_DIR=/usr/share/plymouth/themes/vibeos
+    rsvg-convert -w 512 -h 256 "$SRC_SVG" -o "$PLY_DIR/vibeos-logo.png" || \
+        warn "plymouth logo raster failed"
+    convert -size 16x16 xc:none -fill '#01F9FF' \
+        -draw 'circle 8,8 8,1' "$PLY_DIR/progress-dot.png" || \
+        warn "progress-dot raster failed"
+    ok "plymouth PNGs generated"
+
+    # --- SDDM: background.png (1920x1080 radial gradient + grid) ---
+    SDDM_DIR=/usr/share/sddm/themes/vibeos
+    convert -size 1920x1080 \
+        radial-gradient:'#1A0B2E-#0B0218' \
+        -fill '#01F9FF' -stroke '#01F9FF' -strokewidth 1 \
+        "$SDDM_DIR/background.png" 2>/dev/null || \
+        convert -size 1920x1080 xc:'#0B0218' "$SDDM_DIR/background.png"
+    ok "sddm background rendered"
+
+    # --- GRUB: background.png + 9-patch terminal/select/progress tiles ---
+    GRUB_DIR=/boot/grub/themes/vibeos
+    convert -size 1920x1080 \
+        radial-gradient:'#1A0B2E-#0B0218' \
+        "$GRUB_DIR/background.png" 2>/dev/null || \
+        convert -size 1920x1080 xc:'#0B0218' "$GRUB_DIR/background.png"
+
+    # 9-patch tiles: GRUB expects <prefix>_c.png (center), _n/_s/_e/_w, and 4 corners.
+    # Minimum viable: center tile + matching named variants. Solid neon fills.
+    for prefix in terminal_box select progress_bar progress_highlight; do
+        case "$prefix" in
+            terminal_box)
+                fill='#1A0B2ECC'; stroke='#01F9FF' ;;
+            select)
+                fill='#2D1B4EAA'; stroke='#FF2ECF' ;;
+            progress_bar)
+                fill='#1A0B2E';   stroke='#01F9FF' ;;
+            progress_highlight)
+                fill='#FF2ECF';   stroke='#FF71CE' ;;
+        esac
+        # 9-patch suffixes for this prefix
+        for suffix in c n s e w nw ne sw se; do
+            convert -size 16x16 xc:none -fill "$fill" \
+                -draw "rectangle 0,0 15,15" \
+                "$GRUB_DIR/${prefix}_${suffix}.png" 2>/dev/null || true
+        done
+    done
+    ok "grub 9-patch tiles generated"
+
+    # GRUB wants TTF fonts converted to .pf2 via grub-mkfont. Fall back gracefully.
+    # Orbitron upstream is now variable-font only; apt's fonts-orbitron package
+    # still ships static weights. Try Bold first (matches theme.txt), then any
+    # Orbitron TTF, then variable font.
+    if command -v grub-mkfont >/dev/null 2>&1; then
+        FONT_ORBITRON=$(find /usr/share/fonts -iname 'Orbitron*Bold*.ttf' 2>/dev/null | head -1 || true)
+        [ -z "$FONT_ORBITRON" ] && FONT_ORBITRON=$(find /usr/share/fonts -iname 'Orbitron-VariableFont*.ttf' 2>/dev/null | head -1 || true)
+        [ -z "$FONT_ORBITRON" ] && FONT_ORBITRON=$(find /usr/share/fonts -iname 'Orbitron*.ttf' 2>/dev/null | head -1 || true)
+
+        FONT_JBMONO=$(find /usr/share/fonts -iname 'JetBrainsMono-Regular.ttf' 2>/dev/null | head -1 || true)
+        [ -z "$FONT_JBMONO" ] && FONT_JBMONO=$(find /usr/share/fonts -iname 'JetBrainsMono*Regular*.ttf' 2>/dev/null | head -1 || true)
+        [ -z "$FONT_JBMONO" ] && FONT_JBMONO=$(find /usr/share/fonts -iname 'JetBrainsMono*.ttf' 2>/dev/null | head -1 || true)
+
+        if [ -n "$FONT_ORBITRON" ]; then
+            # Use one name ("unicode") per size — grub-mkfont embeds the family
+            # name from the TTF, so theme.txt just needs to match whichever it reports
+            grub-mkfont -s 36 -o "$GRUB_DIR/orbitron-36.pf2" "$FONT_ORBITRON" 2>/dev/null && \
+                grub-mkfont -s 18 -o "$GRUB_DIR/orbitron-18.pf2" "$FONT_ORBITRON" 2>/dev/null && \
+                ok "grub orbitron font baked from $(basename "$FONT_ORBITRON")"
+        else
+            warn "Orbitron TTF not found for grub-mkfont — menu will use default font"
+        fi
+        if [ -n "$FONT_JBMONO" ]; then
+            grub-mkfont -s 14 -o "$GRUB_DIR/jbmono-14.pf2" "$FONT_JBMONO" 2>/dev/null && \
+                grub-mkfont -s 12 -o "$GRUB_DIR/jbmono-12.pf2" "$FONT_JBMONO" 2>/dev/null && \
+                ok "grub jetbrains mono font baked from $(basename "$FONT_JBMONO")"
+        fi
+    else
+        warn "grub-mkfont missing — install grub-common"
+    fi
 fi
 
 # =============================================================

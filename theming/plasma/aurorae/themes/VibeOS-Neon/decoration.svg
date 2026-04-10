@@ -1,9 +1,21 @@
 <?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<!--
+  VibeOS-Neon Aurorae decoration SVG.
+
+  Element ID contract (matches upstream Plastik / SVGStyle):
+  - decoration             active window frame (9-slice extracted via BorderLeft/Right/Bottom + TitleHeight)
+  - decoration-inactive    inactive window frame
+  - titlebar               (optional) drawn above decoration for extra gloss
+  - Buttons: close, maximize, restore, minimize, help, menu, shade,
+             alldesktops, keepabove, keepbelow
+    Each optionally with -hover, -pressed, -deactivated variants.
+  - Button size = element's bounding box; Aurorae extracts + scales per rc layout.
+-->
 <svg
    xmlns="http://www.w3.org/2000/svg"
-   width="256"
-   height="128"
-   viewBox="0 0 256 128"
+   width="512"
+   height="256"
+   viewBox="0 0 512 256"
    version="1.1">
   <defs>
     <linearGradient id="activeTitle" x1="0" y1="0" x2="0" y2="1">
@@ -21,49 +33,153 @@
     </linearGradient>
   </defs>
 
-  <!-- Active window decoration: 128x64 region -->
+  <!-- ===================================================== -->
+  <!-- Active window decoration: 128x64 at origin            -->
+  <!-- ===================================================== -->
   <g id="decoration">
     <rect x="0" y="0" width="128" height="32" fill="url(#activeTitle)"/>
     <rect x="0" y="30" width="128" height="2" fill="url(#activeBorder)"/>
-    <rect x="0" y="0" width="2" height="64" fill="#01F9FF" fill-opacity="0.6"/>
-    <rect x="126" y="0" width="2" height="64" fill="#01F9FF" fill-opacity="0.6"/>
-    <rect x="0" y="62" width="128" height="2" fill="#01F9FF" fill-opacity="0.6"/>
+    <rect x="0"   y="0"  width="2"   height="64" fill="#01F9FF" fill-opacity="0.6"/>
+    <rect x="126" y="0"  width="2"   height="64" fill="#01F9FF" fill-opacity="0.6"/>
+    <rect x="0"   y="62" width="128" height="2"  fill="#01F9FF" fill-opacity="0.6"/>
   </g>
 
-  <!-- Inactive window decoration: 128x64 region -->
+  <!-- ===================================================== -->
+  <!-- Inactive window decoration                            -->
+  <!-- ===================================================== -->
   <g id="decoration-inactive">
     <rect x="128" y="0" width="128" height="32" fill="url(#inactiveTitle)"/>
     <rect x="128" y="30" width="128" height="2" fill="#9D4EDD" fill-opacity="0.3"/>
-    <rect x="128" y="0" width="2" height="64" fill="#9D4EDD" fill-opacity="0.3"/>
-    <rect x="254" y="0" width="2" height="64" fill="#9D4EDD" fill-opacity="0.3"/>
-    <rect x="128" y="62" width="128" height="2" fill="#9D4EDD" fill-opacity="0.3"/>
+    <rect x="128" y="0"  width="2"   height="64" fill="#9D4EDD" fill-opacity="0.3"/>
+    <rect x="254" y="0"  width="2"   height="64" fill="#9D4EDD" fill-opacity="0.3"/>
+    <rect x="128" y="62" width="128" height="2"  fill="#9D4EDD" fill-opacity="0.3"/>
   </g>
 
-  <!-- Button slots (close/maximize/minimize) at y=80..128 -->
-  <g id="close-button">
-    <circle cx="16" cy="96" r="10" fill="#FF2ECF" fill-opacity="0.8"/>
+  <!-- ===================================================== -->
+  <!-- Close button                                          -->
+  <!-- ===================================================== -->
+  <g id="close">
+    <circle cx="16" cy="96" r="10" fill="#FF2ECF" fill-opacity="0.85"/>
+    <path d="M 11 91 L 21 101 M 21 91 L 11 101" stroke="#F8F0FF" stroke-width="2" stroke-linecap="round"/>
   </g>
-  <g id="close-button-pressed">
-    <circle cx="48" cy="96" r="10" fill="#FF71CE" fill-opacity="1.0"/>
+  <g id="close-hover">
+    <circle cx="48" cy="96" r="10" fill="#FF2ECF" fill-opacity="1.0" stroke="#01F9FF" stroke-width="2"/>
+    <path d="M 43 91 L 53 101 M 53 91 L 43 101" stroke="#F8F0FF" stroke-width="2" stroke-linecap="round"/>
   </g>
-  <g id="close-button-hover">
-    <circle cx="80" cy="96" r="10" fill="#FF2ECF" fill-opacity="1.0" stroke="#01F9FF" stroke-width="2"/>
+  <g id="close-pressed">
+    <circle cx="80" cy="96" r="10" fill="#FF71CE" fill-opacity="1.0"/>
+    <path d="M 75 91 L 85 101 M 85 91 L 75 101" stroke="#F8F0FF" stroke-width="2" stroke-linecap="round"/>
+  </g>
+  <g id="close-deactivated">
+    <circle cx="112" cy="96" r="10" fill="#5A3A8A" fill-opacity="0.5"/>
+    <path d="M 107 91 L 117 101 M 117 91 L 107 101" stroke="#B5A6D9" stroke-width="2" stroke-linecap="round"/>
   </g>
 
-  <g id="maximize-button">
-    <circle cx="112" cy="96" r="10" fill="#05FFA1" fill-opacity="0.8"/>
+  <!-- ===================================================== -->
+  <!-- Maximize button (shown when window is normal)         -->
+  <!-- ===================================================== -->
+  <g id="maximize">
+    <circle cx="144" cy="96" r="10" fill="#05FFA1" fill-opacity="0.85"/>
+    <rect x="140" y="92" width="8" height="8" fill="none" stroke="#0B0218" stroke-width="1.5"/>
   </g>
-  <g id="maximize-button-pressed">
-    <circle cx="144" cy="96" r="10" fill="#05FFA1" fill-opacity="1.0"/>
-  </g>
-  <g id="maximize-button-hover">
+  <g id="maximize-hover">
     <circle cx="176" cy="96" r="10" fill="#05FFA1" fill-opacity="1.0" stroke="#01F9FF" stroke-width="2"/>
+    <rect x="172" y="92" width="8" height="8" fill="none" stroke="#0B0218" stroke-width="1.5"/>
+  </g>
+  <g id="maximize-pressed">
+    <circle cx="208" cy="96" r="10" fill="#05FFA1" fill-opacity="1.0"/>
+    <rect x="204" y="92" width="8" height="8" fill="#0B0218"/>
+  </g>
+  <g id="maximize-deactivated">
+    <circle cx="240" cy="96" r="10" fill="#5A3A8A" fill-opacity="0.5"/>
+    <rect x="236" y="92" width="8" height="8" fill="none" stroke="#B5A6D9" stroke-width="1.5"/>
   </g>
 
-  <g id="minimize-button">
-    <circle cx="208" cy="96" r="10" fill="#FFE400" fill-opacity="0.8"/>
+  <!-- ===================================================== -->
+  <!-- Restore button (shown when window is maximized)       -->
+  <!-- ===================================================== -->
+  <g id="restore">
+    <circle cx="272" cy="96" r="10" fill="#05FFA1" fill-opacity="0.85"/>
+    <rect x="268" y="94" width="6" height="6" fill="none" stroke="#0B0218" stroke-width="1.5"/>
+    <rect x="271" y="91" width="6" height="6" fill="none" stroke="#0B0218" stroke-width="1.5"/>
   </g>
-  <g id="minimize-button-pressed">
-    <circle cx="240" cy="96" r="10" fill="#FFE400" fill-opacity="1.0"/>
+  <g id="restore-hover">
+    <circle cx="304" cy="96" r="10" fill="#05FFA1" fill-opacity="1.0" stroke="#01F9FF" stroke-width="2"/>
+    <rect x="300" y="94" width="6" height="6" fill="none" stroke="#0B0218" stroke-width="1.5"/>
+    <rect x="303" y="91" width="6" height="6" fill="none" stroke="#0B0218" stroke-width="1.5"/>
+  </g>
+  <g id="restore-pressed">
+    <circle cx="336" cy="96" r="10" fill="#05FFA1" fill-opacity="1.0"/>
+    <rect x="332" y="94" width="6" height="6" fill="#0B0218"/>
+    <rect x="335" y="91" width="6" height="6" fill="#0B0218"/>
+  </g>
+  <g id="restore-deactivated">
+    <circle cx="368" cy="96" r="10" fill="#5A3A8A" fill-opacity="0.5"/>
+    <rect x="364" y="94" width="6" height="6" fill="none" stroke="#B5A6D9" stroke-width="1.5"/>
+    <rect x="367" y="91" width="6" height="6" fill="none" stroke="#B5A6D9" stroke-width="1.5"/>
+  </g>
+
+  <!-- ===================================================== -->
+  <!-- Minimize button                                       -->
+  <!-- ===================================================== -->
+  <g id="minimize">
+    <circle cx="400" cy="96" r="10" fill="#FFE400" fill-opacity="0.85"/>
+    <rect x="394" y="100" width="12" height="2" fill="#0B0218"/>
+  </g>
+  <g id="minimize-hover">
+    <circle cx="432" cy="96" r="10" fill="#FFE400" fill-opacity="1.0" stroke="#01F9FF" stroke-width="2"/>
+    <rect x="426" y="100" width="12" height="2" fill="#0B0218"/>
+  </g>
+  <g id="minimize-pressed">
+    <circle cx="464" cy="96" r="10" fill="#FFE400" fill-opacity="1.0"/>
+    <rect x="458" y="100" width="12" height="3" fill="#0B0218"/>
+  </g>
+  <g id="minimize-deactivated">
+    <circle cx="496" cy="96" r="10" fill="#5A3A8A" fill-opacity="0.5"/>
+    <rect x="490" y="100" width="12" height="2" fill="#B5A6D9"/>
+  </g>
+
+  <!-- ===================================================== -->
+  <!-- Help button (context help)                            -->
+  <!-- ===================================================== -->
+  <g id="help">
+    <circle cx="16" cy="136" r="10" fill="#9D4EDD" fill-opacity="0.85"/>
+    <text x="16" y="141" text-anchor="middle" font-family="Orbitron" font-size="14" font-weight="bold" fill="#F8F0FF">?</text>
+  </g>
+  <g id="help-hover">
+    <circle cx="48" cy="136" r="10" fill="#9D4EDD" fill-opacity="1.0" stroke="#01F9FF" stroke-width="2"/>
+    <text x="48" y="141" text-anchor="middle" font-family="Orbitron" font-size="14" font-weight="bold" fill="#F8F0FF">?</text>
+  </g>
+
+  <!-- ===================================================== -->
+  <!-- Menu button (shows window menu)                       -->
+  <!-- ===================================================== -->
+  <g id="menu">
+    <circle cx="80" cy="136" r="10" fill="#2D1B4E" fill-opacity="0.85" stroke="#01F9FF" stroke-width="1"/>
+    <rect x="75" y="132" width="10" height="1.5" fill="#01F9FF"/>
+    <rect x="75" y="135" width="10" height="1.5" fill="#01F9FF"/>
+    <rect x="75" y="138" width="10" height="1.5" fill="#01F9FF"/>
+  </g>
+
+  <!-- ===================================================== -->
+  <!-- Keep above / keep below / all desktops / shade        -->
+  <!-- Single-state only; Aurorae reuses for all variants.   -->
+  <!-- ===================================================== -->
+  <g id="keepabove">
+    <circle cx="112" cy="136" r="10" fill="#2D1B4E" fill-opacity="0.85"/>
+    <path d="M 107 140 L 112 132 L 117 140" fill="none" stroke="#01F9FF" stroke-width="2" stroke-linecap="round"/>
+  </g>
+  <g id="keepbelow">
+    <circle cx="144" cy="136" r="10" fill="#2D1B4E" fill-opacity="0.85"/>
+    <path d="M 139 132 L 144 140 L 149 132" fill="none" stroke="#01F9FF" stroke-width="2" stroke-linecap="round"/>
+  </g>
+  <g id="alldesktops">
+    <circle cx="176" cy="136" r="10" fill="#2D1B4E" fill-opacity="0.85"/>
+    <circle cx="176" cy="136" r="4" fill="none" stroke="#01F9FF" stroke-width="2"/>
+  </g>
+  <g id="shade">
+    <circle cx="208" cy="136" r="10" fill="#2D1B4E" fill-opacity="0.85"/>
+    <rect x="202" y="131" width="12" height="2" fill="#01F9FF"/>
+    <rect x="202" y="135" width="12" height="1" fill="#01F9FF" fill-opacity="0.5"/>
   </g>
 </svg>

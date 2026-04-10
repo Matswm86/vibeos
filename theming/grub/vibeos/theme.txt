@@ -19,6 +19,7 @@ terminal-font: "JetBrains Mono Regular 12"
     text = "VibeOS"
     color = "#FF2ECF"
     font = "Orbitron Bold 36"
+    # note: requires orbitron-bold-36.pf2 baked by grub-mkfont during chroot inject
 }
 
 + label {
