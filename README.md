@@ -169,19 +169,81 @@ Or skip Docker entirely and point your `settings.json` at any hosted MCP provide
 - [x] **Stage 3: Vibbey Phase B** (v0.3.2) — real 3D Clippy-lineage model in a webkit2gtk desktop window, Three.js + GLTFLoader, local Ollama chat proxy, model auto-detect, python3 auto-reexec. "Clippy, but it actually works now."
 - [x] **Stage 3.5: Vibbey brain upgrade** (2026-04-10) — Groq + Ollama hybrid routing (BYO key → bootstrap proxy → local fallback), static knowledge pack injected into system prompt, persistent memory at `~/.vibeos/vibbey-memory.json`, tool-use allowlist via `POST /api/run` with user confirmation, widget-mode chrome-stripped launcher. Vibbey now knows her OS, install state, and roadmap — and can execute safe commands.
 - [ ] **Stage 4: Kubuntu-based VibeOS ISO + full OS rebrand** — bootable `.iso` based on Kubuntu 22.04 LTS (KDE Plasma), with custom GRUB, Plymouth, SDDM, VibeOS-Neon Plasma theme + Aurorae + Kvantum, icons, cursors, fonts, wallpapers, and Vibbey auto-launching as a layer-shell desktop widget on first login. ISO hosted at `iso.mwmai.no` once shipped.
+  - [x] **Phase A — build rig script** (2026-04-10): `scripts/install-build-rig.sh` one-shot host setup (cubic PPA + qemu + ovmf, fetches Kubuntu 22.04.5 base ISO, sha256-verifies)
+  - [x] **Phase B — Vibbey desktop widget** (v0.3.2): webkit2gtk + layer-shell window, Three.js scene, chat bubble, autostart
+  - [x] **Phase C — VibeOS-Neon KDE theme pack authored** (2026-04-10): full `theming/` tree — Plasma color scheme + desktoptheme (3 SVG 9-patches), Aurorae window decoration, Kvantum kvconfig (+ `scripts/kvantum-recolor.py` KvGnomeDark fork), Konsole profile + colorscheme, SDDM login theme (`Main.qml` with Tron grid overlay + magenta focus ring + clock), GRUB theme, Plymouth splash (pulsing wordmark + orbital dots + luks prompt), fastfetch config + ASCII logo, `os-release` rebrand, `/etc/skel/.config/` defaults. **Not visually verified yet** — gated on Kubuntu QEMU smoke test. See `theming/README.md`.
+  - [x] **Phase D — chroot injection script** (2026-04-10): `scripts/chroot-inject.sh` 8-step idempotent installer that runs inside Cubic's chroot terminal (deps → git clone → theming → `/etc/skel` → Plymouth + GRUB + SDDM activation). Ready to run.
+  - [ ] **Phase D — QEMU smoke test + ISO build**: boot Kubuntu 22.04.5 in QEMU via `install-build-rig.sh`, run `chroot-inject.sh` inside Cubic, screenshot every surface, iterate.
+  - [ ] **Phase E — validate**: QEMU live boot + install-to-disk + re-login gating. Record demo video.
+  - [ ] **Phase F — ship**: Caddy vhost at `iso.mwmai.no`, GitHub release notes, "No Linux? Start here" README section.
 
 ---
 
 ## Contributing
 
-Issues and PRs welcome. The installer targets Ubuntu 22.04+ / Pop!\_OS 22.04+.
+Issues and PRs welcome. The installer targets Ubuntu 22.04+ / Pop!\_OS 22.04+ / Kubuntu 22.04+.
 
-To test locally:
+### Path A (curl install) — test locally
+
 ```bash
 git clone https://github.com/Matswm86/vibeos
 cd vibeos
 chmod +x install.sh
 ./install.sh
+```
+
+### Path B (ISO build) — test locally
+
+You need a Linux host with sudo, ~10 GB free disk, and KVM-capable CPU.
+
+```bash
+git clone https://github.com/Matswm86/vibeos
+cd vibeos
+
+# One-shot: install cubic + qemu + ovmf, fetch + verify Kubuntu 22.04.5 ISO
+bash scripts/install-build-rig.sh
+
+# Optional: pre-fetch fonts and wallpapers for the theming pack
+bash scripts/fetch-fonts.sh
+bash scripts/fetch-wallpapers.sh
+
+# Open cubic: cubic ~/vibeos-build/work/
+# Point it at the Kubuntu ISO. When cubic's Terminal tab opens in the chroot:
+#   git clone https://github.com/Matswm86/vibeos /opt/vibeos
+#   cd /opt/vibeos && bash scripts/chroot-inject.sh
+# Exit the chroot (Ctrl+D), let cubic finish, and QEMU-boot the output:
+qemu-system-x86_64 -enable-kvm -m 8G -smp 4 \
+    -bios /usr/share/OVMF/OVMF_CODE.fd \
+    -cdrom ~/vibeos-build/output/vibeos-0.4.0.iso -boot d
+```
+
+### Repo layout
+
+```
+vibeos/
+├── install.sh                  Path A curl-pipe installer
+├── clippy/                     Vibbey: launcher, server, Three.js scene, brain
+│   ├── knowledge/              static knowledge pack injected into system prompt
+│   ├── memory.py               persistent memory at ~/.vibeos/vibbey-memory.json
+│   ├── tools.py                15-command allowlist (read-only)
+│   ├── groq_proxy.py           3-tier chat router (BYO key → bootstrap → Ollama)
+│   ├── widget_mode.py          layer-shell chrome-stripped widget launcher
+│   └── static/                 webkit2gtk frontend
+├── theming/                    Stage 4 Phase C — VibeOS-Neon KDE theme pack
+│   ├── plasma/                 color scheme, desktoptheme, Aurorae, Kvantum
+│   ├── sddm/vibeos/            login theme (QML)
+│   ├── konsole/                profile + colorscheme
+│   ├── grub/vibeos/            boot menu theme
+│   ├── plymouth/vibeos/        boot splash script
+│   ├── fastfetch/              neofetch-style branding
+│   ├── os-release/             /etc/os-release rebrand
+│   └── skel/.config/           defaults copied to every new user
+└── scripts/                    Stage 4 build automation
+    ├── install-build-rig.sh    host setup + Kubuntu ISO fetch
+    ├── chroot-inject.sh        runs inside cubic chroot during ISO build
+    ├── kvantum-recolor.py      fork KvGnomeDark.svg → VibeOS-Neon.svg
+    ├── fetch-fonts.sh          Orbitron + JetBrains Mono + VT323 + Bibata
+    └── fetch-wallpapers.sh     5 cc0 synthwave wallpapers
 ```
 
 ---
