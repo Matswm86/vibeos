@@ -27,21 +27,44 @@ THEMING="$REPO/theming"
 say "step 1 — apt dependencies"
 export DEBIAN_FRONTEND=noninteractive
 apt-get update
+# NOTE: Kubuntu 22.04 (jammy) does NOT ship the following packages — they
+# were added in newer Ubuntu releases. We handle each out-of-band:
+#   - fastfetch         → .deb from GitHub release (fetched below)
+#   - fonts-orbitron    → shipped via theming/fonts/orbitron/ in our repo
+#   - fonts-jetbrains-mono → shipped via theming/fonts/jetbrains-mono/
+#   - kvantum / kvantum-qt5 → jammy uses qt5-style-kvantum (already listed)
 apt-get install -y \
     python3 python3-venv python3-pip python3-gi python3-requests \
     gir1.2-webkit2-4.0 gir1.2-gtklayershell-0.1 libgtk-layer-shell0 \
     nodejs git curl wget jq \
     docker.io build-essential libffi-dev libssl-dev \
-    gh fastfetch \
+    gh \
     qt5-style-kvantum qt5-style-kvantum-themes \
-    kvantum-qt5 kvantum \
     plymouth plymouth-themes \
     sddm \
     papirus-icon-theme \
     imagemagick librsvg2-bin \
-    fonts-orbitron fonts-jetbrains-mono \
     unzip
-ok "packages installed"
+ok "apt packages installed"
+
+# --- fastfetch: not in jammy, pin a GitHub release .deb ---
+say "step 1b — install fastfetch from GitHub release"
+FASTFETCH_VER="2.14.0"
+FASTFETCH_URL="https://github.com/fastfetch-cli/fastfetch/releases/download/${FASTFETCH_VER}/fastfetch-linux-amd64.deb"
+if command -v fastfetch >/dev/null 2>&1; then
+    ok "fastfetch already installed"
+elif curl -fsSL -o /tmp/fastfetch.deb "$FASTFETCH_URL"; then
+    if dpkg -i /tmp/fastfetch.deb 2>&1 | tee /tmp/dpkg.log; then
+        ok "fastfetch ${FASTFETCH_VER} installed"
+    else
+        # dpkg may complain about missing deps — apt-get -f install fixes them
+        apt-get install -f -y
+        ok "fastfetch installed after dep fix"
+    fi
+    rm -f /tmp/fastfetch.deb /tmp/dpkg.log
+else
+    warn "fastfetch download failed — terminal will use default greeting"
+fi
 
 # =============================================================
 # Step 2 — clone VibeOS into /opt
