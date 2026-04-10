@@ -97,41 +97,25 @@ html, body {
   height: 100%;
 }
 
-/* ── Speech bubble ───────────────────────────────────────── */
+/* ── Speech bubble ────────────────────────────────────────
+   In-flow panel under the 3D scene. Fixed min-height so the
+   layout doesn't jump when text arrives or clears. */
 
 #speech-bubble {
-  position: absolute;
-  bottom: 136px;
-  left: 14px;
-  right: 14px;
   padding: 12px 14px;
   background: var(--vbo-bg-1);
-  border: 1px solid var(--vbo-cyan);
-  border-radius: 12px;
-  box-shadow: 0 0 10px var(--vbo-cyan);
+  border-top: 1px solid var(--vbo-cyan);
+  box-shadow: 0 -2px 12px rgba(1, 249, 255, 0.25);
   font-size: 13px;
   line-height: 1.45;
-  max-height: 130px;
+  min-height: 68px;
+  max-height: 140px;
   overflow-y: auto;
   color: var(--vbo-fg);
   transition: opacity 0.2s;
 }
 
-#speech-bubble::after {
-  content: "";
-  position: absolute;
-  bottom: -8px;
-  left: 58%;
-  width: 14px;
-  height: 14px;
-  background: var(--vbo-bg-1);
-  border-right: 1px solid var(--vbo-cyan);
-  border-bottom: 1px solid var(--vbo-cyan);
-  transform: rotate(45deg);
-  box-shadow: 2px 2px 6px rgba(1, 249, 255, 0.4);
-}
-
-#speech-bubble.hidden { opacity: 0; pointer-events: none; }
+#speech-bubble.hidden { opacity: 0; }
 
 /* ── Chat input ──────────────────────────────────────────── */
 

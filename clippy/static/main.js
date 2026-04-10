@@ -121,6 +121,7 @@ window.addEventListener('resize', () => {
 });
 
 // ── Chat UI ────────────────────────────────────────────────
+// Bubble is always in flow under the 3D scene; we just swap the text.
 function showBubble(text) {
   bubbleText.textContent = text;
   bubbleEl.classList.remove('hidden');
