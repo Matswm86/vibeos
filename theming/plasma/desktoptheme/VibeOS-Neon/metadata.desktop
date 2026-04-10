@@ -1,0 +1,18 @@
+[Desktop Entry]
+Name=VibeOS Neon
+Name[en_US]=VibeOS Neon
+Comment=Neon Grid Plasma theme for VibeOS — magenta + electric cyan + violet
+Comment[en_US]=Neon Grid Plasma theme for VibeOS — magenta + electric cyan + violet
+Encoding=UTF-8
+Type=Service
+X-KDE-ServiceTypes=Plasma/Theme
+X-Plasma-API=5.0
+X-KDE-PluginInfo-Author=Mats Mjåtvedt
+X-KDE-PluginInfo-Email=matswm86@yahoo.no
+X-KDE-PluginInfo-Name=VibeOS-Neon
+X-KDE-PluginInfo-Version=0.4.0
+X-KDE-PluginInfo-Website=https://github.com/Matswm86/vibeos
+X-KDE-PluginInfo-Category=
+X-KDE-PluginInfo-Depends=
+X-KDE-PluginInfo-License=LGPL-2.1+
+X-KDE-PluginInfo-EnabledByDefault=true

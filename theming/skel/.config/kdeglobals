@@ -1,0 +1,28 @@
+[General]
+ColorScheme=VibeOS-Neon
+Name=VibeOS Neon
+fixed=JetBrains Mono,12,-1,5,50,0,0,0,0,0
+font=Orbitron,11,-1,5,50,0,0,0,0,0
+menuFont=Orbitron,11,-1,5,50,0,0,0,0,0
+smallestReadableFont=Orbitron,9,-1,5,50,0,0,0,0,0
+taskbarFont=Orbitron,11,-1,5,50,0,0,0,0,0
+toolBarFont=Orbitron,11,-1,5,50,0,0,0,0,0
+shadeSortColumn=true
+
+[Icons]
+Theme=Papirus-Dark
+
+[KDE]
+LookAndFeelPackage=
+SingleClick=false
+contrast=4
+widgetStyle=kvantum-dark
+
+[WM]
+activeBackground=26,11,46
+activeBlend=255,46,207
+activeFont=Orbitron,11,-1,5,75,0,0,0,0,0
+activeForeground=248,240,255
+inactiveBackground=11,2,24
+inactiveBlend=157,78,221
+inactiveForeground=181,166,217

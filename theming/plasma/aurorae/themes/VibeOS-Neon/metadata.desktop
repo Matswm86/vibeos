@@ -1,0 +1,16 @@
+[Desktop Entry]
+Name=VibeOS Neon
+Name[en_US]=VibeOS Neon
+Comment=Neon Grid window decoration with cyan frame + magenta hover glow
+Comment[en_US]=Neon Grid window decoration with cyan frame + magenta hover glow
+Encoding=UTF-8
+Type=Service
+X-KDE-ServiceTypes=KDecoration/AuroraeTheme
+X-KDE-PluginInfo-Author=Mats Mjåtvedt
+X-KDE-PluginInfo-Email=matswm86@yahoo.no
+X-KDE-PluginInfo-Name=VibeOS-Neon
+X-KDE-PluginInfo-Version=0.4.0
+X-KDE-PluginInfo-Website=https://github.com/Matswm86/vibeos
+X-KDE-PluginInfo-Category=KWin Aurorae Theme
+X-KDE-PluginInfo-License=LGPL-2.1+
+X-KDE-PluginInfo-EnabledByDefault=true

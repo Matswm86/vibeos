@@ -1,0 +1,16 @@
+[SddmGreeterTheme]
+Name=VibeOS
+Description=Neon Grid login — magenta + cyan accents, VibeOS wordmark
+Author=Mats Mjåtvedt
+Copyright=(c) 2026 Mats Mjåtvedt, LGPL-2.1+
+License=LGPL-2.1+
+Type=sddm-theme
+Version=0.4.0
+Website=https://github.com/Matswm86/vibeos
+Screenshot=preview.png
+MainScript=Main.qml
+ConfigFile=theme.conf
+TranslationsDirectory=translations
+Theme-Id=vibeos
+Theme-API=2.0
+QtVersion=5

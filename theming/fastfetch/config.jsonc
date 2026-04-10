@@ -1,0 +1,62 @@
+// VibeOS fastfetch config — Neon Grid palette
+// Drop in /etc/fastfetch/config.jsonc
+{
+  "$schema": "https://github.com/fastfetch-cli/fastfetch/raw/dev/doc/json_schema.json",
+  "logo": {
+    "source": "/usr/share/fastfetch/vibeos.txt",
+    "type": "file",
+    "padding": { "top": 1, "left": 2, "right": 3 },
+    "color": {
+      "1": "magenta",
+      "2": "magenta_bold",
+      "3": "cyan",
+      "4": "cyan_bold",
+      "5": "magenta",
+      "6": "cyan",
+      "7": "white"
+    }
+  },
+  "display": {
+    "separator": " › ",
+    "color": {
+      "keys": "magenta",
+      "title": "cyan",
+      "output": "white"
+    },
+    "binaryPrefix": "iec",
+    "percent": {
+      "type": [ "bar", "num" ],
+      "ndigits": 0
+    },
+    "bar": {
+      "charElapsed": "█",
+      "charTotal": "░",
+      "border": false,
+      "width": 14
+    }
+  },
+  "modules": [
+    {
+      "type": "title",
+      "format": "{user-name}{?user-name}@{?}{host-name}"
+    },
+    "separator",
+    { "type": "os", "key": "   os", "keyColor": "magenta" },
+    { "type": "kernel", "key": "   ker", "keyColor": "magenta" },
+    { "type": "uptime", "key": "   up", "keyColor": "magenta" },
+    { "type": "packages", "key": "   pkg", "keyColor": "magenta" },
+    { "type": "shell", "key": "   sh", "keyColor": "magenta" },
+    "break",
+    { "type": "de", "key": "   de", "keyColor": "cyan" },
+    { "type": "wm", "key": "   wm", "keyColor": "cyan" },
+    { "type": "terminal", "key": "   term", "keyColor": "cyan" },
+    { "type": "terminalfont", "key": "   font", "keyColor": "cyan" },
+    "break",
+    { "type": "cpu", "key": "   cpu", "keyColor": "magenta" },
+    { "type": "gpu", "key": "   gpu", "keyColor": "magenta" },
+    { "type": "memory", "key": "   mem", "keyColor": "magenta" },
+    { "type": "disk", "key": "   disk", "keyColor": "magenta" },
+    "break",
+    { "type": "colors", "symbol": "block", "paddingLeft": 2 }
+  ]
+}

@@ -1,0 +1,21 @@
+#!/bin/sh
+#
+# VibeOS motd header — Neon Grid
+# Drop in /etc/update-motd.d/00-header (replaces default)
+#
+
+# Neon palette via ANSI 256
+MAGENTA="\033[38;5;200m"
+CYAN="\033[38;5;87m"
+YELLOW="\033[38;5;226m"
+RESET="\033[0m"
+
+printf "\n"
+printf "${MAGENTA}  ██    ██ ${CYAN}██████  ${MAGENTA}███████ ${CYAN} ██████  ${MAGENTA}███████ ${RESET}\n"
+printf "${MAGENTA}  ██    ██ ${CYAN}██   ██ ${MAGENTA}██      ${CYAN}██    ██ ${MAGENTA}██      ${RESET}\n"
+printf "${MAGENTA}  ██    ██ ${CYAN}██████  ${MAGENTA}█████   ${CYAN}██    ██ ${MAGENTA}███████ ${RESET}\n"
+printf "${MAGENTA}   ██  ██  ${CYAN}██   ██ ${MAGENTA}██      ${CYAN}██    ██ ${MAGENTA}     ██ ${RESET}\n"
+printf "${MAGENTA}    ████   ${CYAN}██████  ${MAGENTA}███████ ${CYAN} ██████  ${MAGENTA}███████ ${RESET}\n"
+printf "\n"
+printf "  ${CYAN}neon grid${RESET} ${YELLOW}//${RESET} $(lsb_release -d -s 2>/dev/null || echo 'VibeOS') ${YELLOW}//${RESET} kernel $(uname -r)\n"
+printf "\n"

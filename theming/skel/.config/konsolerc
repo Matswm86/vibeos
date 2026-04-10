@@ -1,0 +1,14 @@
+[Desktop Entry]
+DefaultProfile=VibeOS.profile
+
+[Favorite Profiles]
+Favorites=VibeOS.profile
+
+[KonsoleWindow]
+ShowMenuBarByDefault=false
+ShowWindowTitleOnTitleBar=true
+RememberWindowSize=true
+
+[MainWindow]
+MenuBar=Disabled
+ToolBarsMovable=Disabled

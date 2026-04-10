@@ -1,0 +1,77 @@
+#
+# VibeOS GRUB theme — Neon Grid
+# Location inside ISO: /boot/grub/themes/vibeos/theme.txt
+#
+
+# global
+title-text: ""
+desktop-image: "background.png"
+desktop-color: "#0B0218"
+terminal-box: "terminal_box_*.png"
+terminal-font: "JetBrains Mono Regular 12"
+
+# heading
++ label {
+    top = 8%
+    left = 0
+    width = 100%
+    align = "center"
+    text = "VibeOS"
+    color = "#FF2ECF"
+    font = "Orbitron Bold 36"
+}
+
++ label {
+    top = 14%
+    left = 0
+    width = 100%
+    align = "center"
+    text = "neon grid // boot menu"
+    color = "#B5A6D9"
+    font = "JetBrains Mono Regular 14"
+}
+
+# boot menu
++ boot_menu {
+    left = 20%
+    width = 60%
+    top = 28%
+    height = 50%
+    item_font = "Orbitron Regular 18"
+    item_color = "#F8F0FF"
+    selected_item_font = "Orbitron Bold 18"
+    selected_item_color = "#01F9FF"
+    item_height = 40
+    item_padding = 6
+    item_spacing = 4
+    item_icon_space = 0
+    icon_width = 0
+    icon_height = 0
+    selected_item_pixmap_style = "select_*.png"
+}
+
+# help line
++ label {
+    bottom = 10%
+    left = 0
+    width = 100%
+    align = "center"
+    text = "↑↓ navigate    enter boot    e edit    c console"
+    color = "#9D4EDD"
+    font = "JetBrains Mono Regular 12"
+}
+
+# progress bar shown during initial boot
++ progress_bar {
+    id = "__timeout__"
+    left = 25%
+    width = 50%
+    top = 88%
+    height = 6
+    show_text = false
+    bar_style = "progress_bar_*.png"
+    highlight_style = "progress_highlight_*.png"
+    fg_color = "#FF2ECF"
+    bg_color = "#1A0B2E"
+    border_color = "#01F9FF"
+}

@@ -1,0 +1,50 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<svg
+   xmlns="http://www.w3.org/2000/svg"
+   xmlns:inkscape="http://www.inkscape.org/namespaces/inkscape"
+   width="48"
+   height="48"
+   viewBox="0 0 48 48"
+   version="1.1">
+  <defs>
+    <linearGradient id="panelGradient" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#1A0B2E" stop-opacity="0.95"/>
+      <stop offset="1" stop-color="#0B0218" stop-opacity="0.95"/>
+    </linearGradient>
+    <linearGradient id="panelAccent" x1="0" y1="0" x2="1" y2="0">
+      <stop offset="0" stop-color="#01F9FF" stop-opacity="0.0"/>
+      <stop offset="0.5" stop-color="#01F9FF" stop-opacity="0.9"/>
+      <stop offset="1" stop-color="#01F9FF" stop-opacity="0.0"/>
+    </linearGradient>
+  </defs>
+  <!-- 9-patch hints: center stretches, edges repeat -->
+  <g id="center">
+    <rect x="4" y="4" width="40" height="40" fill="url(#panelGradient)"/>
+  </g>
+  <g id="top">
+    <rect x="4" y="0" width="40" height="4" fill="url(#panelGradient)"/>
+    <rect x="4" y="0" width="40" height="1" fill="url(#panelAccent)"/>
+  </g>
+  <g id="bottom">
+    <rect x="4" y="44" width="40" height="4" fill="url(#panelGradient)"/>
+  </g>
+  <g id="left">
+    <rect x="0" y="4" width="4" height="40" fill="url(#panelGradient)"/>
+  </g>
+  <g id="right">
+    <rect x="44" y="4" width="4" height="40" fill="url(#panelGradient)"/>
+  </g>
+  <g id="topleft">
+    <rect x="0" y="0" width="4" height="4" fill="url(#panelGradient)"/>
+  </g>
+  <g id="topright">
+    <rect x="44" y="0" width="4" height="4" fill="url(#panelGradient)"/>
+  </g>
+  <g id="bottomleft">
+    <rect x="0" y="44" width="4" height="4" fill="url(#panelGradient)"/>
+  </g>
+  <g id="bottomright">
+    <rect x="44" y="44" width="4" height="4" fill="url(#panelGradient)"/>
+  </g>
+  <g id="hint-compose-over-border" style="display:none"/>
+</svg>

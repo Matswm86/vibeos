@@ -1,0 +1,8 @@
+[Plymouth Theme]
+Name=VibeOS Neon Grid
+Description=Neon magenta + cyan boot splash for VibeOS
+ModuleName=script
+
+[script]
+ImageDir=/usr/share/plymouth/themes/vibeos
+ScriptFile=/usr/share/plymouth/themes/vibeos/vibeos.script

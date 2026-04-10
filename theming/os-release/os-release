@@ -1,0 +1,13 @@
+PRETTY_NAME="VibeOS 0.4.0 (Neon Grid)"
+NAME="VibeOS"
+VERSION_ID="0.4.0"
+VERSION="0.4.0 (Neon Grid)"
+VERSION_CODENAME=neongrid
+ID=vibeos
+ID_LIKE="ubuntu debian"
+HOME_URL="https://github.com/Matswm86/vibeos"
+SUPPORT_URL="https://github.com/Matswm86/vibeos/issues"
+BUG_REPORT_URL="https://github.com/Matswm86/vibeos/issues"
+PRIVACY_POLICY_URL="https://github.com/Matswm86/vibeos/blob/main/PRIVACY.md"
+UBUNTU_CODENAME=jammy
+LOGO=vibeos-logo

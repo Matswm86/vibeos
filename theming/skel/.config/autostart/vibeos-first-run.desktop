@@ -1,0 +1,14 @@
+[Desktop Entry]
+Type=Application
+Version=1.0
+Name=VibeOS First Run
+GenericName=VibeOS Welcome
+Comment=Launch Vibbey on first login
+Exec=/usr/bin/python3 -m clippy
+Icon=vibeos-logo
+Terminal=false
+Categories=System;
+X-GNOME-Autostart-enabled=true
+X-KDE-autostart-after=panel
+X-KDE-autostart-phase=2
+OnlyShowIn=KDE;GNOME;Unity;LXQt;
