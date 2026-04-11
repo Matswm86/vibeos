@@ -523,15 +523,38 @@ if [ -f /boot/grub/themes/vibeos/theme.txt ]; then
     ok "grub theme wired"
 fi
 
-# SDDM: set default theme to vibeos via drop-in
+# SDDM: set default theme + autologin via drop-in
+#
+# IMPORTANT: Theme is set to `breeze` (Kubuntu default), NOT `vibeos`.
+# The vibeos QML theme has known runtime issues that cause SDDM to
+# fall back to a bare X server (black screen with cursor only),
+# blocking the entire boot. Confirmed during 2026-04-12 test-fly.
+# Re-enable vibeos theme only after Main.qml is verified in a live
+# SDDM session — until then, breeze is the safe default.
 mkdir -p /etc/sddm.conf.d
 cat > /etc/sddm.conf.d/vibeos.conf <<'EOF'
 [Theme]
-Current=vibeos
+Current=breeze
 CursorTheme=Bibata-Modern-Ice
-Font=Orbitron
+Font=Noto Sans
 EOF
-ok "sddm default theme set"
+
+# Live-session autologin: casper creates a user named after the
+# lowercase first word of /cdrom/.disk/info ("VibeOS …" → "vibeos").
+# Password is set to the "blank password" crypt hash by casper-bottom
+# 25adduser, and /etc/pam.d/sddm-autologin already has pam_permit.so,
+# so SDDM can log this user in without prompting.
+cat > /etc/sddm.conf.d/99-vibeos-autologin.conf <<'EOF'
+[Autologin]
+User=vibeos
+Session=plasma
+Relogin=false
+
+[General]
+HaltCommand=/usr/bin/systemctl poweroff
+RebootCommand=/usr/bin/systemctl reboot
+EOF
+ok "sddm theme=breeze + autologin user=vibeos"
 
 # =============================================================
 # Step 7 — autostart Vibbey on first login for every new user
