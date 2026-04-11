@@ -394,37 +394,73 @@ else
         done
         ok "calamares desktop launcher rebranded"
 
-        # ── Step 3.6f: hide Ubiquity's launcher ─────────────────
-        # Don't apt-remove ubiquity — ubiquity-casper provides live-boot
-        # hooks and removing the meta package may cascade-break casper.
-        # We just disable the .desktop entries so they don't appear in
-        # the live session menu / desktop.
-        for udesk in /usr/share/applications/ubiquity.desktop \
-                     /usr/share/applications/ubiquity-kde.desktop \
-                     /usr/share/applications/install-kubuntu.desktop \
-                     /usr/share/applications/install.desktop; do
-            if [ -f "$udesk" ]; then
-                # Add NoDisplay=true so Plasma menus skip it
-                if ! grep -q '^NoDisplay=true' "$udesk"; then
-                    printf '\nNoDisplay=true\n' >> "$udesk"
-                fi
-            fi
-        done
-        # Also remove any Desktop file in the live user's home that
-        # casper drops on boot — those live in /etc/skel/Desktop/ on
-        # some derivatives but not Kubuntu, so this is best-effort.
-        rm -f /etc/skel/Desktop/ubiquity*.desktop 2>/dev/null || true
-        ok "ubiquity launchers hidden (NoDisplay=true)"
+        # ── Step 3.6f: kill the Ubiquity boot hijack ────────────
+        # CRITICAL: Ubiquity isn't launched from a .desktop file on
+        # Kubuntu — it's a systemd unit (`ubiquity.service`) that
+        # starts BEFORE display-manager.service via WantedBy=
+        # graphical.target. ubiquity-dm then takes over the screen
+        # and shows the "Try / Install" front page, hijacking the
+        # boot before SDDM/Plasma ever start. NoDisplay=true on
+        # .desktop files is irrelevant — must remove the systemd
+        # symlink.
+        #
+        # First confirmed during 2026-04-11 test-fly: VibeOS Calamares
+        # branding was shipped correctly in the squashfs but the user
+        # never reached a Plasma desktop because ubiquity-dm hijacked.
+        rm -fv /etc/systemd/system/graphical.target.wants/ubiquity.service \
+            2>/dev/null || true
+        ok "ubiquity.service systemd auto-launch disabled"
 
-        # ── Step 3.6g: drop a Calamares Desktop shortcut into ───
-        # /etc/skel/Desktop so it shows up on the live user's
-        # desktop on first login.
+        # Disable legacy upstart job too (belt and suspenders)
+        if [ -f /etc/init/ubiquity.conf ]; then
+            mv /etc/init/ubiquity.conf /etc/init/ubiquity.conf.disabled
+            ok "ubiquity upstart job disabled"
+        fi
+
+        # ── Step 3.6g: hide Ubiquity from casper-bottom ─────────
+        # /usr/share/initramfs-tools/scripts/casper-bottom/25adduser
+        # loops through a hardcoded list of installer .desktop files
+        # and copies the FIRST FOUND one to ~/Desktop on the live
+        # user. The list (in priority order):
+        #   1. /usr/share/applications/ubiquity.desktop
+        #   2. /usr/share/applications/kde4/ubiquity-kdeui.desktop  ← Kubuntu uses this
+        #   3. /usr/share/applications/lubuntu-calamares.desktop    ← we want this
+        #   4. /usr/share/applications/ubuntustudio-calamares.desktop
+        #   5. /var/lib/snapd/desktop/applications/ubuntu-desktop-installer_*.desktop
+        # We rename the kde4 one out of the way so casper falls
+        # through to lubuntu-calamares.desktop, which we rebrand
+        # below to say "Install VibeOS".
+        if [ -f /usr/share/applications/kde4/ubiquity-kdeui.desktop ]; then
+            mv /usr/share/applications/kde4/ubiquity-kdeui.desktop \
+               /usr/share/applications/kde4/ubiquity-kdeui.desktop.disabled
+            ok "ubiquity-kdeui.desktop hidden from casper-bottom"
+        fi
+
+        # ── Step 3.6h: rebrand lubuntu-calamares.desktop ────────
+        # casper-bottom now copies THIS one to ~/Desktop on first
+        # boot. Rewrite it to say "Install VibeOS" with our icon.
+        LCD=/usr/share/applications/lubuntu-calamares.desktop
+        if [ -f "$LCD" ]; then
+            sed -i \
+                -e 's|^Name=Install Lubuntu.*|Name=Install VibeOS|' \
+                -e 's|^GenericName=.*|GenericName=Install VibeOS|' \
+                -e 's|^Icon=calamares|Icon=vibeos-logo|' \
+                -e 's|^Exec=.*|Exec=sudo -E calamares|' \
+                "$LCD"
+            # Strip all localized Name[xx] lines (they all say Lubuntu)
+            sed -i '/^Name\[/d' "$LCD"
+            ok "lubuntu-calamares.desktop rebranded as Install VibeOS"
+        fi
+
+        # ── Step 3.6i: drop our own Install VibeOS shortcut ─────
+        # Belt-and-suspenders: also drop /etc/skel/Desktop/install-vibeos
+        # in case casper-bottom logic changes between Kubuntu releases.
         if [ -f /usr/share/applications/calamares.desktop ]; then
             mkdir -p /etc/skel/Desktop
             cp /usr/share/applications/calamares.desktop \
                /etc/skel/Desktop/install-vibeos.desktop
             chmod +x /etc/skel/Desktop/install-vibeos.desktop
-            ok "Install VibeOS desktop shortcut in /etc/skel"
+            ok "Install VibeOS shortcut in /etc/skel/Desktop"
         fi
 
         ok "calamares branded as VibeOS, ubiquity hidden"
