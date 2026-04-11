@@ -290,74 +290,130 @@ else
 fi
 
 # =============================================================
-# Step 3.6 — install Calamares branding (live installer theming)
+# Step 3.6 — install + brand Calamares (replaces Ubiquity)
 # =============================================================
-# Without this Calamares inherits Qt fallbacks and renders white
-# labels on white widget backgrounds during install (the bug that
-# forced the user to abort the first 0.4.0 test-fly on 2026-04-11).
-say "step 3.6 — install Calamares branding pack"
+# Kubuntu 22.04 ships Ubiquity (KDE frontend), not Calamares. Ubiquity
+# rendered white-on-white during the first 0.4.0 test-fly (2026-04-11).
+# Rather than try to theme Ubiquity (badly documented, KDE frontend
+# uses Qt forms with hardcoded palette overrides), we install Calamares
+# alongside Ubiquity, brand Calamares as VibeOS, and hide Ubiquity's
+# desktop launcher so users only see the Calamares "Install VibeOS"
+# icon. This is the same path Mint / Manjaro / EndeavourOS take.
+say "step 3.6 — install + brand Calamares (replaces Ubiquity)"
 
 CAL_BRANDING_SRC="$THEMING/calamares/branding/vibeos"
 CAL_MODULES_SRC="$THEMING/calamares/modules"
 
 if [ ! -d "$CAL_BRANDING_SRC" ]; then
     warn "Calamares branding source missing at $CAL_BRANDING_SRC — skipping"
-elif ! command -v calamares >/dev/null 2>&1 && [ ! -d /etc/calamares ]; then
-    warn "Calamares not installed in this chroot — branding will be unused. Install \`calamares calamares-settings-ubuntu\` first if you want a live installer."
 else
-    # Drop branding component
-    mkdir -p /etc/calamares/branding/vibeos
-    cp -r "$CAL_BRANDING_SRC"/* /etc/calamares/branding/vibeos/
-
-    # Rasterize logo PNG inside branding dir (Calamares wants PNG, not SVG)
-    if command -v rsvg-convert >/dev/null 2>&1; then
-        rsvg-convert -w 256 -h 256 \
-            "$THEMING/os-release/vibeos-logo.svg" \
-            -o /etc/calamares/branding/vibeos/vibeos-logo.png
-        # welcome.png — slightly larger variant for the welcome page
-        rsvg-convert -w 400 -h 400 \
-            "$THEMING/os-release/vibeos-logo.svg" \
-            -o /etc/calamares/branding/vibeos/welcome.png
-        ok "branding logos rasterized"
-    else
-        warn "rsvg-convert missing — branding logo will be 1x1 placeholder"
-        # Last-resort 1x1 png so QML doesn't crash on missing image
-        printf '\x89PNG\r\n\x1a\n' > /etc/calamares/branding/vibeos/vibeos-logo.png
-        cp /etc/calamares/branding/vibeos/vibeos-logo.png \
-           /etc/calamares/branding/vibeos/welcome.png
-    fi
-
-    # Patch /etc/calamares/settings.conf to use vibeos branding
-    if [ -f /etc/calamares/settings.conf ]; then
-        if grep -q '^branding:' /etc/calamares/settings.conf; then
-            sed -i 's|^branding:.*|branding: vibeos|' /etc/calamares/settings.conf
+    # ── Step 3.6a: install Calamares if not present ──────────────
+    # Settings package on jammy is calamares-settings-ubuntu-common
+    # (NOT calamares-settings-ubuntu — that name only exists on later
+    # Ubuntu releases and is missing from jammy repos).
+    if ! command -v calamares >/dev/null 2>&1; then
+        say "  installing calamares + calamares-settings-ubuntu-common"
+        if apt-get install -y calamares calamares-settings-ubuntu-common; then
+            ok "calamares installed"
         else
-            printf '\nbranding: vibeos\n' >> /etc/calamares/settings.conf
+            warn "apt install calamares failed — branding will be unused"
+            warn "  check: apt-cache search '^calamares' and verify universe repo enabled"
         fi
-        ok "calamares settings.conf points at vibeos branding"
     else
-        warn "/etc/calamares/settings.conf not found — Kubuntu base may not have Calamares yet. Re-run after \`apt install calamares calamares-settings-ubuntu\`."
+        ok "calamares already installed"
     fi
 
-    # Drop welcome.conf override (relaxes internet=required → optional,
-    # which kills the red 'danger' banner that flashed at install start)
-    if [ -f "$CAL_MODULES_SRC/welcome.conf" ]; then
-        mkdir -p /etc/calamares/modules
-        install -Dm644 "$CAL_MODULES_SRC/welcome.conf" \
-            /etc/calamares/modules/welcome.conf
-        ok "welcome.conf override installed (internet check now soft)"
-    fi
+    if [ ! -d /etc/calamares ]; then
+        warn "/etc/calamares still missing after install — skipping branding"
+    else
+        # ── Step 3.6b: drop VibeOS branding component ───────────
+        mkdir -p /etc/calamares/branding/vibeos
+        cp -r "$CAL_BRANDING_SRC"/* /etc/calamares/branding/vibeos/
 
-    # Re-point the desktop launcher icon at the new branding logo
-    for desktop in /usr/share/applications/calamares.desktop \
-                   /usr/share/applications/install-debian.desktop \
-                   /usr/share/applications/io.calamares.calamares.desktop; do
-        if [ -f "$desktop" ]; then
-            sed -i 's|^Icon=.*|Icon=vibeos-logo|' "$desktop" || true
+        if command -v rsvg-convert >/dev/null 2>&1; then
+            rsvg-convert -w 256 -h 256 \
+                "$THEMING/os-release/vibeos-logo.svg" \
+                -o /etc/calamares/branding/vibeos/vibeos-logo.png
+            rsvg-convert -w 400 -h 400 \
+                "$THEMING/os-release/vibeos-logo.svg" \
+                -o /etc/calamares/branding/vibeos/welcome.png
+            ok "branding logos rasterized"
+        else
+            warn "rsvg-convert missing — branding logo will be 1x1 placeholder"
+            printf '\x89PNG\r\n\x1a\n' > /etc/calamares/branding/vibeos/vibeos-logo.png
+            cp /etc/calamares/branding/vibeos/vibeos-logo.png \
+               /etc/calamares/branding/vibeos/welcome.png
         fi
-    done
 
-    ok "calamares branded as VibeOS"
+        # ── Step 3.6c: point settings.conf at vibeos branding ───
+        # calamares-settings-ubuntu-common drops a default settings.conf;
+        # we just rewrite the branding line.
+        if [ -f /etc/calamares/settings.conf ]; then
+            if grep -q '^branding:' /etc/calamares/settings.conf; then
+                sed -i 's|^branding:.*|branding: vibeos|' /etc/calamares/settings.conf
+            else
+                printf '\nbranding: vibeos\n' >> /etc/calamares/settings.conf
+            fi
+            ok "calamares settings.conf points at vibeos branding"
+        else
+            warn "/etc/calamares/settings.conf not found — calamares-settings-ubuntu-common may have failed to drop one"
+        fi
+
+        # ── Step 3.6d: welcome.conf override (kills red banner) ─
+        if [ -f "$CAL_MODULES_SRC/welcome.conf" ]; then
+            mkdir -p /etc/calamares/modules
+            install -Dm644 "$CAL_MODULES_SRC/welcome.conf" \
+                /etc/calamares/modules/welcome.conf
+            ok "welcome.conf override installed (internet check now soft)"
+        fi
+
+        # ── Step 3.6e: repoint Calamares desktop launcher icon ──
+        for desktop in /usr/share/applications/calamares.desktop \
+                       /usr/share/applications/install-debian.desktop \
+                       /usr/share/applications/io.calamares.calamares.desktop; do
+            if [ -f "$desktop" ]; then
+                sed -i 's|^Icon=.*|Icon=vibeos-logo|' "$desktop" || true
+                sed -i 's|^Name=.*|Name=Install VibeOS|' "$desktop" || true
+                sed -i 's|^GenericName=.*|GenericName=System Installer|' "$desktop" || true
+            fi
+        done
+        ok "calamares desktop launcher rebranded"
+
+        # ── Step 3.6f: hide Ubiquity's launcher ─────────────────
+        # Don't apt-remove ubiquity — ubiquity-casper provides live-boot
+        # hooks and removing the meta package may cascade-break casper.
+        # We just disable the .desktop entries so they don't appear in
+        # the live session menu / desktop.
+        for udesk in /usr/share/applications/ubiquity.desktop \
+                     /usr/share/applications/ubiquity-kde.desktop \
+                     /usr/share/applications/install-kubuntu.desktop \
+                     /usr/share/applications/install.desktop; do
+            if [ -f "$udesk" ]; then
+                # Add NoDisplay=true so Plasma menus skip it
+                if ! grep -q '^NoDisplay=true' "$udesk"; then
+                    printf '\nNoDisplay=true\n' >> "$udesk"
+                fi
+            fi
+        done
+        # Also remove any Desktop file in the live user's home that
+        # casper drops on boot — those live in /etc/skel/Desktop/ on
+        # some derivatives but not Kubuntu, so this is best-effort.
+        rm -f /etc/skel/Desktop/ubiquity*.desktop 2>/dev/null || true
+        ok "ubiquity launchers hidden (NoDisplay=true)"
+
+        # ── Step 3.6g: drop a Calamares Desktop shortcut into ───
+        # /etc/skel/Desktop so it shows up on the live user's
+        # desktop on first login.
+        if [ -f /usr/share/applications/calamares.desktop ]; then
+            mkdir -p /etc/skel/Desktop
+            cp /usr/share/applications/calamares.desktop \
+               /etc/skel/Desktop/install-vibeos.desktop
+            chmod +x /etc/skel/Desktop/install-vibeos.desktop
+            ok "Install VibeOS desktop shortcut in /etc/skel"
+        fi
+
+        ok "calamares branded as VibeOS, ubiquity hidden"
+    fi
 fi
 
 # =============================================================
