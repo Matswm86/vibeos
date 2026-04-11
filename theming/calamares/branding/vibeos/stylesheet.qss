@@ -1,0 +1,332 @@
+/*
+ * VibeOS Calamares stylesheet — fixes white-on-white text in installer.
+ *
+ * Calamares loads this AFTER the system Qt theme, so every widget that
+ * the user sees during install gets explicit dark VibeOS-Neon colors.
+ * Without this file Calamares falls back to whatever Qt picks, which on
+ * Kubuntu 22.04 with our skel-installed VibeOS-Neon scheme produces
+ * white labels on white widget backgrounds (unreadable).
+ *
+ * Palette (must match theming/plasma/color-schemes/VibeOS-Neon.colors):
+ *   bg deep      #0B0218
+ *   bg panel     #1A0B2E
+ *   bg raised    #2D1B4E
+ *   text         #F8F0FF
+ *   text dim     #B5A6D9
+ *   accent cyan  #01F9FF
+ *   accent pink  #FF2ECF
+ *   warn         #FFE400
+ *   bad          #FF6188
+ *   good         #05FFA1
+ */
+
+#mainApp {
+    background-color: #0B0218;
+    color:            #F8F0FF;
+}
+
+QWidget {
+    background-color: #0B0218;
+    color:            #F8F0FF;
+    font-family:      "Inter", "Noto Sans", sans-serif;
+    font-size:        10pt;
+}
+
+QLabel {
+    background-color: transparent;
+    color:            #F8F0FF;
+}
+
+QLabel[fontSize="big"] {
+    font-size:   14pt;
+    font-weight: bold;
+    color:       #01F9FF;
+}
+
+/* ── Sidebar (steps panel on the left) ─────────────────────────── */
+#sideBarApp {
+    background-color: #1A0B2E;
+    border-right:     2px solid #FF2ECF;
+}
+
+#sidebarMenuApp {
+    background-color: #1A0B2E;
+}
+
+#sidebarMenuApp QToolButton {
+    background-color: transparent;
+    color:            #B5A6D9;
+    border:           none;
+    padding:          10px 14px;
+    text-align:       left;
+}
+
+#sidebarMenuApp QToolButton:hover {
+    color:            #01F9FF;
+    background-color: rgba(1, 249, 255, 0.08);
+}
+
+#sidebarMenuApp QToolButton[checked="true"],
+#sidebarMenuApp QToolButton:checked {
+    color:            #FF2ECF;
+    background-color: rgba(255, 46, 207, 0.12);
+    border-left:      3px solid #FF2ECF;
+    font-weight:      bold;
+}
+
+/* ── Buttons (Next / Back / Install) ───────────────────────────── */
+QPushButton {
+    background-color: #2D1B4E;
+    color:            #F8F0FF;
+    border:           1px solid #01F9FF;
+    border-radius:    4px;
+    padding:          6px 18px;
+    min-height:       28px;
+    min-width:        80px;
+}
+
+QPushButton:hover {
+    background-color: #3D2A5F;
+    border-color:     #FF2ECF;
+    color:            #FFFFFF;
+}
+
+QPushButton:pressed {
+    background-color: #FF2ECF;
+    color:            #0B0218;
+}
+
+QPushButton:disabled {
+    background-color: #1A0B2E;
+    color:            #5A4A7F;
+    border-color:     #5A4A7F;
+}
+
+/* ── Text inputs (hostname, username, password fields) ─────────── */
+QLineEdit, QTextEdit, QPlainTextEdit {
+    background-color: #1A0B2E;
+    color:            #F8F0FF;
+    border:           1px solid #5A4A7F;
+    border-radius:    3px;
+    padding:          4px 8px;
+    selection-background-color: #FF2ECF;
+    selection-color:  #0B0218;
+}
+
+QLineEdit:focus, QTextEdit:focus, QPlainTextEdit:focus {
+    border:           1px solid #01F9FF;
+}
+
+QLineEdit:disabled {
+    background-color: #0B0218;
+    color:            #5A4A7F;
+}
+
+/* ── Combo boxes (timezone, keyboard, locale) ──────────────────── */
+QComboBox {
+    background-color: #1A0B2E;
+    color:            #F8F0FF;
+    border:           1px solid #5A4A7F;
+    border-radius:    3px;
+    padding:          4px 8px;
+    min-height:       24px;
+}
+
+QComboBox:hover  { border-color: #01F9FF; }
+QComboBox:focus  { border-color: #01F9FF; }
+
+QComboBox QAbstractItemView {
+    background-color:        #1A0B2E;
+    color:                   #F8F0FF;
+    border:                  1px solid #01F9FF;
+    selection-background-color: #FF2ECF;
+    selection-color:         #0B0218;
+    outline:                 none;
+}
+
+QComboBox::drop-down {
+    border-left: 1px solid #5A4A7F;
+    width:       20px;
+}
+
+/* ── Lists (partition table, package picker) ───────────────────── */
+QListView, QTreeView, QTableView, QListWidget, QTreeWidget {
+    background-color:        #1A0B2E;
+    color:                   #F8F0FF;
+    alternate-background-color: #2D1B4E;
+    border:                  1px solid #5A4A7F;
+    selection-background-color: #FF2ECF;
+    selection-color:         #0B0218;
+    outline:                 none;
+}
+
+QListView::item:hover,
+QTreeView::item:hover,
+QTableView::item:hover {
+    background-color: rgba(1, 249, 255, 0.10);
+    color:            #01F9FF;
+}
+
+QHeaderView::section {
+    background-color: #2D1B4E;
+    color:            #01F9FF;
+    border:           none;
+    border-right:     1px solid #1A0B2E;
+    border-bottom:    1px solid #FF2ECF;
+    padding:          6px 8px;
+    font-weight:      bold;
+}
+
+/* ── Group boxes (the boxed sections in summary / users page) ──── */
+QGroupBox {
+    background-color: #0B0218;
+    color:            #F8F0FF;
+    border:           1px solid #2D1B4E;
+    border-radius:    4px;
+    margin-top:       12px;
+    padding-top:      12px;
+}
+
+QGroupBox::title {
+    color:    #01F9FF;
+    subcontrol-origin:  margin;
+    subcontrol-position: top left;
+    left:     10px;
+    padding:  0 6px;
+    background-color: #0B0218;
+    font-weight: bold;
+}
+
+/* ── Check boxes / radios (the "install third-party software"
+       options that the user said are unreadable) ─────────────── */
+QCheckBox, QRadioButton {
+    background-color: transparent;
+    color:            #F8F0FF;
+    spacing:          8px;
+    padding:          4px 0;
+}
+
+QCheckBox::indicator, QRadioButton::indicator {
+    width:  16px;
+    height: 16px;
+    border: 1px solid #5A4A7F;
+    background-color: #1A0B2E;
+}
+
+QCheckBox::indicator { border-radius: 2px; }
+QRadioButton::indicator { border-radius: 8px; }
+
+QCheckBox::indicator:hover,
+QRadioButton::indicator:hover {
+    border-color: #01F9FF;
+}
+
+QCheckBox::indicator:checked,
+QRadioButton::indicator:checked {
+    background-color: #FF2ECF;
+    border-color:     #FF2ECF;
+}
+
+QCheckBox::indicator:checked:hover,
+QRadioButton::indicator:checked:hover {
+    background-color: #FF71CE;
+    border-color:     #FF71CE;
+}
+
+QCheckBox:disabled, QRadioButton:disabled {
+    color: #5A4A7F;
+}
+
+/* ── Progress bars (install progress) ──────────────────────────── */
+QProgressBar {
+    background-color: #1A0B2E;
+    border:           1px solid #5A4A7F;
+    border-radius:    3px;
+    color:            #F8F0FF;
+    text-align:       center;
+    min-height:       18px;
+}
+
+QProgressBar::chunk {
+    background-color: qlineargradient(
+        x1:0, y1:0, x2:1, y2:0,
+        stop:0 #FF2ECF, stop:1 #01F9FF);
+    border-radius: 2px;
+}
+
+/* ── Scroll bars ───────────────────────────────────────────────── */
+QScrollBar:vertical {
+    background-color: #0B0218;
+    width:            12px;
+    border:           none;
+    margin:           0;
+}
+
+QScrollBar::handle:vertical {
+    background-color: #2D1B4E;
+    border-radius:    3px;
+    min-height:       30px;
+}
+
+QScrollBar::handle:vertical:hover {
+    background-color: #01F9FF;
+}
+
+QScrollBar::add-line:vertical,
+QScrollBar::sub-line:vertical { height: 0; background: none; }
+
+QScrollBar:horizontal {
+    background-color: #0B0218;
+    height:           12px;
+    border:           none;
+}
+
+QScrollBar::handle:horizontal {
+    background-color: #2D1B4E;
+    border-radius:    3px;
+    min-width:        30px;
+}
+
+QScrollBar::handle:horizontal:hover {
+    background-color: #01F9FF;
+}
+
+QScrollBar::add-line:horizontal,
+QScrollBar::sub-line:horizontal { width: 0; background: none; }
+
+/* ── Tooltips ──────────────────────────────────────────────────── */
+QToolTip {
+    background-color: #2D1B4E;
+    color:            #F8F0FF;
+    border:           1px solid #01F9FF;
+    padding:          4px 8px;
+}
+
+/* ── Welcome page requirements list (the "danger" red banner) ──── */
+/* Calamares names this widget #widget_welcome_requirements        */
+#widget_welcome_requirements QLabel {
+    background-color: transparent;
+    color:            #F8F0FF;
+}
+
+/* Tabs (advanced options pages) */
+QTabWidget::pane {
+    background-color: #0B0218;
+    border:           1px solid #2D1B4E;
+}
+
+QTabBar::tab {
+    background-color: #1A0B2E;
+    color:            #B5A6D9;
+    padding:          6px 14px;
+    border:           1px solid #2D1B4E;
+    border-bottom:    none;
+}
+
+QTabBar::tab:selected {
+    background-color: #2D1B4E;
+    color:            #01F9FF;
+    border-color:     #FF2ECF;
+}
+
+QTabBar::tab:hover { color: #01F9FF; }

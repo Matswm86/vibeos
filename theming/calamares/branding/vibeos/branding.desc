@@ -1,0 +1,44 @@
+---
+# VibeOS Calamares branding component
+# Drop-in for /etc/calamares/branding/vibeos/branding.desc
+# Activated by /etc/calamares/settings.conf:  branding: vibeos
+
+componentName: vibeos
+
+# Welcome page text style — keep concise; Calamares wraps automatically
+welcomeStyleCalamares: false
+welcomeExpandingLogo:  true
+
+windowExpanding:    normal
+windowSize:         900px,540px
+windowPlacement:    center
+
+strings:
+    productName:         VibeOS
+    shortProductName:    VibeOS
+    version:             0.4.0
+    shortVersion:        0.4
+    versionedName:       VibeOS 0.4.0 "Neon"
+    shortVersionedName:  VibeOS 0.4
+    bootloaderEntryName: VibeOS
+    productUrl:          https://github.com/Matswm86/vibeos
+    supportUrl:          https://github.com/Matswm86/vibeos/issues
+    knownIssuesUrl:      https://github.com/Matswm86/vibeos/issues
+    releaseNotesUrl:     https://github.com/Matswm86/vibeos/releases
+    donateUrl:           https://github.com/Matswm86/vibeos
+
+images:
+    productLogo:         "vibeos-logo.png"
+    productIcon:         "vibeos-logo.png"
+    productWelcome:      "welcome.png"
+
+slideshow:               "show.qml"
+slideshowAPI:            2
+
+# VibeOS-Neon palette — these names are read by Calamares stylesheet.qss
+# and also exposed to QML as branding.style.<key>
+style:
+   sidebarBackground:    "#1A0B2E"
+   sidebarText:          "#F8F0FF"
+   sidebarTextSelect:    "#01F9FF"
+   sidebarTextHighlight: "#FF2ECF"

@@ -290,6 +290,77 @@ else
 fi
 
 # =============================================================
+# Step 3.6 — install Calamares branding (live installer theming)
+# =============================================================
+# Without this Calamares inherits Qt fallbacks and renders white
+# labels on white widget backgrounds during install (the bug that
+# forced the user to abort the first 0.4.0 test-fly on 2026-04-11).
+say "step 3.6 — install Calamares branding pack"
+
+CAL_BRANDING_SRC="$THEMING/calamares/branding/vibeos"
+CAL_MODULES_SRC="$THEMING/calamares/modules"
+
+if [ ! -d "$CAL_BRANDING_SRC" ]; then
+    warn "Calamares branding source missing at $CAL_BRANDING_SRC — skipping"
+elif ! command -v calamares >/dev/null 2>&1 && [ ! -d /etc/calamares ]; then
+    warn "Calamares not installed in this chroot — branding will be unused. Install \`calamares calamares-settings-ubuntu\` first if you want a live installer."
+else
+    # Drop branding component
+    mkdir -p /etc/calamares/branding/vibeos
+    cp -r "$CAL_BRANDING_SRC"/* /etc/calamares/branding/vibeos/
+
+    # Rasterize logo PNG inside branding dir (Calamares wants PNG, not SVG)
+    if command -v rsvg-convert >/dev/null 2>&1; then
+        rsvg-convert -w 256 -h 256 \
+            "$THEMING/os-release/vibeos-logo.svg" \
+            -o /etc/calamares/branding/vibeos/vibeos-logo.png
+        # welcome.png — slightly larger variant for the welcome page
+        rsvg-convert -w 400 -h 400 \
+            "$THEMING/os-release/vibeos-logo.svg" \
+            -o /etc/calamares/branding/vibeos/welcome.png
+        ok "branding logos rasterized"
+    else
+        warn "rsvg-convert missing — branding logo will be 1x1 placeholder"
+        # Last-resort 1x1 png so QML doesn't crash on missing image
+        printf '\x89PNG\r\n\x1a\n' > /etc/calamares/branding/vibeos/vibeos-logo.png
+        cp /etc/calamares/branding/vibeos/vibeos-logo.png \
+           /etc/calamares/branding/vibeos/welcome.png
+    fi
+
+    # Patch /etc/calamares/settings.conf to use vibeos branding
+    if [ -f /etc/calamares/settings.conf ]; then
+        if grep -q '^branding:' /etc/calamares/settings.conf; then
+            sed -i 's|^branding:.*|branding: vibeos|' /etc/calamares/settings.conf
+        else
+            printf '\nbranding: vibeos\n' >> /etc/calamares/settings.conf
+        fi
+        ok "calamares settings.conf points at vibeos branding"
+    else
+        warn "/etc/calamares/settings.conf not found — Kubuntu base may not have Calamares yet. Re-run after \`apt install calamares calamares-settings-ubuntu\`."
+    fi
+
+    # Drop welcome.conf override (relaxes internet=required → optional,
+    # which kills the red 'danger' banner that flashed at install start)
+    if [ -f "$CAL_MODULES_SRC/welcome.conf" ]; then
+        mkdir -p /etc/calamares/modules
+        install -Dm644 "$CAL_MODULES_SRC/welcome.conf" \
+            /etc/calamares/modules/welcome.conf
+        ok "welcome.conf override installed (internet check now soft)"
+    fi
+
+    # Re-point the desktop launcher icon at the new branding logo
+    for desktop in /usr/share/applications/calamares.desktop \
+                   /usr/share/applications/install-debian.desktop \
+                   /usr/share/applications/io.calamares.calamares.desktop; do
+        if [ -f "$desktop" ]; then
+            sed -i 's|^Icon=.*|Icon=vibeos-logo|' "$desktop" || true
+        fi
+    done
+
+    ok "calamares branded as VibeOS"
+fi
+
+# =============================================================
 # Step 4 — rebrand OS identity files
 # =============================================================
 say "step 4 — rebrand OS identity"
@@ -373,6 +444,7 @@ printf '  plasma theme:  %s\n' "$( [ -d /usr/share/plasma/desktoptheme/VibeOS-Ne
 printf '  aurorae deco:  %s\n' "$( [ -d /usr/share/aurorae/themes/VibeOS-Neon ] && echo installed || echo MISSING )"
 printf '  kvantum:       %s\n' "$( [ -f /usr/share/Kvantum/VibeOS-Neon/VibeOS-Neon.svg ] && echo installed || echo partial )"
 printf '  sddm theme:    %s\n' "$( [ -d /usr/share/sddm/themes/vibeos ] && echo installed || echo MISSING )"
+printf '  calamares:     %s\n' "$( [ -f /etc/calamares/branding/vibeos/branding.desc ] && echo installed || echo MISSING )"
 printf '  plymouth:      %s\n' "$(plymouth-set-default-theme 2>/dev/null || echo unknown)"
 printf '  vibbey auto:   %s\n' "$( [ -f /etc/skel/.config/autostart/vibeos-first-run.desktop ] && echo installed || echo MISSING )"
 
