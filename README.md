@@ -26,7 +26,9 @@ Takes ~10 minutes (apt + npm + Ollama model pull). After it finishes, Vibbey pop
 
 ### 💿 Path B — "Start from scratch"
 
-Download `vibeos-0.4.0.iso`, flash it to a USB with [balenaEtcher](https://www.balena.io/etcher/), boot your machine from the USB, and land in a fully-themed VibeOS desktop. Zero terminal steps. Ideal for users who have never installed Linux and want the "just works" experience.
+**[Download vibeos-0.4.0.iso (4.7 GB)](https://iso.mwmai.no/vibeos-0.4.0.iso)** · [SHA256SUMS](https://iso.mwmai.no/SHA256SUMS) · [landing page](https://iso.mwmai.no/)
+
+Flash it to a USB with [balenaEtcher](https://www.balena.io/etcher/), boot your machine from the USB, and land in a fully-themed VibeOS desktop. Zero terminal steps. Ideal for users who have never installed Linux and want the "just works" experience.
 
 What you get:
 
@@ -35,7 +37,7 @@ What you get:
 - 🧠 Everything from Path A preinstalled: Claude Code, Ollama, Docker, GitHub CLI, Node.js, Python, Git
 - 🔑 Hybrid Groq + Ollama with 300 free bootstrap messages, then bring-your-own-key
 
-**Status**: actively building. Stage 4 in progress — base distro Kubuntu 22.04 LTS + KDE Plasma, full Neon Grid rebrand (theme, fonts, wallpapers, GRUB, Plymouth, SDDM), Vibbey auto-launching as a layer-shell desktop widget on first login. ISO will be hosted at `iso.mwmai.no` once shipped.
+**Status**: v0.4.0 ISO shipped 2026-04-11 at [`iso.mwmai.no`](https://iso.mwmai.no/). Kubuntu 22.04 LTS + KDE Plasma base, full Neon Grid rebrand (theme, fonts, wallpapers, GRUB, Plymouth, SDDM), Vibbey auto-launching on first login. Early release — report issues at [github.com/Matswm86/vibeos/issues](https://github.com/Matswm86/vibeos/issues).
 
 ---
 
@@ -99,7 +101,14 @@ Vibbey is VibeOS's onboarding character: nostalgic nod to Microsoft's old paperc
 **Brain** — Vibbey routes chats through three tiers, automatically falling back:
 
 1. **Your own Groq key** (if you have one at `~/.vibeos/groq.key`) → unlimited smart mode on `llama-3.3-70b-versatile`
-2. **VibeOS bootstrap proxy** (`~/.vibeos/groq.token`) → 300 free messages on the hosted proxy at `groq.mwmai.no`, so newbies get smart mode without signing up
+2. **VibeOS bootstrap proxy** (`~/.vibeos/groq.token`) → 300 free messages on the hosted proxy at [`groq.mwmai.no`](https://groq.mwmai.no/health). Activate on a fresh install with one command:
+   ```bash
+   mkdir -p ~/.vibeos && \
+     curl -sS -X POST https://groq.mwmai.no/bootstrap \
+     | python3 -c 'import sys,json; print(json.load(sys.stdin)["token"])' \
+     > ~/.vibeos/groq.token
+   ```
+   Then restart Vibbey. No signup, no form, no email — just fast responses until the 300 messages are used.
 3. **Local Ollama** (`gemma3:4b` default, auto-detects whatever you have pulled) → private, offline, no cost
 
 **Knowledge** — at server startup she loads a static knowledge pack from `clippy/knowledge/` (identity, common commands, troubleshooting) straight into her system prompt, so she can answer "how do I open a terminal" or "how do I auth GitHub CLI" without searching the web.

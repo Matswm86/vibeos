@@ -1,0 +1,34 @@
+[Unit]
+Description=VibeOS bootstrap Groq proxy (groq.mwmai.no)
+Documentation=https://github.com/Matswm86/vibeos/blob/main/services/groq-proxy/README.md
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+Type=simple
+EnvironmentFile=/etc/mwmai/vibeos.env
+WorkingDirectory=%h/services/groq-proxy
+ExecStart=/usr/bin/python3 %h/services/groq-proxy/app.py
+Restart=on-failure
+RestartSec=5
+StandardOutput=journal
+StandardError=journal
+
+# Hardening — ONLY the directives user-scope systemd can apply without
+# CAP_SYS_ADMIN. ProtectKernel*, ProtectHostname, ProtectClock,
+# LockPersonality, RestrictRealtime, RestrictNamespaces all require caps
+# the user manager doesn't have and will fail the unit with
+# status=218/CAPABILITIES. User-scope is already isolated by uid, so the
+# directives below are the practical ceiling — same allowlist as
+# pytor-tutor.service, which ships in prod.
+NoNewPrivileges=true
+PrivateTmp=true
+ProtectSystem=strict
+ProtectHome=read-only
+ReadWritePaths=%h/services/groq-proxy
+
+# PYTHONUNBUFFERED so journal sees log lines in real time
+Environment=PYTHONUNBUFFERED=1
+
+[Install]
+WantedBy=default.target

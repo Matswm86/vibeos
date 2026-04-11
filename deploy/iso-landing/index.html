@@ -1,0 +1,194 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>VibeOS — a fun Linux distro with a 3D assistant built in</title>
+<meta name="description" content="Download VibeOS: Kubuntu 22.04 rebased with Neon Grid theme and Vibbey, a 3D AI assistant. Free and open source.">
+<style>
+  :root {
+    --bg: #0a0e1a;
+    --fg: #e8f0ff;
+    --accent: #7afcff;
+    --accent-2: #ff4fa3;
+    --muted: #8995b3;
+    --card: #121828;
+    --border: #2a3350;
+  }
+  * { box-sizing: border-box; }
+  html, body { margin: 0; padding: 0; }
+  body {
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", system-ui, sans-serif;
+    background: var(--bg);
+    color: var(--fg);
+    line-height: 1.6;
+    min-height: 100vh;
+    background-image:
+      radial-gradient(ellipse at top, rgba(122, 252, 255, 0.08), transparent 60%),
+      radial-gradient(ellipse at bottom, rgba(255, 79, 163, 0.05), transparent 60%);
+  }
+  .container { max-width: 780px; margin: 0 auto; padding: 3rem 1.5rem 6rem; }
+  header { text-align: center; margin-bottom: 3rem; }
+  h1 {
+    font-size: clamp(2.5rem, 6vw, 4rem);
+    margin: 0 0 0.5rem;
+    background: linear-gradient(90deg, var(--accent), var(--accent-2));
+    -webkit-background-clip: text;
+    background-clip: text;
+    color: transparent;
+    letter-spacing: -0.02em;
+  }
+  .tagline { color: var(--muted); font-size: 1.15rem; margin: 0; }
+  .version-badge {
+    display: inline-block;
+    font-family: ui-monospace, "SF Mono", Menlo, monospace;
+    font-size: 0.85rem;
+    color: var(--accent);
+    border: 1px solid var(--border);
+    background: var(--card);
+    padding: 0.25rem 0.75rem;
+    border-radius: 999px;
+    margin-top: 1rem;
+  }
+  .download-card {
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 2rem;
+    margin-bottom: 2rem;
+  }
+  .download-btn {
+    display: block;
+    width: 100%;
+    text-align: center;
+    background: linear-gradient(135deg, var(--accent), var(--accent-2));
+    color: #0a0e1a;
+    font-weight: 700;
+    font-size: 1.2rem;
+    padding: 1.1rem 2rem;
+    border-radius: 8px;
+    text-decoration: none;
+    transition: transform 0.15s ease, box-shadow 0.15s ease;
+    border: none;
+    cursor: pointer;
+  }
+  .download-btn:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 8px 24px rgba(122, 252, 255, 0.25);
+  }
+  .file-meta {
+    display: flex;
+    justify-content: space-between;
+    margin-top: 1rem;
+    font-family: ui-monospace, "SF Mono", Menlo, monospace;
+    font-size: 0.85rem;
+    color: var(--muted);
+  }
+  .checksum-box {
+    background: #0a0e1a;
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    padding: 0.75rem 1rem;
+    font-family: ui-monospace, "SF Mono", Menlo, monospace;
+    font-size: 0.78rem;
+    color: var(--accent);
+    word-break: break-all;
+    margin-top: 1rem;
+  }
+  .checksum-label { color: var(--muted); font-size: 0.75rem; text-transform: uppercase; letter-spacing: 0.08em; margin-bottom: 0.4rem; }
+  h2 { color: var(--accent); font-size: 1.3rem; margin: 2.5rem 0 1rem; }
+  ol { padding-left: 1.2rem; }
+  ol li { margin-bottom: 0.5rem; }
+  code {
+    background: #0a0e1a;
+    border: 1px solid var(--border);
+    padding: 0.15rem 0.45rem;
+    border-radius: 4px;
+    font-size: 0.85rem;
+    color: var(--accent);
+  }
+  pre code { display: block; padding: 1rem; border-radius: 6px; overflow-x: auto; }
+  .warning {
+    background: rgba(255, 79, 163, 0.08);
+    border: 1px solid rgba(255, 79, 163, 0.3);
+    border-radius: 8px;
+    padding: 1rem 1.25rem;
+    margin: 1.5rem 0;
+    font-size: 0.95rem;
+  }
+  footer {
+    margin-top: 4rem;
+    padding-top: 2rem;
+    border-top: 1px solid var(--border);
+    text-align: center;
+    color: var(--muted);
+    font-size: 0.9rem;
+  }
+  footer a { color: var(--accent); text-decoration: none; }
+  footer a:hover { text-decoration: underline; }
+</style>
+</head>
+<body>
+  <div class="container">
+    <header>
+      <h1>VibeOS</h1>
+      <p class="tagline">A fun Linux distro with a 3D AI assistant built in.</p>
+      <span class="version-badge">v0.4.0 &middot; Kubuntu 22.04 base</span>
+    </header>
+
+    <div class="download-card">
+      <a href="/vibeos-0.4.0.iso" class="download-btn" download>
+        Download VibeOS 0.4.0 ISO
+      </a>
+      <div class="file-meta">
+        <span>vibeos-0.4.0.iso</span>
+        <span>4.7 GB</span>
+      </div>
+      <div class="checksum-label" style="margin-top: 1.25rem;">SHA256</div>
+      <div class="checksum-box">a23f653e8c762efaa6ad85ffbedad649ee899c9d1fbf5a42f600a26b7e71f4f0</div>
+      <p style="margin: 1rem 0 0; font-size: 0.85rem; color: var(--muted);">
+        Also available at <a href="/SHA256SUMS" style="color: var(--accent);">/SHA256SUMS</a>
+      </p>
+    </div>
+
+    <h2>What&rsquo;s inside</h2>
+    <ul>
+      <li><strong>Kubuntu 22.04 base</strong> with a custom &ldquo;Neon Grid&rdquo; theme (KDE Plasma, Aurorae, Kvantum)</li>
+      <li><strong>Vibbey</strong> &mdash; a 3D assistant that auto-launches on first boot. Chat via Groq (fast, cloud) or local Ollama (private, offline)</li>
+      <li><strong>Ollama</strong> preinstalled with <code>gemma3:4b</code></li>
+      <li><strong>Claude Code</strong> ready to install via <code>vibe install claude</code></li>
+      <li><strong>Zero telemetry</strong>, zero tracking, zero account required</li>
+    </ul>
+
+    <h2>How to boot it</h2>
+    <ol>
+      <li>Verify the download: <code>sha256sum vibeos-0.4.0.iso</code> &mdash; must match above</li>
+      <li>Flash to a USB stick (8 GB or larger): <code>sudo dd if=vibeos-0.4.0.iso of=/dev/sdX bs=4M status=progress</code> &mdash; replace <code>sdX</code> with your actual USB device</li>
+      <li>Or use <a href="https://etcher.balena.io/" style="color: var(--accent);">balenaEtcher</a> (cross-platform GUI)</li>
+      <li>Reboot, hit F12 / F2 / Esc / Del (depends on your BIOS) and pick the USB stick</li>
+      <li>Try it live first. When you&rsquo;re happy, run the installer from the desktop</li>
+    </ol>
+
+    <div class="warning">
+      <strong>This is v0.4.0.</strong> It&rsquo;s the first ISO release. Expect rough edges. Report anything weird at <a href="https://github.com/Matswm86/vibeos/issues" style="color: var(--accent);">github.com/Matswm86/vibeos/issues</a>.
+    </div>
+
+    <h2>Smart-mode options</h2>
+    <p>Vibbey tries three backends in order: your own Groq key &rarr; a free 300-message bootstrap proxy &rarr; local Ollama. All three are optional &mdash; out of the box Vibbey falls straight to Ollama, which works fully offline.</p>
+    <p>To activate the free 300-message bootstrap tier (faster responses), run this once after boot:</p>
+    <pre><code>curl -X POST https://groq.mwmai.no/bootstrap \
+  | python3 -c 'import sys,json; print(json.load(sys.stdin)["token"])' \
+  &gt; ~/.vibeos/groq.token
+systemctl --user restart vibbey</code></pre>
+
+    <footer>
+      <p>
+        <a href="https://github.com/Matswm86/vibeos">Source on GitHub</a> &middot;
+        <a href="https://mwmai.no">MWMai</a> &middot;
+        <a href="https://github.com/Matswm86/vibeos/blob/main/LICENSE">MIT License</a>
+      </p>
+      <p style="font-size: 0.8rem; margin-top: 1rem;">Built in Norway. Free forever.</p>
+    </footer>
+  </div>
+</body>
+</html>
