@@ -307,20 +307,35 @@ CAL_MODULES_SRC="$THEMING/calamares/modules"
 if [ ! -d "$CAL_BRANDING_SRC" ]; then
     warn "Calamares branding source missing at $CAL_BRANDING_SRC — skipping"
 else
-    # ── Step 3.6a: install Calamares if not present ──────────────
-    # Settings package on jammy is calamares-settings-ubuntu-common
-    # (NOT calamares-settings-ubuntu — that name only exists on later
-    # Ubuntu releases and is missing from jammy repos).
+    # ── Step 3.6a: install Calamares + a working settings pack ──
+    # On jammy, `calamares-settings-ubuntu-common` is metadata only
+    # — it does NOT drop /etc/calamares/. The package that ships an
+    # actual /etc/calamares/settings.conf + modules is one of the
+    # derivative-specific settings packages. We use lubuntu's because
+    # it's Ubuntu-derived (so the install behavior matches what we
+    # want) and it's the most-tested Calamares config in the jammy
+    # repos. We then override branding: vibeos in 3.6c.
+    #
+    # NOTE: do NOT switch to calamares-settings-debian unless you also
+    # patch out debian-specific packages/grub config — it'll try to
+    # install Debian repos.
     if ! command -v calamares >/dev/null 2>&1; then
-        say "  installing calamares + calamares-settings-ubuntu-common"
-        if apt-get install -y calamares calamares-settings-ubuntu-common; then
-            ok "calamares installed"
+        say "  installing calamares"
+        apt-get install -y calamares || \
+            warn "apt install calamares failed — verify universe repo enabled"
+    else
+        ok "calamares binary already installed"
+    fi
+
+    if [ ! -f /etc/calamares/settings.conf ]; then
+        say "  installing calamares-settings-lubuntu (drops /etc/calamares/*)"
+        if apt-get install -y calamares-settings-lubuntu; then
+            ok "calamares-settings-lubuntu installed"
         else
-            warn "apt install calamares failed — branding will be unused"
-            warn "  check: apt-cache search '^calamares' and verify universe repo enabled"
+            warn "calamares-settings-lubuntu install failed — branding will not activate"
         fi
     else
-        ok "calamares already installed"
+        ok "/etc/calamares/settings.conf already present"
     fi
 
     if [ ! -d /etc/calamares ]; then
