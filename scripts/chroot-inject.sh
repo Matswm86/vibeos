@@ -468,6 +468,41 @@ else
 fi
 
 # =============================================================
+# Step 3.7 — pin casper FLAVOUR so the live user is named "vibeos"
+# =============================================================
+# Casper derives the live username from /cdrom/.disk/info via:
+#   FLAVOUR=$(cut -d' ' -f1 /cdrom/.disk/info | tr '[A-Z]' '[a-z]')
+#   USERNAME=$FLAVOUR
+# Cubic writes a .disk/info string like "vibeos-0.4.1 (20260412)",
+# whose first word is "vibeos-0.4.1". Linux usernames can't contain
+# dots, so useradd rejects it and 25adduser fails silently — leaving
+# SDDM autologin (configured for User=vibeos) with no user to log in.
+# Result: black screen + cursor (confirmed during 2026-04-12 test-fly).
+#
+# /etc/casper.conf has a hardcoded escape hatch: setting FLAVOUR to a
+# non-empty string forces casper to use that exact value AND the
+# adjacent USERNAME / USERFULLNAME / HOST values rather than parsing
+# .disk/info. We pin all four to clean strings.
+say "step 3.7 — pin casper FLAVOUR / USERNAME to vibeos"
+if [ -f /etc/casper.conf ]; then
+    sed -i \
+        -e 's|^export USERNAME=.*|export USERNAME="vibeos"|' \
+        -e 's|^export USERFULLNAME=.*|export USERFULLNAME="VibeOS Live User"|' \
+        -e 's|^export HOST=.*|export HOST="vibeos"|' \
+        -e 's|^export BUILD_SYSTEM=.*|export BUILD_SYSTEM="VibeOS"|' \
+        -e 's|^# *export FLAVOUR=.*|export FLAVOUR="vibeos"|' \
+        /etc/casper.conf
+    # If the FLAVOUR line was missing entirely (some derivatives strip it),
+    # append it.
+    if ! grep -q '^export FLAVOUR=' /etc/casper.conf; then
+        echo 'export FLAVOUR="vibeos"' >> /etc/casper.conf
+    fi
+    ok "casper.conf pinned (FLAVOUR=vibeos, USERNAME=vibeos)"
+else
+    warn "/etc/casper.conf not found — live user will be derived from .disk/info"
+fi
+
+# =============================================================
 # Step 4 — rebrand OS identity files
 # =============================================================
 say "step 4 — rebrand OS identity"
