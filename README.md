@@ -26,7 +26,7 @@ Takes ~10 minutes (apt + npm + Ollama model pull). After it finishes, Vibbey pop
 
 ### 💿 Path B — "Start from scratch"
 
-**[Download vibeos-0.4.0.iso (4.7 GB)](https://iso.mwmai.no/vibeos-0.4.0.iso)** · [SHA256SUMS](https://iso.mwmai.no/SHA256SUMS) · [landing page](https://iso.mwmai.no/)
+**[Download vibeos-0.4.1.iso (4.7 GB)](https://iso.mwmai.no/vibeos-0.4.1.iso)** · [SHA256SUMS](https://iso.mwmai.no/SHA256SUMS) · [landing page](https://iso.mwmai.no/)
 
 Flash it to a USB with [balenaEtcher](https://www.balena.io/etcher/), boot your machine from the USB, and land in a fully-themed VibeOS desktop. Zero terminal steps. Ideal for users who have never installed Linux and want the "just works" experience.
 
@@ -37,7 +37,7 @@ What you get:
 - 🧠 Everything from Path A preinstalled: Claude Code, Ollama, Docker, GitHub CLI, Node.js, Python, Git
 - 🔑 Hybrid Groq + Ollama with 300 free bootstrap messages, then bring-your-own-key
 
-**Status**: v0.4.0 ISO shipped 2026-04-11 at [`iso.mwmai.no`](https://iso.mwmai.no/). Kubuntu 22.04 LTS + KDE Plasma base, full Neon Grid rebrand (theme, fonts, wallpapers, GRUB, Plymouth, SDDM), Vibbey auto-launching on first login. Early release — report issues at [github.com/Matswm86/vibeos/issues](https://github.com/Matswm86/vibeos/issues).
+**Status**: v0.4.1 ISO shipped 2026-04-12 (Calamares installer verified) at [`iso.mwmai.no`](https://iso.mwmai.no/). Kubuntu 22.04 LTS + KDE Plasma base, full Neon Grid rebrand (theme, fonts, wallpapers, GRUB, Plymouth, SDDM), Vibbey auto-launching on first login. Early release — report issues at [github.com/Matswm86/vibeos/issues](https://github.com/Matswm86/vibeos/issues).
 
 ---
 
@@ -86,7 +86,7 @@ The onboarding model (Gemma3 4B) runs on CPU-only. Claude Code itself requires n
 
 **Path A today (v0.3.2+)** — an installer + configuration layer on top of any Debian/Ubuntu-family distro. Everything downloads at install time, so you always get the latest Claude Code and latest MCPs. Vibbey runs as a chrome-stripped webkit2gtk widget after the install finishes.
 
-**Path B in active development (v0.4.0, Stage 4)** — a bootable `.iso` image based on **Kubuntu 22.04 LTS (KDE Plasma)** with a full VibeOS rebrand: custom GRUB, Plymouth boot splash, SDDM login theme, VibeOS-Neon Plasma theme + Aurorae window decorations + Kvantum for GTK apps, custom icons, cursors, fonts (Orbitron / JetBrains Mono / VT323), Tron-grid wallpapers, and Vibbey auto-launching on first login **as a true layer-shell desktop widget** (no window chrome, no Alt-Tab entry, anchored to the bottom-right corner).
+**Path B in active development (v0.4.1, Stage 4)** — a bootable `.iso` image based on **Kubuntu 22.04 LTS (KDE Plasma)** with a full VibeOS rebrand: custom GRUB, Plymouth boot splash, SDDM login theme, VibeOS-Neon Plasma theme + Aurorae window decorations + Kvantum for GTK apps, custom icons, cursors, fonts (Orbitron / JetBrains Mono / VT323), Tron-grid wallpapers, and Vibbey auto-launching on first login **as a true layer-shell desktop widget** (no window chrome, no Alt-Tab entry, anchored to the bottom-right corner).
 
 Why Kubuntu + KDE and not GNOME or COSMIC? We tested. KDE's KWin is currently the only widely-deployed Linux compositor with **mature, rendered layer-shell support**, which is the Wayland protocol that lets Vibbey be a true desktop widget instead of a window. GNOME Mutter rejects layer-shell, and COSMIC (Pop!\_OS's new compositor) accepts the protocol but doesn't yet render GTK3 layer surfaces visually. Kubuntu gets us working integration today.
 
@@ -223,7 +223,7 @@ bash scripts/fetch-wallpapers.sh
 # Exit the chroot (Ctrl+D), let cubic finish, and QEMU-boot the output:
 qemu-system-x86_64 -enable-kvm -m 8G -smp 4 \
     -bios /usr/share/OVMF/OVMF_CODE.fd \
-    -cdrom ~/vibeos-build/output/vibeos-0.4.0.iso -boot d
+    -cdrom ~/vibeos-build/output/vibeos-0.4.1.iso -boot d
 ```
 
 ### Repo layout
