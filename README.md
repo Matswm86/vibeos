@@ -22,7 +22,7 @@ Takes ~10 minutes (apt + npm + Ollama model pull). After it finishes, Vibbey pop
 
 > *"Looks like you're about to Vibe hard. Would you like to continue? ;)"*
 
-**Status**: shipped, v0.3.2+. Stable.
+**Status**: shipped, v0.4.1. Stable.
 
 ### 💿 Path B — "Start from scratch"
 
@@ -84,7 +84,7 @@ The onboarding model (Gemma3 4B) runs on CPU-only. Claude Code itself requires n
 
 ## What VibeOS is (and will be)
 
-**Path A today (v0.3.2+)** — an installer + configuration layer on top of any Debian/Ubuntu-family distro. Everything downloads at install time, so you always get the latest Claude Code and latest MCPs. Vibbey runs as a chrome-stripped webkit2gtk widget after the install finishes.
+**Path A today (v0.4.1)** — an installer + configuration layer on top of any Debian/Ubuntu-family distro. Everything downloads at install time, so you always get the latest Claude Code and latest MCPs. Vibbey runs as a chrome-stripped webkit2gtk widget after the install finishes.
 
 **Path B in active development (v0.4.1, Stage 4)** — a bootable `.iso` image based on **Kubuntu 22.04 LTS (KDE Plasma)** with a full VibeOS rebrand: custom GRUB, Plymouth boot splash, SDDM login theme, VibeOS-Neon Plasma theme + Aurorae window decorations + Kvantum for GTK apps, custom icons, cursors, fonts (Orbitron / JetBrains Mono / VT323), Tron-grid wallpapers, and Vibbey auto-launching on first login **as a true layer-shell desktop widget** (no window chrome, no Alt-Tab entry, anchored to the bottom-right corner).
 
