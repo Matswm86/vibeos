@@ -26,7 +26,7 @@
 
 set -euo pipefail
 
-VIBEOS_VERSION="0.3.2"
+VIBEOS_VERSION="0.4.1"
 VIBEOS_DIR="${HOME}/.vibeos"
 VIBEOS_REPO="https://github.com/Matswm86/vibeos.git"
 CLAUDE_DIR="${HOME}/.claude"
