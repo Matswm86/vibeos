@@ -54,6 +54,58 @@ USER_AGENT = "VibeOS-BootstrapProxy/0.1 (+https://groq.mwmai.no)"
 # want to forward unbounded payloads.
 MAX_REQUEST_BYTES = 256 * 1024  # 256 KB — plenty for chat messages
 
+# ---------------------------------------------------------------------------
+# Landing page
+# ---------------------------------------------------------------------------
+# Rendered on GET /. Plain HTML with no inline CSS/JS/images so it works
+# under the Caddy vhost CSP `default-src 'none'; frame-ancestors 'none'`.
+# Default browser styles are sufficient for an API docs page.
+
+LANDING_PAGE_HTML = b"""<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>VibeOS Bootstrap Groq Proxy</title>
+</head>
+<body>
+<h1>VibeOS Bootstrap Groq Proxy</h1>
+<p>API-only service. No browser UI. Hands out free 300-message bootstrap
+tokens to fresh VibeOS installs so <em>Vibbey</em> (the 3D AI assistant) has a
+smart backend before the user has signed up for their own Groq key.</p>
+
+<h2>Endpoints</h2>
+
+<h3><code>GET /health</code></h3>
+<p>Service status and call counters.</p>
+<pre>curl https://groq.mwmai.no/health</pre>
+
+<h3><code>POST /bootstrap</code></h3>
+<p>Issue a fresh 300-message token. Optional <code>label</code> in the body.</p>
+<pre>curl -X POST https://groq.mwmai.no/bootstrap \\
+  -H "Content-Type: application/json" \\
+  -d '{"label":"my-vibeos-laptop"}'</pre>
+
+<h3><code>POST /v1/chat/completions</code></h3>
+<p>OpenAI-compatible chat. Requires
+<code>Authorization: Bearer &lt;bootstrap-token&gt;</code>. Response headers include
+<code>X-Bootstrap-Remaining</code> and <code>X-Bootstrap-Quota</code> so clients can warn
+the user as they approach zero.</p>
+<pre>curl -X POST https://groq.mwmai.no/v1/chat/completions \\
+  -H "Authorization: Bearer $TOKEN" \\
+  -H "Content-Type: application/json" \\
+  -d '{"messages":[{"role":"user","content":"hello"}]}'</pre>
+
+<h2>Source</h2>
+<p><a href="https://github.com/Matswm86/vibeos/tree/main/services/groq-proxy">github.com/Matswm86/vibeos/tree/main/services/groq-proxy</a></p>
+
+<hr>
+<p><small>Part of the <a href="https://github.com/Matswm86/vibeos">VibeOS</a>
+project &mdash; free OSS Linux distro with a 3D AI assistant.</small></p>
+</body>
+</html>
+"""
+
 logging.basicConfig(
     level=logging.INFO,
     format="%(asctime)s %(levelname)s %(message)s",
@@ -223,6 +275,14 @@ class ProxyHandler(BaseHTTPRequestHandler):
         self.end_headers()
         self.wfile.write(body)
 
+    def _send_html(self, status: int, body: bytes) -> None:
+        self.send_response(status)
+        self.send_header("Content-Type", "text/html; charset=utf-8")
+        self.send_header("Content-Length", str(len(body)))
+        self.send_header("Cache-Control", "public, max-age=300")
+        self.end_headers()
+        self.wfile.write(body)
+
     def _read_body(self) -> bytes | None:
         length = int(self.headers.get("Content-Length") or 0)
         if length <= 0:
@@ -255,6 +315,9 @@ class ProxyHandler(BaseHTTPRequestHandler):
     # --- routing -----------------------------------------------------------
 
     def do_GET(self) -> None:  # noqa: N802  — stdlib naming
+        if self.path == "/":
+            self._send_html(200, LANDING_PAGE_HTML)
+            return
         if self.path == "/health":
             self._send_json(200, health_snapshot())
             return
