@@ -463,6 +463,34 @@ else
             ok "Install VibeOS shortcut in /etc/skel/Desktop"
         fi
 
+        # ── Step 3.6j: patch calamares-logs-helper ──────────────
+        # calamares-settings-lubuntu ships /usr/bin/calamares-logs-helper
+        # with `set -ex` and a hardcoded /home/lubuntu/ path. This makes
+        # the ENTIRE install fail at the very last step (log copying)
+        # because the live user is vibeos, not lubuntu. Confirmed during
+        # 2026-04-12 first successful install attempt.
+        # Fix: remove set -e, make session.log path dynamic, add || true.
+        if [ -f /usr/bin/calamares-logs-helper ]; then
+            cat > /usr/bin/calamares-logs-helper <<'LOGSEOF'
+#!/bin/sh
+set -x
+root=$1
+install_dir=$root/var/log/installer
+[ -d $install_dir ] || mkdir -p $install_dir
+session_log="$(find /home -path '*/.cache/calamares/session.log' 2>/dev/null | head -1)"
+[ -n "$session_log" ] && cp "$session_log" $install_dir/debug || true
+cp /cdrom/.disk/info $install_dir/media-info 2>/dev/null || true
+cp /var/log/casper.log $install_dir/casper.log 2>/dev/null || true
+cp /var/log/syslog $install_dir/syslog 2>/dev/null || true
+gzip --stdout $root/var/lib/dpkg/status > $install_dir/initial-status.gz 2>/dev/null || true
+chmod 600 $install_dir/* 2>/dev/null
+chmod 644 $install_dir/initial-status.gz 2>/dev/null
+chmod 644 $install_dir/media-info 2>/dev/null
+LOGSEOF
+            chmod 755 /usr/bin/calamares-logs-helper
+            ok "calamares-logs-helper patched (dynamic path, no set -e)"
+        fi
+
         ok "calamares branded as VibeOS, ubiquity hidden"
     fi
 fi

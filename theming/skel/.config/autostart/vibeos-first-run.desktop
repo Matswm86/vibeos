@@ -4,7 +4,7 @@ Version=1.0
 Name=VibeOS First Run
 GenericName=VibeOS Welcome
 Comment=Launch Vibbey on first login
-Exec=/usr/bin/python3 -m clippy
+Exec=env PYTHONPATH=/opt/vibeos /usr/bin/python3 -m clippy
 Icon=vibeos-logo
 Terminal=false
 Categories=System;
