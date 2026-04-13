@@ -549,14 +549,24 @@ fi
 # line up across a live-session → installed-system transition.
 say "step 3.8 — pre-create vibeos user in squashfs"
 if ! id vibeos >/dev/null 2>&1; then
-    useradd -m -s /bin/bash -u 999 -U \
-        -G sudo,audio,video,plugdev,netdev,lpadmin,dialout,cdrom \
-        -c "VibeOS Live User" \
-        vibeos
+    # Prefer uid 999 (matches casper default) but fall back to
+    # auto-assign if something else already claimed it inside the
+    # chroot (e.g. systemd-coredump, sssd). A non-999 uid is fine —
+    # the user still exists, which is the point.
+    if getent passwd 999 >/dev/null 2>&1; then
+        warn "uid 999 already in use by $(getent passwd 999 | cut -d: -f1) — auto-assigning"
+        useradd -m -s /bin/bash -U \
+            -G sudo,audio,video,plugdev,netdev,lpadmin,dialout,cdrom \
+            -c "VibeOS Live User" vibeos
+    else
+        useradd -m -s /bin/bash -u 999 -U \
+            -G sudo,audio,video,plugdev,netdev,lpadmin,dialout,cdrom \
+            -c "VibeOS Live User" vibeos
+    fi
     passwd -d vibeos
-    ok "vibeos user created (uid 999, blank password)"
+    ok "vibeos user created (uid $(id -u vibeos), blank password)"
 else
-    ok "vibeos user already exists"
+    ok "vibeos user already exists (uid $(id -u vibeos))"
 fi
 install -d -m0755 /etc/sudoers.d
 echo "vibeos ALL=(ALL) NOPASSWD: ALL" > /etc/sudoers.d/vibeos
