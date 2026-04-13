@@ -75,6 +75,26 @@ html, body {
   text-transform: uppercase;
 }
 
+#install-btn {
+  margin-left: auto;
+  padding: 5px 12px;
+  font-family: var(--font-display);
+  font-weight: 700;
+  font-size: 11px;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--vbo-bg-0);
+  background: var(--vbo-yellow);
+  border: 1px solid var(--vbo-yellow-warm);
+  border-radius: 4px;
+  cursor: pointer;
+  box-shadow: 0 0 10px var(--vbo-char-glow);
+  transition: transform 0.08s ease, box-shadow 0.15s ease;
+}
+#install-btn:hover { transform: translateY(-1px); box-shadow: 0 0 14px var(--vbo-yellow); }
+#install-btn:active { transform: translateY(0); }
+#install-btn.hidden { display: none; }
+
 /* ── 3D scene container ──────────────────────────────────── */
 
 #scene-container {

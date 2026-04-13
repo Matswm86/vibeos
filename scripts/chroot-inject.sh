@@ -586,6 +586,21 @@ if [ -f /boot/grub/themes/vibeos/theme.txt ]; then
     ok "grub theme wired"
 fi
 
+# GRUB cmdline: quiet noisy ACPI / firmware messages so the splash isn't
+# preceded by a wall of harmless red errors. Users were reporting "ACPI
+# error" before the boot menu — almost always benign table warnings, but
+# they look alarming on first install. quiet+loglevel=3 hides them while
+# leaving real failures (level 0-2) visible.
+if [ -f /etc/default/grub ]; then
+    if ! grep -q 'loglevel=' /etc/default/grub; then
+        sed -i 's|^GRUB_CMDLINE_LINUX_DEFAULT="\(.*\)"|GRUB_CMDLINE_LINUX_DEFAULT="\1 quiet loglevel=3"|' /etc/default/grub
+        # Collapse the duplicate "quiet" if the default already had one
+        sed -i 's| quiet quiet | quiet |g' /etc/default/grub
+    fi
+    update-grub || warn "update-grub failed (may be ok in chroot without devices)"
+    ok "grub cmdline quieted"
+fi
+
 # SDDM: set default theme + autologin via drop-in
 #
 # IMPORTANT: Theme is set to `breeze` (Kubuntu default), NOT `vibeos`.
@@ -628,6 +643,55 @@ say "step 7 — vibbey autostart propagated via /etc/skel"
     || warn "autostart entry NOT in /etc/skel — Vibbey will not auto-launch"
 
 # =============================================================
+# Step 7.5 — bake Ollama + a small local model into the ISO
+# =============================================================
+# Why: Vibbey defaults to Groq cloud, but on first boot the user might
+# be offline (no Wi-Fi yet) or might have declined cloud mode. Bundling
+# a small local model means Vibbey works end-to-end with zero internet
+# and zero API key. ~2 GB cost for qwen2.5:3b — still fits a 8 GB USB.
+#
+# Set VIBEOS_BAKE_OLLAMA=0 to skip (e.g. lean ISO variant).
+say "step 7.5 — install Ollama + pull local fallback model"
+if [ "${VIBEOS_BAKE_OLLAMA:-1}" = "1" ]; then
+    if ! command -v ollama >/dev/null 2>&1; then
+        # Official installer is the only supported path; it sets up the
+        # systemd unit and a dedicated `ollama` user automatically.
+        curl -fsSL https://ollama.com/install.sh | sh \
+            && ok "ollama installed" \
+            || warn "ollama install failed — Vibbey will need internet for chat"
+    else
+        ok "ollama already present"
+    fi
+
+    if command -v ollama >/dev/null 2>&1; then
+        # Pull happens at build time so the ISO ships the blob. The
+        # systemd ollama.service must be running for `ollama pull` to
+        # work — start it transiently inside the chroot.
+        ollama serve >/tmp/ollama-serve.log 2>&1 &
+        OLLAMA_PID=$!
+        sleep 4
+        # Default fallback model: qwen2.5:3b — smart enough for chat,
+        # ~1.9 GB on disk. Override with VIBEOS_OLLAMA_MODEL.
+        OLLAMA_MODEL="${VIBEOS_OLLAMA_MODEL:-qwen2.5:3b}"
+        ollama pull "$OLLAMA_MODEL" \
+            && ok "pulled $OLLAMA_MODEL" \
+            || warn "ollama pull $OLLAMA_MODEL failed (network or daemon)"
+        kill "$OLLAMA_PID" 2>/dev/null || true
+        wait "$OLLAMA_PID" 2>/dev/null || true
+
+        # Also flip Vibbey's default Ollama model to match what we pulled.
+        # (groq_proxy.chat falls back to ollama_model="gemma3:4b" by default;
+        # a stale name = "ollama_error: model not found" on first chat.)
+        if [ -f /opt/vibeos/clippy/server.py ]; then
+            sed -i "s|ollama_model = payload.get(\"model\", \"gemma3:4b\")|ollama_model = payload.get(\"model\", \"$OLLAMA_MODEL\")|" \
+                /opt/vibeos/clippy/server.py || true
+        fi
+    fi
+else
+    say "step 7.5 skipped (VIBEOS_BAKE_OLLAMA=0)"
+fi
+
+# =============================================================
 # Step 8 — report
 # =============================================================
 printf '\n\e[36m=== chroot inject complete ===\e[0m\n'
@@ -640,5 +704,7 @@ printf '  sddm theme:    %s\n' "$( [ -d /usr/share/sddm/themes/vibeos ] && echo 
 printf '  calamares:     %s\n' "$( [ -f /etc/calamares/branding/vibeos/branding.desc ] && echo installed || echo MISSING )"
 printf '  plymouth:      %s\n' "$(plymouth-set-default-theme 2>/dev/null || echo unknown)"
 printf '  vibbey auto:   %s\n' "$( [ -f /etc/skel/.config/autostart/vibeos-first-run.desktop ] && echo installed || echo MISSING )"
+printf '  ollama:        %s\n' "$( command -v ollama >/dev/null 2>&1 && echo installed || echo MISSING )"
+printf '  ollama models: %s\n' "$( command -v ollama >/dev/null 2>&1 && (ollama list 2>/dev/null | tail -n +2 | awk '{print $1}' | xargs echo) || echo none )"
 
 printf '\nexit the chroot terminal (Ctrl+D) and let cubic finish the ISO build.\n'

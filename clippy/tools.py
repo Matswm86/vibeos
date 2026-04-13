@@ -35,6 +35,10 @@ class ToolSpec:
     accepts_arg: bool = False
     arg_pattern: re.Pattern[str] | None = None
     arg_builder: Callable[[str], list[str]] | None = None
+    # Spawn-and-detach: for long-running GUI processes (e.g. the installer).
+    # We Popen with start_new_session=True and return immediately with
+    # exit_code=0 + a "spawned" stdout marker. Caller never blocks.
+    detach: bool = False
 
 
 # Model name regex: allow alphanumerics, dots, hyphens, colons, slashes (for
@@ -118,6 +122,21 @@ ALLOWED: dict[str, ToolSpec] = {
         argv=["node", "--version"],
         description="Show Node.js version",
     ),
+
+    # ── Installer ──────────────────────────────────────────
+    # Live-session only in practice — on installed systems Calamares
+    # is usually still present but launching it is harmless (it'll just
+    # show "no media" and exit). pkexec gives the polkit auth dialog
+    # the live `vibeos` user already has NOPASSWD rules for.
+    "install_vibeos": ToolSpec(
+        argv=["pkexec", "calamares", "-d"],
+        description="Launch the VibeOS installer (Calamares)",
+        detach=True,
+    ),
+    "is_live_session": ToolSpec(
+        argv=["test", "-d", "/cdrom/casper"],
+        description="Check whether we're running from the live ISO",
+    ),
 }
 
 
@@ -166,6 +185,25 @@ def run_tool(tool_id: str, arg: str | None = None) -> dict[str, object]:
             "error": "not_installed",
             "detail": f"'{argv[0]}' is not on PATH",
             "tool_id": tool_id,
+        }
+
+    if spec.detach:
+        try:
+            subprocess.Popen(
+                argv,
+                stdout=subprocess.DEVNULL,
+                stderr=subprocess.DEVNULL,
+                stdin=subprocess.DEVNULL,
+                start_new_session=True,
+            )
+        except OSError as e:
+            return {"error": "spawn_failed", "detail": str(e), "tool_id": tool_id}
+        return {
+            "tool_id": tool_id,
+            "argv": argv,
+            "stdout": f"spawned {argv[0]} (detached)",
+            "stderr": "",
+            "exit_code": 0,
         }
 
     try:

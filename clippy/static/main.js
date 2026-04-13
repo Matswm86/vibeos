@@ -6,6 +6,8 @@
 import * as THREE from 'three';
 import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';
 
+window.__vibbeyAlive = true;
+
 const statusEl = document.getElementById('status');
 const bubbleEl = document.getElementById('speech-bubble');
 const bubbleText = document.getElementById('bubble-text');
@@ -15,6 +17,7 @@ const canvas = document.getElementById('scene');
 const aboutLink = document.getElementById('about-link');
 const aboutModal = document.getElementById('about-modal');
 const aboutClose = document.getElementById('about-close');
+const installBtn = document.getElementById('install-btn');
 const container = document.getElementById('scene-container');
 
 // ── Scene setup ────────────────────────────────────────────
@@ -406,4 +409,74 @@ aboutClose.addEventListener('click', () => {
 });
 aboutModal.addEventListener('click', (e) => {
   if (e.target === aboutModal) aboutModal.classList.add('hidden');
+});
+
+// ── Install button (live-session overlay) ─────────────────
+// Reveal "Install VibeOS" only when we're on the live ISO. We probe by
+// running the is_live_session tool (test -d /cdrom/casper) — exit_code=0
+// means live, anything else means installed system.
+async function detectLiveSession() {
+  try {
+    const r = await fetch('/api/run', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ tool_id: 'is_live_session' }),
+    });
+    const data = await r.json();
+    if (data.exit_code === 0) {
+      installBtn.classList.remove('hidden');
+      // Replace the generic greeting with an install-flow nudge once GLB loads.
+      // We do this opportunistically — if the bubble already shows the greeting,
+      // overwrite it. If not, the loader callback will set the right text.
+      setTimeout(() => {
+        if (clippyRoot) {
+          showBubble(
+            "Hi! Looks like you're trying VibeOS from the live USB. " +
+            "When you're ready to install on this machine, click the " +
+            "yellow Install VibeOS button up top. I'll walk you through it."
+          );
+        }
+      }, 500);
+    }
+  } catch (e) {
+    console.warn('[vibbey] live-session detect failed', e);
+  }
+}
+detectLiveSession();
+
+installBtn.addEventListener('click', async () => {
+  const ok = window.confirm(
+    "Launch the VibeOS installer?\n\n" +
+    "Calamares will open and walk you through partitioning, user setup, " +
+    "and copying VibeOS to your disk. This is reversible until the final " +
+    "Install button inside Calamares.\n\n" +
+    "I'll stay open here in case you need help."
+  );
+  if (!ok) return;
+  installBtn.disabled = true;
+  installBtn.textContent = 'Launching…';
+  try {
+    const r = await fetch('/api/run', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ tool_id: 'install_vibeos' }),
+    });
+    const data = await r.json();
+    if (data.error) {
+      showBubble(`Couldn't launch installer: ${data.detail || data.error}`);
+      installBtn.disabled = false;
+      installBtn.textContent = 'Install VibeOS';
+    } else {
+      showBubble(
+        "Installer launched! It'll ask for your password (use the live " +
+        "session password, usually blank or 'vibeos'). Pick the disk, " +
+        "set a username, and I'll be here if you get stuck."
+      );
+      installBtn.textContent = 'Installer running';
+    }
+  } catch (e) {
+    showBubble(`Launch failed: ${e.message}`);
+    installBtn.disabled = false;
+    installBtn.textContent = 'Install VibeOS';
+  }
 });

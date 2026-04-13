@@ -15,8 +15,8 @@
   <script type="importmap">
   {
     "imports": {
-      "three": "https://unpkg.com/three@0.162.0/build/three.module.js",
-      "three/addons/": "https://unpkg.com/three@0.162.0/examples/jsm/"
+      "three": "./vendor/three/three.module.js",
+      "three/addons/": "./vendor/three/addons/"
     }
   }
   </script>
@@ -26,6 +26,9 @@
     <header id="titlebar">
       <span class="brand">&#128206; Vibbey</span>
       <span class="tagline">VibeOS Assistant</span>
+      <button id="install-btn" class="hidden" title="Launch the VibeOS installer">
+        Install VibeOS
+      </button>
     </header>
 
     <div id="scene-container">
@@ -33,7 +36,7 @@
     </div>
 
     <div id="speech-bubble">
-      <div id="bubble-text">Initializing Vibbey&hellip;</div>
+      <div id="bubble-text">Loading 3D scene&hellip;</div>
     </div>
 
     <div id="chat">
@@ -68,6 +71,21 @@
     </div>
   </div>
 
+  <script>
+    // Watchdog: if main.js never boots (import failure, syntax error,
+    // sandboxed importmap), surface a visible error instead of leaving
+    // the user staring at a frozen bubble. Cleared by main.js on first paint.
+    window.__vibbeyAlive = false;
+    setTimeout(() => {
+      if (window.__vibbeyAlive) return;
+      const t = document.getElementById('bubble-text');
+      const s = document.getElementById('status');
+      if (t) t.textContent =
+        "I couldn't start. The 3D engine didn't load. " +
+        "Open a terminal and run: journalctl --user -u vibeos-first-run -n 50";
+      if (s) { s.textContent = 'startup failed'; s.classList.add('error'); }
+    }, 6000);
+  </script>
   <script type="module" src="main.js"></script>
 </body>
 </html>

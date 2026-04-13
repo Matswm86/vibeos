@@ -3,17 +3,24 @@ Description=VibeOS First Run — Vibbey desktop assistant
 Documentation=https://github.com/Matswm86/vibeos
 # Skip entirely if Vibbey has already completed onboarding on this account.
 ConditionPathExists=!%h/.vibeos/first-run-complete
-# Only start once the graphical session is up (we open a window).
-After=graphical-session.target
+# Wait until both the graphical session AND network-online (NetworkManager-wait-online
+# pulled in via Wants=) are ready. Without this, Vibbey races boot and Groq calls
+# fail before NetworkManager has an IP — which used to look like a silent hang.
+After=graphical-session.target network-online.target
+Wants=network-online.target
 PartOf=graphical-session.target
 
 [Service]
 Type=simple
 Environment=VIBEOS_DIR=/opt/vibeos
+Environment=PYTHONPATH=/opt/vibeos
 WorkingDirectory=/opt/vibeos
 ExecStart=/usr/bin/python3 -m clippy
-Restart=no
-# Vibbey is interactive; a failed launch is not a reason to spam logs.
+# Restart on failure so a transient import / DBus race doesn't kill the
+# first-run experience permanently. After 3 retries the user has a real bug.
+Restart=on-failure
+RestartSec=3
+StartLimitBurst=3
 StandardOutput=journal
 StandardError=journal
 
