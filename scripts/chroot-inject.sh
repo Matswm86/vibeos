@@ -549,6 +549,62 @@ cp -r "$THEMING/skel/.config/"* /etc/skel/.config/
 ok "skel configs installed"
 
 # =============================================================
+# Step 5.5 — install Look-and-Feel package + system-wide xdg configs
+# =============================================================
+# Problem 0.4.2 → 0.4.3: dumping raw kwinrc/plasmarc/kdeglobals into
+# /etc/skel with Backend=OpenGL + GLCore=true + an aurorae override
+# caused KWin to crash at session start on MSI hardware → black screen
+# + cursor. Fix: ship a proper Plasma Look-and-Feel package that KDE
+# applies atomically via lookandfeeltool, plus system-wide fallback
+# configs in /etc/xdg/. The /etc/xdg/kwinrc intentionally has NO
+# Backend / GLCore / decoration override — KWin auto-detects a safe
+# backend and L&F sets the decoration. Per-user skel now carries only
+# genuinely per-user state (konsolerc, Kvantum kvconfig, autostart).
+say "step 5.5 — install Plasma Look-and-Feel + /etc/xdg defaults"
+
+# System-wide KDE fallbacks (read when ~/.config/<file> is absent)
+mkdir -p /etc/xdg
+for f in kdeglobals plasmarc kwinrc kcminputrc; do
+    if [ -f "$THEMING/xdg/$f" ]; then
+        install -Dm644 "$THEMING/xdg/$f" "/etc/xdg/$f"
+    else
+        warn "theming/xdg/$f missing — skipping"
+    fi
+done
+ok "xdg defaults installed"
+
+# Look-and-Feel package
+LNF_SRC="$THEMING/plasma/look-and-feel/org.vibeos.neon"
+LNF_DEST="/usr/share/plasma/look-and-feel/org.vibeos.neon"
+if [ -d "$LNF_SRC" ] && [ -f "$LNF_SRC/metadata.desktop" ] && [ -f "$LNF_SRC/contents/defaults" ]; then
+    mkdir -p /usr/share/plasma/look-and-feel
+    cp -r "$LNF_SRC" /usr/share/plasma/look-and-feel/
+    ok "look-and-feel package org.vibeos.neon installed"
+else
+    warn "Look-and-Feel package missing or malformed — system will use xdg fallbacks only"
+fi
+
+# Apply L&F as system default. lookandfeeltool needs a running DBus,
+# which chroot usually lacks — try anyway and fall back to manual
+# kwriteconfig5 of LookAndFeelPackage if the tool can't run. Both
+# paths end up at the same key, so either is sufficient for first boot.
+if command -v lookandfeeltool >/dev/null 2>&1; then
+    lookandfeeltool -a org.vibeos.neon 2>/dev/null && \
+        ok "lookandfeeltool applied org.vibeos.neon" || \
+        warn "lookandfeeltool failed (chroot DBus limitation — xdg fallback covers it)"
+else
+    warn "lookandfeeltool not installed — relying on /etc/xdg + LookAndFeelPackage key"
+fi
+
+# Belt-and-suspenders: pin the L&F package via kwriteconfig5 so KDE
+# auto-applies it on first session start even if lookandfeeltool didn't run.
+if command -v kwriteconfig5 >/dev/null 2>&1; then
+    kwriteconfig5 --file /etc/xdg/kdeglobals --group KDE \
+        --key LookAndFeelPackage org.vibeos.neon || true
+    ok "LookAndFeelPackage pinned in /etc/xdg/kdeglobals"
+fi
+
+# =============================================================
 # Step 6 — set Plymouth + GRUB defaults
 # =============================================================
 say "step 6 — activate Plymouth + GRUB + SDDM themes"

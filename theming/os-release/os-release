@@ -1,7 +1,7 @@
-PRETTY_NAME="VibeOS 0.4.0 (Neon Grid)"
+PRETTY_NAME="VibeOS 0.4.3 (Neon Grid)"
 NAME="VibeOS"
-VERSION_ID="0.4.0"
-VERSION="0.4.0 (Neon Grid)"
+VERSION_ID="0.4.3"
+VERSION="0.4.3 (Neon Grid)"
 VERSION_CODENAME=neongrid
 ID=vibeos
 ID_LIKE="ubuntu debian"

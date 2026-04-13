@@ -1,8 +1,5 @@
 [Compositing]
 Enabled=true
-Backend=OpenGL
-GLCore=true
-OpenGLIsUnsafe=false
 HiddenPreviews=5
 LatencyPolicy=Medium
 WindowsBlockCompositing=true
@@ -22,13 +19,3 @@ slidingpopupsEnabled=true
 [Windows]
 ElectricBorderCornerRatio=0.25
 Placement=Smart
-
-[org.kde.kdecoration2]
-BorderSize=Normal
-BorderSizeAuto=false
-ButtonsOnLeft=
-ButtonsOnRight=IAX
-CloseOnDoubleClickOnMenu=false
-ShowToolTips=true
-library=org.kde.kwin.aurorae
-theme=__aurorae__svg__VibeOS-Neon

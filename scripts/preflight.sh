@@ -35,7 +35,8 @@ for f in scripts/install-build-rig.sh \
          scripts/chroot-inject.sh \
          scripts/fetch-fonts.sh \
          scripts/fetch-wallpapers.sh \
-         scripts/preflight.sh; do
+         scripts/preflight.sh \
+         scripts/validate-theming.sh; do
     if [ -f "$f" ]; then
         if bash -n "$f" 2>/dev/null; then
             ok "bash -n $f"
@@ -315,6 +316,20 @@ if missing:
     ok "kvantum-recolor covers all neon palette targets"
 else
     fail "kvantum-recolor palette incomplete (see above)"
+fi
+
+# =============================================================
+# 10) Theme asset validator — Look-and-Feel + xdg integrity
+# =============================================================
+say "10. theme asset integrity (validate-theming.sh)"
+if [ -x scripts/validate-theming.sh ]; then
+    if scripts/validate-theming.sh >/dev/null 2>&1; then
+        ok "validate-theming.sh passed"
+    else
+        fail "validate-theming.sh failed — run 'bash scripts/validate-theming.sh' for detail"
+    fi
+else
+    warn "scripts/validate-theming.sh missing or not executable"
 fi
 
 # =============================================================

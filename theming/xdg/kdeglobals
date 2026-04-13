@@ -13,7 +13,7 @@ shadeSortColumn=true
 Theme=Papirus-Dark
 
 [KDE]
-LookAndFeelPackage=
+LookAndFeelPackage=org.vibeos.neon
 SingleClick=false
 contrast=4
 widgetStyle=kvantum-dark
