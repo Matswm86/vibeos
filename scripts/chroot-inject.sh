@@ -531,6 +531,39 @@ else
 fi
 
 # =============================================================
+# Step 3.8 — pre-create vibeos user in squashfs (belt-and-braces)
+# =============================================================
+# Background: casper-bottom/25adduser is supposed to create the live
+# user at boot via user-setup-apply, reading USERNAME from casper.conf.
+# Confirmed during 2026-04-13 test-fly that 0.4.3 builds ship with a
+# fully intact user-setup package AND pinned casper.conf, yet the
+# vibeos user still fails to appear — both graphical session and TTY
+# login reject it. Root cause is likely a silent debconf/env failure
+# inside 25adduser (USERNAME not exported into the right subshell)
+# that we cannot reliably fix from the chroot side.
+#
+# Fix: create the user NOW inside the squashfs. casper's runtime
+# creation becomes redundant but harmless (useradd is idempotent when
+# the user already exists; user-setup-apply will see the existing
+# entry and skip). uid 999 matches casper's default so /home perms
+# line up across a live-session → installed-system transition.
+say "step 3.8 — pre-create vibeos user in squashfs"
+if ! id vibeos >/dev/null 2>&1; then
+    useradd -m -s /bin/bash -u 999 -U \
+        -G sudo,audio,video,plugdev,netdev,lpadmin,dialout,cdrom \
+        -c "VibeOS Live User" \
+        vibeos
+    passwd -d vibeos
+    ok "vibeos user created (uid 999, blank password)"
+else
+    ok "vibeos user already exists"
+fi
+install -d -m0755 /etc/sudoers.d
+echo "vibeos ALL=(ALL) NOPASSWD: ALL" > /etc/sudoers.d/vibeos
+chmod 0440 /etc/sudoers.d/vibeos
+ok "sudoers entry installed for vibeos"
+
+# =============================================================
 # Step 4 — rebrand OS identity files
 # =============================================================
 say "step 4 — rebrand OS identity"
