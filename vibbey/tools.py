@@ -52,6 +52,13 @@ ALLOWED: dict[str, ToolSpec] = {
         argv=["claude", "--version"],
         description="Show the installed Claude Code version",
     ),
+    "claude_setup": ToolSpec(
+        # Launches the kdialog-driven first-run wizard. Detached so the
+        # Vibbey HTTP worker isn't blocked while the user fills it in.
+        argv=["/usr/bin/vibeos-claude-setup"],
+        description="Run the Claude Code setup wizard (paste API key, scaffold ~/workspace)",
+        detach=True,
+    ),
 
     # ── GitHub CLI ─────────────────────────────────────────
     "gh_version": ToolSpec(

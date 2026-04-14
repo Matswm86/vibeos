@@ -1,0 +1,13 @@
+[Desktop Entry]
+Type=Application
+Version=1.0
+Name=Start Coding with Claude
+GenericName=Claude Code
+Comment=Open Konsole in ~/workspace and launch Claude Code
+Comment[nb]=Åpne Konsole i ~/workspace og start Claude Code
+Exec=konsole --noclose -e /usr/bin/vibeos-claude-start
+Icon=start-coding-with-claude
+Terminal=false
+Categories=Development;IDE;
+Keywords=claude;ai;anthropic;code;terminal;
+StartupNotify=true

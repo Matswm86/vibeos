@@ -1,0 +1,39 @@
+Source: vibeos-claude-code
+Section: misc
+Priority: optional
+Maintainer: Mats Mjåtvedt <matswm86@yahoo.no>
+Build-Depends: debhelper-compat (= 13)
+Standards-Version: 4.6.2
+Homepage: https://vibeos.mwmai.no/
+
+Package: vibeos-claude-code
+Architecture: all
+Depends:
+ ${misc:Depends},
+ nodejs (>= 18),
+ libsecret-tools,
+ kdialog,
+ konsole,
+ xdg-utils,
+ jq
+Recommends:
+ vibeos-vibbey
+Description: Claude Code baked-in setup for VibeOS
+ Ships the first-run wizard /usr/bin/vibeos-claude-setup that walks a fresh
+ user through Claude Code activation: paste an Anthropic API key (or skip),
+ key is stored in the KDE Wallet / GNOME Keyring via libsecret, and a
+ ~/workspace directory is scaffolded with a permissive .claude/settings.json
+ suited to a dev workstation.
+ .
+ A login shell hook at /etc/profile.d/vibeos-claude.sh lifts the key out of
+ the keyring into ANTHROPIC_API_KEY so the unmodified upstream `claude`
+ binary works from any terminal without per-session setup.
+ .
+ Installs the "Start Coding with Claude" desktop launcher which opens
+ Konsole inside ~/workspace and invokes `claude`. Ships the Claude Code
+ quickstart under /usr/share/vibeos/claude-code-docs/ so Vibbey can answer
+ follow-up questions without internet.
+ .
+ The Claude Code CLI itself (@anthropic-ai/claude-code) is installed
+ globally via npm from mkosi.postinst.chroot at ISO build time, so this
+ .deb does NOT pull it in at apt time.

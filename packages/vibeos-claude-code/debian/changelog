@@ -1,0 +1,12 @@
+vibeos-claude-code (2.0.0-day4) noble; urgency=medium
+
+  * Day 4: Claude Code baked into the ISO.
+  * /usr/bin/vibeos-claude-setup — interactive wizard (kdialog UI).
+  * Anthropic API key stored in KDE Wallet via secret-tool (libsecret).
+  * /etc/profile.d/vibeos-claude.sh exports ANTHROPIC_API_KEY from keyring.
+  * ~/workspace scaffolded with permissive .claude/settings.json.
+  * "Start Coding with Claude" desktop launcher → Konsole + claude.
+  * Claude Code quickstart docs bundled at /usr/share/vibeos/claude-code-docs/.
+  * @anthropic-ai/claude-code npm package baked via mkosi.postinst.chroot.
+
+ -- Mats Mjåtvedt <matswm86@yahoo.no>  Wed, 15 Apr 2026 00:00:00 +0200

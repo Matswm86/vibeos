@@ -87,10 +87,14 @@ FIRST_RUN_SCRIPT = [
     {
         "step": "claude_code",
         "opener": (
-            "Ready for the main event? I can walk you through setting up "
-            "Claude Code — Anthropic's AI coding assistant. You'll need a "
-            "Claude API key. Want to set it up now?"
+            "Ready for the main event? I'll launch the Claude Code setup "
+            "wizard — it takes one paste of your Anthropic API key and "
+            "scaffolds ~/workspace. Shortcut 'Start Coding with Claude' "
+            "lands on your desktop. Want me to open it now?"
         ),
+        # Tool the frontend should offer to invoke when the user says yes.
+        # Maps to ALLOWED['claude_setup'] in vibbey/tools.py.
+        "tool_id": "claude_setup",
     },
 ]
 
@@ -132,6 +136,9 @@ LET_LOOSE_LINE = "Looks like you're about to Vibe hard. Would you like to contin
 class VibbeyStep:
     step: str
     opener: str
+    # Optional allow-listed tool id the UI should offer as the step's CTA.
+    # Present only on steps that have a one-click action (e.g. claude_code).
+    tool_id: str | None = None
 
 
 def get_first_run_script() -> list[VibbeyStep]:

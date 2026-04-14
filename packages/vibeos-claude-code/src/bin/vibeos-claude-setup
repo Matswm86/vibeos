@@ -1,0 +1,225 @@
+#!/usr/bin/env bash
+# vibeos-claude-setup — first-run wizard for Claude Code on VibeOS.
+#
+# Responsibilities:
+#   1. Offer a "Yes / Get one / Skip" choice.
+#   2. If yes, prompt for an Anthropic API key and store it in the desktop
+#      keyring via `secret-tool` (libsecret — the KDE Wallet under Plasma,
+#      GNOME Keyring elsewhere). NOT written to any plaintext file.
+#   3. Scaffold ~/workspace/ with a permissive .claude/settings.json.
+#   4. Drop a "Start Coding with Claude" shortcut on the user's Desktop.
+#   5. Mark the run as complete (~/.vibeos/claude-setup-complete) so the
+#      XDG autostart entry does not re-prompt.
+#
+# Designed to be launched either by Vibbey's `claude_setup` tool or manually.
+# Pure POSIX-ish bash — no Python dependency.
+
+set -euo pipefail
+
+readonly KEYRING_SCHEMA="org.vibeos.claude-code"
+readonly KEYRING_ATTR="api-key"
+readonly STATE_DIR="${HOME}/.vibeos"
+readonly STATE_FLAG="${STATE_DIR}/claude-setup-complete"
+readonly WORKSPACE_DIR="${HOME}/workspace"
+readonly TEMPLATE_DIR="/usr/share/vibeos/claude-workspace-template"
+readonly ANTHROPIC_KEYS_URL="https://console.anthropic.com/account/keys"
+
+# ── UI helpers ───────────────────────────────────────────────
+# Prefer kdialog (KDE). Fall back to zenity, then stdin.
+
+has() { command -v "$1" >/dev/null 2>&1; }
+
+ui_info() {
+    local title="$1" text="$2"
+    if has kdialog; then
+        kdialog --title "$title" --msgbox "$text"
+    elif has zenity; then
+        zenity --info --title="$title" --text="$text" --width=500
+    else
+        printf '\n== %s ==\n%s\n' "$title" "$text"
+    fi
+}
+
+ui_error() {
+    local title="$1" text="$2"
+    if has kdialog; then
+        kdialog --title "$title" --error "$text"
+    elif has zenity; then
+        zenity --error --title="$title" --text="$text" --width=500
+    else
+        printf '\n!! %s !!\n%s\n' "$title" "$text" >&2
+    fi
+}
+
+# Returns one of: yes, getone, skip
+ui_choose() {
+    local title="$1" text="$2"
+    if has kdialog; then
+        # --yesnocancel exits 0 yes, 1 no, 2 cancel
+        local rc=0
+        kdialog --title "$title" \
+                --yesnocancel "$text" \
+                --yes-label "Yes, I have a key" \
+                --no-label "Get a key" \
+                --cancel-label "Skip for now" \
+            || rc=$?
+        case "$rc" in
+            0) printf 'yes' ;;
+            1) printf 'getone' ;;
+            2) printf 'skip' ;;
+            *) printf 'skip' ;;
+        esac
+    elif has zenity; then
+        local choice
+        choice=$(zenity --list \
+            --title="$title" \
+            --text="$text" \
+            --radiolist \
+            --column="" --column="Choice" \
+            TRUE  "Yes, I have a key" \
+            FALSE "Get a key" \
+            FALSE "Skip for now" \
+            --height=280 --width=480) || choice="Skip for now"
+        case "$choice" in
+            "Yes, I have a key") printf 'yes' ;;
+            "Get a key")         printf 'getone' ;;
+            *)                   printf 'skip' ;;
+        esac
+    else
+        printf '%s\n%s\n[y]es / [g]et one / [s]kip: ' "$title" "$text" >&2
+        local ans
+        read -r ans
+        case "${ans:0:1}" in
+            y|Y) printf 'yes' ;;
+            g|G) printf 'getone' ;;
+            *)   printf 'skip' ;;
+        esac
+    fi
+}
+
+# Echoes the entered key (may be empty if cancelled).
+ui_read_key() {
+    local title="$1" text="$2"
+    if has kdialog; then
+        kdialog --title "$title" --password "$text" 2>/dev/null || printf ''
+    elif has zenity; then
+        zenity --password --title="$title" 2>/dev/null || printf ''
+    else
+        printf '%s\n%s\nKey (input hidden): ' "$title" "$text" >&2
+        local key
+        IFS= read -rs key
+        printf '\n' >&2
+        printf '%s' "$key"
+    fi
+}
+
+# ── Keyring storage ──────────────────────────────────────────
+store_key_in_keyring() {
+    local key="$1"
+    # secret-tool reads the secret from stdin (no args), so nothing hits the
+    # process table or shell history.
+    printf '%s' "$key" | secret-tool store \
+        --label="VibeOS — Anthropic Claude API key" \
+        schema "$KEYRING_SCHEMA" \
+        "$KEYRING_ATTR" default
+}
+
+# ── Workspace scaffolding ────────────────────────────────────
+scaffold_workspace() {
+    mkdir -p "$WORKSPACE_DIR"
+    if [ -d "$TEMPLATE_DIR" ]; then
+        # -n so we don't stomp on an existing .claude/ if the user re-runs.
+        cp -rn "$TEMPLATE_DIR/." "$WORKSPACE_DIR/" 2>/dev/null || true
+    fi
+}
+
+# ── Desktop shortcut (per-user copy on ~/Desktop for discoverability) ──
+install_desktop_shortcut() {
+    local sys="/usr/share/applications/start-coding-with-claude.desktop"
+    local dst="${HOME}/Desktop/start-coding-with-claude.desktop"
+    [ -f "$sys" ] || return 0
+    mkdir -p "${HOME}/Desktop"
+    cp -n "$sys" "$dst" 2>/dev/null || true
+    chmod +x "$dst" 2>/dev/null || true
+    # KDE Plasma 5.27 requires the trusted flag for .desktop on ~/Desktop.
+    if has kioclient5; then
+        kioclient5 exec "$dst" >/dev/null 2>&1 || true
+    fi
+}
+
+# ── Main flow ────────────────────────────────────────────────
+main() {
+    mkdir -p "$STATE_DIR"
+
+    local welcome_text
+    welcome_text=$(cat <<'EOF'
+Let's get Claude Code ready on this machine.
+
+Claude Code is Anthropic's terminal-native AI pair programmer. VibeOS ships
+with it pre-installed — you just need an API key to start using it.
+
+Your key is stored in the system keyring, not in a plaintext file.
+EOF
+    )
+
+    local choice
+    choice=$(ui_choose "Set up Claude Code" "$welcome_text")
+
+    case "$choice" in
+        skip)
+            ui_info "Claude Code — skipped" \
+                    "No problem. Run 'vibeos-claude-setup' any time to set it up later."
+            touch "$STATE_FLAG"
+            exit 0
+            ;;
+        getone)
+            if has xdg-open; then
+                xdg-open "$ANTHROPIC_KEYS_URL" >/dev/null 2>&1 &
+            fi
+            ui_info "Get a Claude API key" \
+                    "Opening https://console.anthropic.com/account/keys in your browser. Sign in, create a key, copy it, then re-run vibeos-claude-setup."
+            exit 0
+            ;;
+        yes)
+            ;;  # fall through
+    esac
+
+    local key_prompt
+    key_prompt=$(cat <<'EOF'
+Paste your Anthropic API key. It will be stored in the keyring under the
+label "VibeOS — Anthropic Claude API key".
+
+Tip: keys start with "sk-ant-".
+EOF
+    )
+
+    local api_key
+    api_key=$(ui_read_key "Anthropic API key" "$key_prompt")
+
+    if [ -z "$api_key" ]; then
+        ui_error "Setup cancelled" "No key entered. Re-run vibeos-claude-setup to try again."
+        exit 1
+    fi
+
+    # Light format sanity check — keys start with sk-ant- and are long.
+    if ! printf '%s' "$api_key" | grep -qE '^sk-ant-[A-Za-z0-9_-]{20,}$'; then
+        ui_error "That does not look like an Anthropic key" \
+                 "Expected format: sk-ant-... (at least 20 characters after the prefix). Nothing was saved."
+        exit 1
+    fi
+
+    if ! store_key_in_keyring "$api_key"; then
+        ui_error "Keyring write failed" \
+                 "Could not store the key. Is the KDE Wallet service running? Try: systemctl --user status kwalletd5"
+        exit 1
+    fi
+
+    scaffold_workspace
+    install_desktop_shortcut
+    touch "$STATE_FLAG"
+
+    ui_info "Claude Code is ready" \
+            "Your key is stored. A 'Start Coding with Claude' shortcut is on your desktop, and ~/workspace/ is scaffolded. Open a new terminal or use the shortcut to run 'claude'."
+}
+
+main "$@"

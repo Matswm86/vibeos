@@ -1,0 +1,36 @@
+#!/usr/bin/make -f
+%:
+	dh $@
+
+override_dh_auto_build:
+	# Nothing to compile — shell wizard + static assets.
+
+override_dh_auto_install:
+	# Setup wizard
+	install -d debian/vibeos-claude-code/usr/bin
+	install -m 0755 src/bin/vibeos-claude-setup \
+	    debian/vibeos-claude-code/usr/bin/vibeos-claude-setup
+	install -m 0755 src/bin/vibeos-claude-start \
+	    debian/vibeos-claude-code/usr/bin/vibeos-claude-start
+	# /etc/profile.d shell hook — pulls API key from keyring
+	install -d debian/vibeos-claude-code/etc/profile.d
+	install -m 0644 src/profile/vibeos-claude.sh \
+	    debian/vibeos-claude-code/etc/profile.d/vibeos-claude.sh
+	# Desktop launcher (system-wide)
+	install -d debian/vibeos-claude-code/usr/share/applications
+	install -m 0644 src/applications/start-coding-with-claude.desktop \
+	    debian/vibeos-claude-code/usr/share/applications/start-coding-with-claude.desktop
+	# Workspace settings template (read by the wizard)
+	install -d debian/vibeos-claude-code/usr/share/vibeos/claude-workspace-template/.claude
+	install -m 0644 src/workspace/settings.json \
+	    debian/vibeos-claude-code/usr/share/vibeos/claude-workspace-template/.claude/settings.json
+	install -m 0644 src/workspace/README.md \
+	    debian/vibeos-claude-code/usr/share/vibeos/claude-workspace-template/README.md
+	# Quickstart docs for offline reference / Vibbey RAG
+	install -d debian/vibeos-claude-code/usr/share/vibeos/claude-code-docs
+	install -m 0644 src/docs/*.md \
+	    debian/vibeos-claude-code/usr/share/vibeos/claude-code-docs/
+	# Icon
+	install -d debian/vibeos-claude-code/usr/share/icons/hicolor/scalable/apps
+	install -m 0644 src/icons/start-coding-with-claude.svg \
+	    debian/vibeos-claude-code/usr/share/icons/hicolor/scalable/apps/start-coding-with-claude.svg

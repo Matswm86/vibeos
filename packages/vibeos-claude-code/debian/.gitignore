@@ -1,0 +1,9 @@
+# Keep source, ignore dpkg-buildpackage outputs
+*.deb
+*.buildinfo
+*.changes
+*.substvars
+debhelper-build-stamp
+.debhelper/
+vibeos-claude-code/
+vibeos-claude-code.postrm.debhelper

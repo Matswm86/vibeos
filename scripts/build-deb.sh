@@ -49,7 +49,7 @@ fi
 
 TARGETS=("${@}")
 if [ "${#TARGETS[@]}" -eq 0 ]; then
-    TARGETS=(vibeos-desktop vibeos-vibbey)
+    TARGETS=(vibeos-desktop vibeos-vibbey vibeos-claude-code)
 fi
 
 for pkg in "${TARGETS[@]}"; do

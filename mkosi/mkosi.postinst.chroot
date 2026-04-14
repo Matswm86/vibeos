@@ -147,8 +147,38 @@ else
     echo "[mkosi.postinst] skipping model pre-pull (ollama not installed)"
 fi
 
+# ─── Claude Code CLI baked globally via npm ─────────────────────────
+# vibeos-claude-code.deb ships the setup wizard + profile hook + shortcut
+# but deliberately does NOT depend on the npm package (apt can't install
+# from npm). We bake @anthropic-ai/claude-code here so `claude` is on PATH
+# from first boot without any user action. Pinning behaviour: unpinned on
+# purpose — the package updates daily and users should be able to `apt`
+# new VibeOS images with the current Claude CLI. If this step fails (no
+# internet in CI), the ISO still boots and the wizard explains how to
+# install it manually.
+if command -v npm >/dev/null 2>&1; then
+    echo "[mkosi.postinst] installing @anthropic-ai/claude-code globally"
+    # --omit=optional shaves ~40MB (native deps Claude CLI falls back on)
+    # --no-audit --no-fund skip network chatter that slows CI
+    npm install -g --omit=optional --no-audit --no-fund \
+        @anthropic-ai/claude-code \
+        || echo "[mkosi.postinst] WARNING: claude-code npm install failed (offline CI?)"
+    # Sanity check: record the version that landed so we can inspect the
+    # ISO later without booting it.
+    if command -v claude >/dev/null 2>&1; then
+        claude --version > /usr/share/vibeos/claude-code-docs/BAKED_VERSION 2>&1 || true
+    fi
+else
+    echo "[mkosi.postinst] skipping claude-code install (npm not present)"
+fi
+
 # ─── Clean up apt cache to shave ~300MB off the ISO ─────────────────
 apt-get clean
 rm -rf /var/lib/apt/lists/*
+# Clean npm cache to trim another ~80MB that isn't needed at runtime
+if command -v npm >/dev/null 2>&1; then
+    npm cache clean --force 2>/dev/null || true
+    rm -rf /root/.npm 2>/dev/null || true
+fi
 
 echo "[mkosi.postinst] done"

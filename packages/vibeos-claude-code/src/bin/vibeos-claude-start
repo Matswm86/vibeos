@@ -1,0 +1,35 @@
+#!/usr/bin/env bash
+# vibeos-claude-start — launcher used by the "Start Coding with Claude"
+# desktop shortcut. Runs inside Konsole (set by the .desktop file).
+#
+# Flow:
+#   1. Ensure ~/workspace/ exists and has a .claude/settings.json; run the
+#      setup wizard first if not.
+#   2. Resolve ANTHROPIC_API_KEY from the keyring (the /etc/profile.d hook
+#      already does this for new shells, but the .desktop launcher bypasses
+#      login shells so we re-do it here).
+#   3. cd ~/workspace and exec claude.
+
+set -euo pipefail
+
+readonly STATE_FLAG="${HOME}/.vibeos/claude-setup-complete"
+readonly WORKSPACE_DIR="${HOME}/workspace"
+
+if [ ! -f "$STATE_FLAG" ] || [ ! -d "$WORKSPACE_DIR/.claude" ]; then
+    vibeos-claude-setup
+fi
+
+if [ -z "${ANTHROPIC_API_KEY:-}" ] && command -v secret-tool >/dev/null 2>&1; then
+    key=$(secret-tool lookup schema org.vibeos.claude-code api-key default 2>/dev/null || true)
+    if [ -n "$key" ]; then
+        export ANTHROPIC_API_KEY="$key"
+    fi
+fi
+
+if ! command -v claude >/dev/null 2>&1; then
+    printf '\n[vibeos-claude-start] claude is not on PATH. Try: sudo npm install -g @anthropic-ai/claude-code\n' >&2
+    exec "${SHELL:-/bin/bash}"
+fi
+
+cd "$WORKSPACE_DIR"
+exec claude "$@"
