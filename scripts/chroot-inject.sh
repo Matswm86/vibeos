@@ -262,27 +262,38 @@ else
     # still ships static weights. Try Bold first (matches theme.txt), then any
     # Orbitron TTF, then variable font.
     if command -v grub-mkfont >/dev/null 2>&1; then
-        FONT_ORBITRON=$(find /usr/share/fonts -iname 'Orbitron*Bold*.ttf' 2>/dev/null | head -1 || true)
-        [ -z "$FONT_ORBITRON" ] && FONT_ORBITRON=$(find /usr/share/fonts -iname 'Orbitron-VariableFont*.ttf' 2>/dev/null | head -1 || true)
-        [ -z "$FONT_ORBITRON" ] && FONT_ORBITRON=$(find /usr/share/fonts -iname 'Orbitron*.ttf' 2>/dev/null | head -1 || true)
+        # GRUB matches `font = "Family Style Size"` in theme.txt against the
+        # pf2 file's embedded family-name string (NOT the filename). Without
+        # -n, grub-mkfont inherits whatever name the TTF itself advertises —
+        # often "Orbitron" instead of "Orbitron Bold 36", which causes GRUB
+        # to fall back to its built-in unicode font and render the menu as
+        # garbled placeholder glyphs / circles. Explicit -n with the exact
+        # name from theme.txt guarantees a match.
+        FONT_ORBITRON_BOLD=$(find /usr/share/fonts -iname 'Orbitron*Bold*.ttf' 2>/dev/null | head -1 || true)
+        FONT_ORBITRON_REG=$(find /usr/share/fonts -iname 'Orbitron-Regular.ttf' 2>/dev/null | head -1 || true)
+        [ -z "$FONT_ORBITRON_REG" ] && FONT_ORBITRON_REG=$(find /usr/share/fonts -iname 'Orbitron-VariableFont*.ttf' 2>/dev/null | head -1 || true)
+        [ -z "$FONT_ORBITRON_REG" ] && FONT_ORBITRON_REG=$(find /usr/share/fonts -iname 'Orbitron*.ttf' 2>/dev/null | head -1 || true)
+        # If only a Bold variant exists, use it for Regular too (better than no font)
+        [ -z "$FONT_ORBITRON_REG" ] && FONT_ORBITRON_REG="$FONT_ORBITRON_BOLD"
+        # If only a Regular/Variable exists, use it for Bold too
+        [ -z "$FONT_ORBITRON_BOLD" ] && FONT_ORBITRON_BOLD="$FONT_ORBITRON_REG"
 
         FONT_JBMONO=$(find /usr/share/fonts -iname 'JetBrainsMono-Regular.ttf' 2>/dev/null | head -1 || true)
         [ -z "$FONT_JBMONO" ] && FONT_JBMONO=$(find /usr/share/fonts -iname 'JetBrainsMono*Regular*.ttf' 2>/dev/null | head -1 || true)
         [ -z "$FONT_JBMONO" ] && FONT_JBMONO=$(find /usr/share/fonts -iname 'JetBrainsMono*.ttf' 2>/dev/null | head -1 || true)
 
-        if [ -n "$FONT_ORBITRON" ]; then
-            # Use one name ("unicode") per size — grub-mkfont embeds the family
-            # name from the TTF, so theme.txt just needs to match whichever it reports
-            grub-mkfont -s 36 -o "$GRUB_DIR/orbitron-36.pf2" "$FONT_ORBITRON" 2>/dev/null && \
-                grub-mkfont -s 18 -o "$GRUB_DIR/orbitron-18.pf2" "$FONT_ORBITRON" 2>/dev/null && \
-                ok "grub orbitron font baked from $(basename "$FONT_ORBITRON")"
+        if [ -n "$FONT_ORBITRON_BOLD" ] && [ -n "$FONT_ORBITRON_REG" ]; then
+            grub-mkfont -n "Orbitron Bold 36"    -s 36 -o "$GRUB_DIR/orbitron-bold-36.pf2"    "$FONT_ORBITRON_BOLD" 2>/dev/null
+            grub-mkfont -n "Orbitron Bold 18"    -s 18 -o "$GRUB_DIR/orbitron-bold-18.pf2"    "$FONT_ORBITRON_BOLD" 2>/dev/null
+            grub-mkfont -n "Orbitron Regular 18" -s 18 -o "$GRUB_DIR/orbitron-regular-18.pf2" "$FONT_ORBITRON_REG"  2>/dev/null
+            ok "grub orbitron fonts baked (bold=$(basename "$FONT_ORBITRON_BOLD"), reg=$(basename "$FONT_ORBITRON_REG"))"
         else
             warn "Orbitron TTF not found for grub-mkfont — menu will use default font"
         fi
         if [ -n "$FONT_JBMONO" ]; then
-            grub-mkfont -s 14 -o "$GRUB_DIR/jbmono-14.pf2" "$FONT_JBMONO" 2>/dev/null && \
-                grub-mkfont -s 12 -o "$GRUB_DIR/jbmono-12.pf2" "$FONT_JBMONO" 2>/dev/null && \
-                ok "grub jetbrains mono font baked from $(basename "$FONT_JBMONO")"
+            grub-mkfont -n "JetBrains Mono Regular 14" -s 14 -o "$GRUB_DIR/jbmono-14.pf2" "$FONT_JBMONO" 2>/dev/null
+            grub-mkfont -n "JetBrains Mono Regular 12" -s 12 -o "$GRUB_DIR/jbmono-12.pf2" "$FONT_JBMONO" 2>/dev/null
+            ok "grub jetbrains mono font baked from $(basename "$FONT_JBMONO")"
         fi
     else
         warn "grub-mkfont missing — install grub-common"
@@ -681,8 +692,23 @@ if [ -f /boot/grub/themes/vibeos/theme.txt ]; then
     if ! grep -q '^GRUB_THEME=' /etc/default/grub; then
         echo 'GRUB_THEME="/boot/grub/themes/vibeos/theme.txt"' >> /etc/default/grub
     fi
+    # Pin a graphics mode GRUB can actually render. "auto" lets GRUB ask
+    # firmware for a native mode but on some hardware the returned mode has
+    # no matching font, resulting in garbled/circle-glyph output. 1280x720
+    # is a VESA baseline every UEFI and most legacy BIOSes can hit.
+    # GRUB_GFXPAYLOAD_LINUX=keep lets Plymouth inherit the framebuffer.
+    if grep -q '^GRUB_GFXMODE=' /etc/default/grub; then
+        sed -i 's|^GRUB_GFXMODE=.*|GRUB_GFXMODE=1280x720,auto|' /etc/default/grub
+    else
+        echo 'GRUB_GFXMODE=1280x720,auto' >> /etc/default/grub
+    fi
+    if grep -q '^GRUB_GFXPAYLOAD_LINUX=' /etc/default/grub; then
+        sed -i 's|^GRUB_GFXPAYLOAD_LINUX=.*|GRUB_GFXPAYLOAD_LINUX=keep|' /etc/default/grub
+    else
+        echo 'GRUB_GFXPAYLOAD_LINUX=keep' >> /etc/default/grub
+    fi
     update-grub || warn "update-grub failed (may be ok in chroot without devices)"
-    ok "grub theme wired"
+    ok "grub theme wired (gfxmode 1280x720)"
 fi
 
 # GRUB cmdline: quiet noisy ACPI / firmware messages so the splash isn't
@@ -784,6 +810,27 @@ if [ "${VIBEOS_BAKE_OLLAMA:-1}" = "1" ]; then
         if [ -f /opt/vibeos/clippy/server.py ]; then
             sed -i "s|ollama_model = payload.get(\"model\", \"gemma3:4b\")|ollama_model = payload.get(\"model\", \"$OLLAMA_MODEL\")|" \
                 /opt/vibeos/clippy/server.py || true
+        fi
+
+        # 0.4.3 post-install regression: ollama.service was not enabled on
+        # first boot, so Vibbey chat came up with "Ollama is down". The
+        # upstream installer creates the unit but `systemctl enable` runs
+        # via a dbus call that silently no-ops inside a chroot. Force it
+        # with the low-level symlink that enable would create.
+        OLLAMA_UNIT=""
+        [ -f /etc/systemd/system/ollama.service ] && OLLAMA_UNIT=/etc/systemd/system/ollama.service
+        [ -z "$OLLAMA_UNIT" ] && [ -f /usr/lib/systemd/system/ollama.service ] && OLLAMA_UNIT=/usr/lib/systemd/system/ollama.service
+        if [ -n "$OLLAMA_UNIT" ]; then
+            mkdir -p /etc/systemd/system/multi-user.target.wants
+            systemctl enable ollama.service 2>/dev/null \
+                || ln -sf "$OLLAMA_UNIT" /etc/systemd/system/multi-user.target.wants/ollama.service
+            if [ -L /etc/systemd/system/multi-user.target.wants/ollama.service ]; then
+                ok "ollama.service enabled for first boot"
+            else
+                warn "ollama.service enable failed — Vibbey will ask user to start it manually"
+            fi
+        else
+            warn "ollama.service unit file missing — skip enable"
         fi
     fi
 else

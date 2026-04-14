@@ -19,3 +19,15 @@ slidingpopupsEnabled=true
 [Windows]
 ElectricBorderCornerRatio=0.25
 Placement=Smart
+
+# Fallback decoration: if the VibeOS-Neon Aurorae theme fails to load
+# (missing SVG element, bad layout), KWin drops to zero-chrome windows
+# with no titlebar or close button. Pin Breeze as the baseline here so
+# at minimum the user gets standard KDE decorations. The L&F package
+# org.vibeos.neon overrides this with aurorae+VibeOS-Neon when applied.
+[org.kde.kdecoration2]
+library=org.kde.breeze
+theme=Breeze
+BorderSize=Normal
+ButtonsOnLeft=
+ButtonsOnRight=IAX
