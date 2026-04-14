@@ -1,0 +1,81 @@
+#!/bin/bash
+# Runs INSIDE the built rootfs after all packages are installed, before
+# the image is sealed. Analogous to v1's `chroot-inject.sh` but minimal —
+# only things that genuinely can't be expressed as a .deb postinst end
+# up here.
+
+set -euo pipefail
+
+echo "[mkosi.postinst] starting vibeos-specific postinst"
+
+# ─── Display manager: SDDM is our greeter ────────────────────────────
+# Ubuntu 24.04 may install gdm3 alongside SDDM depending on metapackage
+# resolution. Force SDDM as the active display manager.
+if [ -f /usr/bin/sddm ]; then
+    echo "/usr/bin/sddm" > /etc/X11/default-display-manager
+    systemctl disable gdm3 2>/dev/null || true
+    systemctl disable lightdm 2>/dev/null || true
+    systemctl enable sddm
+fi
+
+# ─── Default shell: zsh (we promised this in v2-plan.md) ─────────────
+# Ubuntu's useradd defaults still point at /bin/bash; flip the
+# system-wide default so both the live user and any post-install
+# accounts get zsh unless they override.
+if [ -x /usr/bin/zsh ]; then
+    sed -i 's|^SHELL=.*|SHELL=/usr/bin/zsh|' /etc/default/useradd || true
+    sed -i 's|^DSHELL=.*|DSHELL=/usr/bin/zsh|' /etc/adduser.conf || true
+fi
+
+# ─── Flatpak + Flathub ──────────────────────────────────────────────
+if command -v flatpak >/dev/null 2>&1; then
+    flatpak remote-add --if-not-exists --system flathub \
+        https://flathub.org/repo/flathub.flatpakrepo || true
+fi
+
+# ─── Live user for the ISO boot (before install) ────────────────────
+# Calamares will create the real user during install. This one exists
+# only during the live session so someone can click "Install" without
+# a root shell. Password is "vibeos" (live-only, documented, not secret).
+if ! id vibeos >/dev/null 2>&1; then
+    useradd -m -s /usr/bin/zsh -G sudo,audio,video,plugdev,netdev vibeos
+    echo 'vibeos:vibeos' | chpasswd
+    # Auto-login in the live session only — SDDM config
+    mkdir -p /etc/sddm.conf.d
+    cat > /etc/sddm.conf.d/autologin.conf <<EOF
+[Autologin]
+User=vibeos
+Session=plasma
+Relogin=false
+EOF
+fi
+
+# ─── Install Calamares launcher on live desktop ─────────────────────
+# Day 2 replaces this with the branded version. For Day 1 we just need
+# the launcher to exist so we can verify the install flow works.
+if [ -f /usr/share/applications/calamares.desktop ]; then
+    mkdir -p /home/vibeos/Desktop
+    cp /usr/share/applications/calamares.desktop /home/vibeos/Desktop/
+    chmod +x /home/vibeos/Desktop/calamares.desktop
+    chown -R vibeos:vibeos /home/vibeos/Desktop
+fi
+
+# ─── os-release branding (will be overridden by vibeos-desktop.deb on Day 2) ─
+cat > /etc/os-release <<EOF
+PRETTY_NAME="VibeOS 2.0.0-dev"
+NAME="VibeOS"
+VERSION_ID="2.0.0-dev"
+VERSION="2.0.0-dev"
+ID=vibeos
+ID_LIKE=ubuntu
+HOME_URL="https://vibeos.mwmai.no/"
+SUPPORT_URL="https://vibeos.mwmai.no/docs/"
+BUG_REPORT_URL="https://github.com/Matswm86/vibeos/issues"
+UBUNTU_CODENAME=noble
+EOF
+
+# ─── Clean up apt cache to shave ~300MB off the ISO ─────────────────
+apt-get clean
+rm -rf /var/lib/apt/lists/*
+
+echo "[mkosi.postinst] done"
