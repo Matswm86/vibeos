@@ -8,8 +8,10 @@ node_modules/
 
 # Build artifacts
 mkosi.output/
+mkosi.cache/
 *.iso
 *.iso.sha256
+*.raw
 build/
 dist/
 

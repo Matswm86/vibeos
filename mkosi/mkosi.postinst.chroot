@@ -38,7 +38,15 @@ fi
 # only during the live session so someone can click "Install" without
 # a root shell. Password is "vibeos" (live-only, documented, not secret).
 if ! id vibeos >/dev/null 2>&1; then
-    useradd -m -s /usr/bin/zsh -G sudo,audio,video,plugdev,netdev vibeos
+    # Build supplementary group list from only those that actually exist in
+    # the chroot — NetworkManager's `netdev` group is created by its postinst
+    # which needs dbus, and dbus isn't running in the chroot. Same caveat for
+    # `plugdev`. Missing groups get added at first boot by systemd-sysusers.
+    GROUPS=""
+    for g in sudo audio video plugdev netdev; do
+        getent group "$g" >/dev/null 2>&1 && GROUPS="${GROUPS:+$GROUPS,}$g"
+    done
+    useradd -m -s /usr/bin/zsh -G "$GROUPS" vibeos
     echo 'vibeos:vibeos' | chpasswd
     # Auto-login in the live session only — SDDM config
     mkdir -p /etc/sddm.conf.d

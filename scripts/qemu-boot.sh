@@ -44,11 +44,11 @@ ISO=""
 INSTALL_DISK=0
 for arg in "$@"; do
     case "$arg" in
-        --install) INSTALL_DISK=1 ;;
-        *.iso)     ISO="$arg" ;;
+        --install)      INSTALL_DISK=1 ;;
+        *.iso|*.raw|*.img) ISO="$arg" ;;
     esac
 done
-[ -z "$ISO" ] && ISO="mkosi.output/vibeos.iso"
+[ -z "$ISO" ] && ISO="mkosi.output/vibeos.raw"
 [ -f "$ISO" ] || err "ISO not found: $ISO  (run ./scripts/build.sh first)"
 
 info "booting $ISO in QEMU (SPICE display on localhost:5930)"

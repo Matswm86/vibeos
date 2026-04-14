@@ -3,7 +3,12 @@
 # VibeOS-specific packages installed. All build artifacts land in
 # ./mkosi.output/ (ISO) and ./apt-repo/pool/ (.deb files) via volume
 # mounts.
-FROM debian:bookworm-slim
+#
+# Base image = ubuntu:24.04 because:
+#  - Python 3.12 is available (recent mkosi requires >=3.12)
+#  - debootstrap noble metadata matches the target distro
+#  - same apt+dpkg versions as the built system, no drift
+FROM ubuntu:24.04
 
 ENV DEBIAN_FRONTEND=noninteractive
 ENV LC_ALL=C.UTF-8
@@ -16,21 +21,27 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
     fakeroot \
     squashfs-tools xorriso mtools \
     dosfstools e2fsprogs \
-    systemd-container \
+    cpio zstd xz-utils \
+    systemd-container systemd-boot systemd-boot-efi \
     apt-utils gnupg \
-    python3 python3-pip python3-venv \
+    python3 python3-pip python3-venv python3-dev \
+    python3-pefile python3-cryptography \
     reprepro \
     qemu-utils \
     locales \
+    sudo \
   && locale-gen en_US.UTF-8 \
   && rm -rf /var/lib/apt/lists/*
 
-# Install mkosi from PyPI — the bookworm apt version is old (v14).
-# Latest mkosi has proper Ubuntu 24.04 noble support, systemd-repart
-# integration, and the `mkosi.conf` format we use in mkosi/mkosi.conf.
-RUN python3 -m venv /opt/mkosi \
-  && /opt/mkosi/bin/pip install --no-cache-dir mkosi \
-  && ln -s /opt/mkosi/bin/mkosi /usr/local/bin/mkosi
+# Install mkosi from git — not distributed via PyPI. Ubuntu noble has
+# mkosi 20.2 in apt but we pin a modern tagged release from upstream for
+# current noble + systemd-boot support. The bin/mkosi shim in the repo
+# is designed to run directly from a git checkout.
+ARG MKOSI_REF=v26
+RUN git clone --depth=1 --branch=${MKOSI_REF} \
+      https://github.com/systemd/mkosi.git /opt/mkosi \
+  && ln -s /opt/mkosi/bin/mkosi /usr/local/bin/mkosi \
+  && mkosi --version
 
 WORKDIR /work
 

@@ -36,8 +36,8 @@ fi
 ACTION="${1:-build}"
 case "$ACTION" in
     clean)
-        info "wiping mkosi.output/"
-        rm -rf mkosi.output/
+        info "wiping mkosi.output/ and mkosi.cache/"
+        rm -rf mkosi.output/ mkosi.cache/
         ok "clean"
         exit 0
         ;;
@@ -59,9 +59,9 @@ case "$ACTION" in
         ;;
 esac
 
-if [ -f mkosi.output/vibeos.iso ]; then
-    SIZE=$(du -h mkosi.output/vibeos.iso | cut -f1)
-    ok "ISO built: mkosi.output/vibeos.iso ($SIZE)"
+if [ -f mkosi.output/vibeos.raw ]; then
+    SIZE=$(du -h mkosi.output/vibeos.raw | cut -f1)
+    ok "ISO built: mkosi.output/vibeos.raw ($SIZE)"
     info "next step: ./scripts/qemu-boot.sh"
 else
     err "ISO not produced — check mkosi output above for errors"
