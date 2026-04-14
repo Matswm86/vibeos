@@ -30,9 +30,26 @@ fi
 
 mkdir -p packages/local
 
+# ─── Fetch Ollama .deb (pinned version, placed in local apt repo) ─────────────
+# vibeos-vibbey Depends: ollama, so mkosi needs it in packages/local/.
+# We use the official GitHub release .deb for reproducible builds.
+OLLAMA_VERSION="${OLLAMA_VERSION:-0.6.5}"
+OLLAMA_DEB_NAME="ollama_${OLLAMA_VERSION}_amd64.deb"
+if [ ! -f "packages/local/${OLLAMA_DEB_NAME}" ]; then
+    info "downloading Ollama ${OLLAMA_VERSION} .deb"
+    # GitHub release filename is ollama-linux-amd64.deb; rename to include version
+    curl -fsSL \
+        "https://github.com/ollama/ollama/releases/download/v${OLLAMA_VERSION}/ollama-linux-amd64.deb" \
+        -o "packages/local/${OLLAMA_DEB_NAME}" \
+        || err "failed to download Ollama .deb — check OLLAMA_VERSION=${OLLAMA_VERSION}"
+    ok "ollama .deb → packages/local/${OLLAMA_DEB_NAME}"
+else
+    info "using cached Ollama .deb: ${OLLAMA_DEB_NAME}"
+fi
+
 TARGETS=("${@}")
 if [ "${#TARGETS[@]}" -eq 0 ]; then
-    TARGETS=(vibeos-desktop)
+    TARGETS=(vibeos-desktop vibeos-vibbey)
 fi
 
 for pkg in "${TARGETS[@]}"; do
@@ -46,9 +63,7 @@ for pkg in "${TARGETS[@]}"; do
         -w "/work/$src_dir" \
         "$IMAGE_TAG" \
         bash -euo pipefail -c "
-            # Render SVG wallpapers to PNG so KDE/SDDM/Plymouth all have a
-            # raster to load even when Qt SVG renderer is absent in the
-            # target session. Source SVGs stay in the tree for reference.
+            # Render SVG wallpapers to PNG (vibeos-desktop only; vibbey has none).
             for svg in src/wallpapers/*/contents/images/*.svg; do
                 [ -f \"\$svg\" ] || continue
                 png=\"\${svg%.svg}.png\"
@@ -56,10 +71,8 @@ for pkg in "${TARGETS[@]}"; do
                 echo \"[build-deb] rendered \$png\"
             done
             # -d skips the build-dep check: the builder image has the
-            # deps already (debhelper, fakeroot), no need to verify via
-            # apt against build-essential:native which we deliberately
-            # omit to keep the image small. Our .debs are arch:all data
-            # packages anyway — no compiler is invoked.
+            # deps already (debhelper, fakeroot). Our .debs are arch:all
+            # data packages — no compiler is invoked.
             dpkg-buildpackage -us -uc -b -d
         " \
         || err "dpkg-buildpackage failed for $pkg"

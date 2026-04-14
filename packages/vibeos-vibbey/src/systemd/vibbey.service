@@ -1,0 +1,23 @@
+[Unit]
+Description=Vibbey AI Assistant HTTP Server
+Documentation=https://vibeos.mwmai.no/
+After=network.target ollama.service
+Wants=ollama.service
+
+[Service]
+Type=simple
+# Load the single-source-of-truth config as environment variables.
+# The leading dash means the file may be absent without failure.
+EnvironmentFile=-/etc/vibeos/vibbey.conf
+# Override state directory so all Vibbey sessions share one memory store.
+Environment=VIBEOS_STATE_DIR=/var/lib/vibbey
+ExecStart=/usr/bin/vibbey --server-only
+Restart=on-failure
+RestartSec=5
+# DynamicUser creates a transient UID and manages /var/lib/vibbey ownership.
+# StateDirectory= persists across restarts even with DynamicUser.
+DynamicUser=yes
+StateDirectory=vibbey
+
+[Install]
+WantedBy=multi-user.target

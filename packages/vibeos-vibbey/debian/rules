@@ -1,0 +1,32 @@
+#!/usr/bin/make -f
+%:
+	dh $@
+
+override_dh_auto_install:
+	# Install Python source from vibbey/ at the repo root (two levels up from here)
+	install -d debian/vibeos-vibbey/usr/share/vibeos
+	cp -r ../../vibbey debian/vibeos-vibbey/usr/share/vibeos/
+	# Remove Python cache so the .deb stays clean
+	find debian/vibeos-vibbey/usr/share/vibeos/vibbey \
+	    -name '__pycache__' -exec rm -rf {} + 2>/dev/null || true
+	find debian/vibeos-vibbey/usr/share/vibeos/vibbey \
+	    -name '*.pyc' -delete 2>/dev/null || true
+	# Install /etc/vibeos/vibbey.conf (defaultconfig — may be edited post-install)
+	install -d debian/vibeos-vibbey/etc/vibeos
+	install -m 0644 src/config/vibbey.conf \
+	    debian/vibeos-vibbey/etc/vibeos/vibbey.conf
+	# Install systemd unit
+	install -d debian/vibeos-vibbey/lib/systemd/system
+	install -m 0644 src/systemd/vibbey.service \
+	    debian/vibeos-vibbey/lib/systemd/system/vibbey.service
+	# Install XDG autostart entry
+	install -d debian/vibeos-vibbey/etc/xdg/autostart
+	install -m 0644 src/autostart/vibbey-first-run.desktop \
+	    debian/vibeos-vibbey/etc/xdg/autostart/vibbey-first-run.desktop
+	# Install wrapper script
+	install -d debian/vibeos-vibbey/usr/bin
+	install -m 0755 src/bin/vibbey \
+	    debian/vibeos-vibbey/usr/bin/vibbey
+
+override_dh_auto_build:
+	# Nothing to compile — pure Python + static assets

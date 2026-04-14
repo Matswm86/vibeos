@@ -1,0 +1,10 @@
+[Desktop Entry]
+Type=Application
+Name=Vibbey First Run
+Comment=VibeOS onboarding assistant — opens on first login only
+Exec=/bin/sh -c 'test -f "$HOME/.vibeos/first-run-complete" || /usr/bin/vibbey'
+Icon=/usr/share/vibeos/vibbey/static/vibeos-icon.svg
+Terminal=false
+StartupNotify=false
+Categories=System;
+X-GNOME-Autostart-enabled=true

@@ -1,0 +1,23 @@
+#!/bin/sh
+set -e
+
+case "$1" in
+    configure)
+        # Enable and start ollama (installed as a dependency)
+        if command -v systemctl >/dev/null 2>&1 && systemctl --system >/dev/null 2>&1; then
+            systemctl enable ollama.service 2>/dev/null || true
+            systemctl enable vibbey.service 2>/dev/null || true
+            # Don't start vibbey here — it's started by XDG autostart on first login
+            # or by the user via: systemctl start vibbey
+        fi
+        ;;
+    abort-upgrade|abort-remove|abort-deconfigure)
+        ;;
+    *)
+        echo "postinst called with unknown argument \`$1'" >&2
+        exit 1
+        ;;
+esac
+
+#DEBHELPER#
+exit 0

@@ -1,0 +1,6 @@
+#!/usr/bin/env bash
+# Vibbey wrapper — runs the vibbey Python package from its install location.
+# Flags:
+#   --server-only   HTTP server only (used by vibbey.service)
+#   --window        Open GUI window (default if no flag given)
+PYTHONPATH=/usr/share/vibeos${PYTHONPATH:+:$PYTHONPATH} exec python3 -m vibbey "$@"

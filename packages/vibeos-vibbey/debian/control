@@ -1,0 +1,28 @@
+Source: vibeos-vibbey
+Section: misc
+Priority: optional
+Maintainer: Mats Mjåtvedt <matswm86@yahoo.no>
+Build-Depends: debhelper-compat (= 13)
+Standards-Version: 4.6.2
+Homepage: https://vibeos.mwmai.no/
+
+Package: vibeos-vibbey
+Architecture: all
+Depends:
+ ${misc:Depends},
+ python3 (>= 3.11),
+ python3-gi,
+ gir1.2-webkit2-4.1 | gir1.2-webkit2-4.0,
+ ollama
+Description: Vibbey AI assistant service for VibeOS
+ Vibbey is the VibeOS onboarding assistant — a Clippy-lineage AI guide
+ that greets the user on first login, walks through hardware detection,
+ and hands off to Claude Code once the user is ready.
+ .
+ Ships the Vibbey Python source at /usr/share/vibeos/vibbey/, the static
+ web UI (Three.js scene + chat), the /etc/vibeos/vibbey.conf single-config
+ file, the vibbey.service systemd unit, and the XDG autostart entry for
+ first-login detection. Requires Ollama (installed separately).
+ .
+ The active AI model is controlled by VIBEOS_MODEL in vibbey.conf.
+ Default: qwen2.5:3b (pre-pulled into the ISO at build time).

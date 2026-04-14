@@ -1,0 +1,12 @@
+vibeos-vibbey (2.0.0-day3) noble; urgency=medium
+
+  * Day 3: Vibbey v2 — single config, systemd service, welcome tour.
+  * /etc/vibeos/vibbey.conf replaces 11 scattered hardcoded model refs.
+  * qwen2.5:3b replaces gemma3:4b as the default local model.
+  * vibbey.service runs HTTP server as system daemon (DynamicUser=yes).
+  * vibbey-first-run.desktop opens window on first login via XDG autostart.
+  * 4-step welcome tour (Norwegian + English).
+  * /api/config endpoint exposes active model to frontend.
+  * Acceptance: grep -r gemma3 /usr/share/vibeos returns nothing.
+
+ -- Mats Mjåtvedt <matswm86@yahoo.no>  Mon, 14 Apr 2026 00:00:00 +0200

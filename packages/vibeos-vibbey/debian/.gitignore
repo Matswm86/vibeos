@@ -1,0 +1,11 @@
+*
+!.gitignore
+# Keep source, ignore dpkg-buildpackage outputs
+*.deb
+*.buildinfo
+*.changes
+*.substvars
+debhelper-build-stamp
+.debhelper/
+vibeos-vibbey/
+vibeos-vibbey.postrm.debhelper

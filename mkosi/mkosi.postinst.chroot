@@ -116,6 +116,37 @@ if [ -f /usr/lib/vibeos/os-release ]; then
     install -m 0644 /usr/lib/vibeos/os-release /etc/os-release
 fi
 
+# ─── Ollama: pre-pull qwen2.5:3b into the ISO ───────────────────────
+# vibeos-vibbey.deb installs Ollama and enables ollama.service. Here we
+# pre-pull qwen2.5:3b so the model is baked into the ISO — no internet
+# required after install. We start Ollama as the ollama system user
+# (same as in production), wait for readiness, pull, then shut down.
+if command -v ollama >/dev/null 2>&1 && id ollama >/dev/null 2>&1; then
+    echo "[mkosi.postinst] starting Ollama daemon to pre-pull qwen2.5:3b"
+    export OLLAMA_HOST=127.0.0.1:11434
+    su -s /bin/sh -c 'OLLAMA_HOST=127.0.0.1:11434 ollama serve' ollama &
+    OLLAMA_PID=$!
+
+    # Wait up to 30 s for Ollama to be ready
+    for i in $(seq 1 30); do
+        if curl -sf http://127.0.0.1:11434/api/tags >/dev/null 2>&1; then
+            echo "[mkosi.postinst] Ollama ready after ${i}s"
+            break
+        fi
+        sleep 1
+    done
+
+    # Pull the default model into the ollama user's model store
+    su -s /bin/sh -c 'OLLAMA_HOST=127.0.0.1:11434 ollama pull qwen2.5:3b' ollama \
+        || echo "[mkosi.postinst] WARNING: qwen2.5:3b pull failed (CI without internet?)"
+
+    kill "$OLLAMA_PID" 2>/dev/null || true
+    wait "$OLLAMA_PID" 2>/dev/null || true
+    echo "[mkosi.postinst] Ollama daemon stopped"
+else
+    echo "[mkosi.postinst] skipping model pre-pull (ollama not installed)"
+fi
+
 # ─── Clean up apt cache to shave ~300MB off the ISO ─────────────────
 apt-get clean
 rm -rf /var/lib/apt/lists/*

@@ -1,0 +1,389 @@
+/* VibeOS Neon Grid — Vibbey window styling */
+
+:root {
+  --vbo-magenta: #FF2ECF;
+  --vbo-pink: #FF71CE;
+  --vbo-cyan: #01F9FF;
+  --vbo-violet: #9D4EDD;
+  --vbo-bg-0: #05020E;
+  --vbo-bg-1: #0E0823;
+  --vbo-bg-2: #1C1438;
+  --vbo-fg: #FFF7D8;
+  --vbo-muted: #C9BEEE;
+  --vbo-yellow: #FFE400;
+  --vbo-yellow-warm: #FFC430;
+  --vbo-mint: #05FFA1;
+  --vbo-grid: rgba(1, 249, 255, 0.20);
+  /* Frame + accent roles — set per-concept: cyan frame dominant, yellow
+     character glow, magenta for outer halo + highlights only. */
+  --vbo-frame: var(--vbo-cyan);
+  --vbo-frame-glow: rgba(1, 249, 255, 0.45);
+  --vbo-halo: rgba(255, 46, 207, 0.22);
+  --vbo-char-glow: rgba(255, 196, 48, 0.55);
+
+  --font-display: "Orbitron", "Rajdhani", system-ui, sans-serif;
+  --font-body: "Inter", system-ui, sans-serif;
+  --font-mono: "JetBrains Mono", "Fira Code", monospace;
+}
+
+* { box-sizing: border-box; margin: 0; padding: 0; }
+
+html, body {
+  height: 100%;
+  font-family: var(--font-body);
+  color: var(--vbo-fg);
+  background: radial-gradient(ellipse at top, var(--vbo-bg-1), var(--vbo-bg-0));
+  overflow: hidden;
+}
+
+#app {
+  display: flex;
+  flex-direction: column;
+  height: 100vh;
+  border: 1px solid var(--vbo-frame);
+  box-shadow:
+    0 0 14px var(--vbo-frame-glow),
+    0 0 48px var(--vbo-halo),
+    inset 0 0 70px rgba(255, 196, 48, 0.04);
+  position: relative;
+}
+
+/* ── Title bar ───────────────────────────────────────────── */
+
+#titlebar {
+  display: flex;
+  align-items: baseline;
+  gap: 10px;
+  padding: 10px 14px;
+  background: linear-gradient(90deg, var(--vbo-bg-1), var(--vbo-bg-2));
+  border-bottom: 1px solid var(--vbo-frame);
+  box-shadow: 0 1px 12px var(--vbo-frame-glow);
+}
+
+#titlebar .brand {
+  font-family: var(--font-display);
+  font-weight: 700;
+  font-size: 15px;
+  color: var(--vbo-yellow);
+  text-shadow: 0 0 6px var(--vbo-yellow);
+}
+
+#titlebar .tagline {
+  font-size: 10px;
+  color: var(--vbo-muted);
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+}
+
+#install-btn {
+  margin-left: auto;
+  padding: 5px 12px;
+  font-family: var(--font-display);
+  font-weight: 700;
+  font-size: 11px;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--vbo-bg-0);
+  background: var(--vbo-yellow);
+  border: 1px solid var(--vbo-yellow-warm);
+  border-radius: 4px;
+  cursor: pointer;
+  box-shadow: 0 0 10px var(--vbo-char-glow);
+  transition: transform 0.08s ease, box-shadow 0.15s ease;
+}
+#install-btn:hover { transform: translateY(-1px); box-shadow: 0 0 14px var(--vbo-yellow); }
+#install-btn:active { transform: translateY(0); }
+#install-btn.hidden { display: none; }
+
+/* ── 3D scene container ──────────────────────────────────── */
+
+#scene-container {
+  flex: 1;
+  position: relative;
+  background:
+    repeating-linear-gradient(
+      0deg,
+      transparent 0,
+      transparent 39px,
+      var(--vbo-grid) 39px,
+      var(--vbo-grid) 40px
+    ),
+    repeating-linear-gradient(
+      90deg,
+      transparent 0,
+      transparent 39px,
+      var(--vbo-grid) 39px,
+      var(--vbo-grid) 40px
+    ),
+    radial-gradient(
+      ellipse at center 55%,
+      var(--vbo-char-glow) 0%,
+      rgba(255, 196, 48, 0.15) 25%,
+      var(--vbo-bg-2) 60%,
+      var(--vbo-bg-0) 95%
+    );
+}
+
+#scene {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+}
+
+/* ── Speech bubble ────────────────────────────────────────
+   In-flow panel under the 3D scene. Fixed min-height so the
+   layout doesn't jump when text arrives or clears. */
+
+#speech-bubble {
+  padding: 12px 14px;
+  background: var(--vbo-bg-1);
+  border-top: 1px solid var(--vbo-frame);
+  box-shadow: 0 -2px 14px var(--vbo-frame-glow);
+  font-size: 13px;
+  line-height: 1.5;
+  min-height: 68px;
+  max-height: 140px;
+  overflow-y: auto;
+  color: var(--vbo-fg);
+  font-family: var(--font-mono);
+  transition: opacity 0.2s;
+}
+
+#speech-bubble.hidden { opacity: 0; }
+
+/* ── Chat input ──────────────────────────────────────────── */
+
+#chat {
+  display: flex;
+  gap: 8px;
+  padding: 10px 12px;
+  background: var(--vbo-bg-1);
+  border-top: 1px solid var(--vbo-magenta);
+}
+
+#chat-input {
+  flex: 1;
+  padding: 9px 12px;
+  background: var(--vbo-bg-0);
+  color: var(--vbo-fg);
+  border: 1px solid var(--vbo-violet);
+  border-radius: 6px;
+  font-family: var(--font-mono);
+  font-size: 12px;
+  outline: none;
+  transition: border-color 0.15s, box-shadow 0.15s;
+}
+
+#chat-input:focus {
+  border-color: var(--vbo-cyan);
+  box-shadow: 0 0 8px var(--vbo-cyan);
+}
+
+#chat-send {
+  padding: 9px 16px;
+  background: linear-gradient(135deg, var(--vbo-magenta), var(--vbo-violet));
+  color: var(--vbo-fg);
+  border: 1px solid var(--vbo-pink);
+  border-radius: 6px;
+  font-family: var(--font-display);
+  font-weight: 600;
+  font-size: 11px;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  cursor: pointer;
+  transition: transform 0.1s, box-shadow 0.15s;
+}
+
+#chat-send:hover {
+  box-shadow: 0 0 12px var(--vbo-magenta);
+  transform: translateY(-1px);
+}
+
+#chat-send:active { transform: translateY(0); }
+#chat-send:disabled { opacity: 0.4; cursor: not-allowed; }
+
+/* ── Footer ──────────────────────────────────────────────── */
+
+footer {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 6px 12px;
+  background: var(--vbo-bg-0);
+  border-top: 1px solid var(--vbo-violet);
+  font-family: var(--font-mono);
+  font-size: 10px;
+  color: var(--vbo-muted);
+}
+
+#status.online { color: var(--vbo-mint); }
+#status.error { color: var(--vbo-magenta); }
+
+#about-link {
+  cursor: pointer;
+  color: var(--vbo-cyan);
+  text-decoration: underline;
+}
+
+/* ── About modal ─────────────────────────────────────────── */
+
+#about-modal {
+  position: absolute;
+  inset: 0;
+  background: rgba(11, 2, 24, 0.85);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 10;
+  transition: opacity 0.15s;
+}
+
+#about-modal.hidden {
+  opacity: 0;
+  pointer-events: none;
+}
+
+.modal-body {
+  max-width: 340px;
+  padding: 20px 22px;
+  background: var(--vbo-bg-1);
+  border: 1px solid var(--vbo-cyan);
+  border-radius: 10px;
+  box-shadow: 0 0 20px var(--vbo-magenta);
+  font-size: 12px;
+  line-height: 1.5;
+}
+
+.modal-body h3 {
+  font-family: var(--font-display);
+  color: var(--vbo-yellow);
+  margin-bottom: 10px;
+  font-size: 14px;
+}
+
+.modal-body p {
+  margin-bottom: 10px;
+  color: var(--vbo-fg);
+}
+
+.modal-body .muted {
+  color: var(--vbo-muted);
+  font-style: italic;
+}
+
+.modal-body button {
+  margin-top: 6px;
+  padding: 6px 14px;
+  background: var(--vbo-violet);
+  color: var(--vbo-fg);
+  border: 1px solid var(--vbo-pink);
+  border-radius: 5px;
+  font-family: var(--font-display);
+  font-size: 11px;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  cursor: pointer;
+}
+
+.modal-body button:hover {
+  box-shadow: 0 0 8px var(--vbo-magenta);
+}
+
+/* ══════════════════════════════════════════════════════════════
+   WIDGET MODE — chrome-stripped floating desktop widget
+   Triggered by <html class="widget-mode"> set from a ?widget=1
+   URL param. Launcher: clippy.widget_mode
+   ══════════════════════════════════════════════════════════════ */
+
+html.widget-mode,
+html.widget-mode body {
+  background: transparent !important;
+}
+
+html.widget-mode #app {
+  border: none !important;
+  box-shadow: none !important;
+  background: transparent !important;
+  /* Column layout: scene fills, bubble floats, chat pill at bottom */
+  gap: 0;
+}
+
+/* Hide everything that looks like program-window chrome */
+html.widget-mode #titlebar,
+html.widget-mode footer {
+  display: none !important;
+}
+
+/* 3D scene fills almost the whole widget, transparent so the character
+   appears to float on the desktop */
+html.widget-mode #scene-container {
+  background: transparent !important;
+  flex: 1 1 auto;
+}
+
+/* Speech bubble becomes a floating rounded bubble anchored over the scene —
+   cyan frame with warm yellow text, matching the concept mockup. */
+html.widget-mode #speech-bubble {
+  position: absolute;
+  left: 14px;
+  right: 14px;
+  top: 14px;
+  max-height: 120px;
+  padding: 12px 16px;
+  background: rgba(5, 2, 14, 0.82);
+  border: 1px solid var(--vbo-frame);
+  border-radius: 16px;
+  box-shadow:
+    0 10px 30px var(--vbo-frame-glow),
+    0 0 44px var(--vbo-halo),
+    inset 0 1px 0 rgba(255, 255, 255, 0.05);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+  z-index: 5;
+  pointer-events: none;
+  font-size: 12px;
+  color: var(--vbo-fg);
+}
+
+/* Chat becomes a compact pill at the bottom, translucent, cyan-framed */
+html.widget-mode #chat {
+  position: absolute;
+  left: 14px;
+  right: 14px;
+  bottom: 14px;
+  padding: 6px 8px;
+  background: rgba(5, 2, 14, 0.82);
+  border: 1px solid var(--vbo-frame);
+  border-radius: 999px;
+  box-shadow:
+    0 8px 24px var(--vbo-frame-glow),
+    0 0 30px var(--vbo-halo);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+  z-index: 6;
+}
+
+html.widget-mode #chat-input {
+  background: transparent;
+  border: none;
+  box-shadow: none;
+  padding: 6px 10px;
+  font-size: 12px;
+}
+
+html.widget-mode #chat-input:focus {
+  box-shadow: none;
+}
+
+html.widget-mode #chat-send {
+  padding: 6px 14px;
+  font-size: 10px;
+  border-radius: 999px;
+}
+
+/* Hide about modal in widget mode — it'd blanket the whole desktop */
+html.widget-mode #about-modal {
+  display: none !important;
+}
+

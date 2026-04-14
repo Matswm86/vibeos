@@ -1,0 +1,92 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Vibbey — VibeOS Assistant</title>
+  <script>
+    // Widget-mode toggle — must run before the stylesheet applies so there's
+    // no flash of full-chrome layout when launched as a desktop widget.
+    if (new URLSearchParams(location.search).get('widget') === '1') {
+      document.documentElement.classList.add('widget-mode');
+    }
+  </script>
+  <link rel="stylesheet" href="style.css">
+  <script type="importmap">
+  {
+    "imports": {
+      "three": "./vendor/three/three.module.js",
+      "three/addons/": "./vendor/three/addons/"
+    }
+  }
+  </script>
+</head>
+<body>
+  <div id="app">
+    <header id="titlebar">
+      <span class="brand">&#128206; Vibbey</span>
+      <span class="tagline">VibeOS Assistant</span>
+      <button id="install-btn" class="hidden" title="Launch the VibeOS installer">
+        Install VibeOS
+      </button>
+    </header>
+
+    <div id="scene-container">
+      <canvas id="scene"></canvas>
+    </div>
+
+    <div id="speech-bubble">
+      <div id="bubble-text">Loading 3D scene&hellip;</div>
+    </div>
+
+    <div id="chat">
+      <input type="text" id="chat-input" placeholder="Ask Vibbey..." autocomplete="off" autofocus>
+      <button id="chat-send">Send</button>
+    </div>
+
+    <footer>
+      <span id="status">Waking up&hellip;</span>
+      <span id="about-link" title="About Vibbey">About</span>
+    </footer>
+
+    <div id="about-modal" class="hidden">
+      <div class="modal-body">
+        <h3>About Vibbey</h3>
+        <p>
+          Vibbey is the VibeOS onboarding assistant. She uses Groq
+          (<code>llama-3.3-70b-versatile</code>) as her primary brain for
+          fast, smart answers, and falls back to local Ollama
+          (<code>qwen2.5:3b</code> by default — configurable in
+          <code>/etc/vibeos/vibbey.conf</code>) when Groq is unavailable
+          or you&rsquo;ve opted out of cloud mode. She is not Claude &mdash;
+          Claude Code takes over once you&rsquo;re set up.
+        </p>
+        <p>
+          3D model: <strong>Rigged Microsoft Clippy/Clippit</strong> by
+          Freedumbanimates on Sketchfab, used under the Sketchfab Standard
+          license.
+        </p>
+        <p class="muted">VibeOS &mdash; free, open source, and a little bit fun.</p>
+        <button id="about-close">Close</button>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    // Watchdog: if main.js never boots (import failure, syntax error,
+    // sandboxed importmap), surface a visible error instead of leaving
+    // the user staring at a frozen bubble. Cleared by main.js on first paint.
+    window.__vibbeyAlive = false;
+    setTimeout(() => {
+      if (window.__vibbeyAlive) return;
+      const t = document.getElementById('bubble-text');
+      const s = document.getElementById('status');
+      if (t) t.textContent =
+        "I couldn't start. The 3D engine didn't load. " +
+        "Open a terminal and run: journalctl --user -u vibbey -n 50";
+      if (s) { s.textContent = 'startup failed'; s.classList.add('error'); }
+    }, 6000);
+  </script>
+  <script type="module" src="main.js"></script>
+</body>
+</html>
