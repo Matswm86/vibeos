@@ -1,0 +1,9 @@
+{
+  "KPlugin": {
+    "Authors": [{ "Email": "matswm86@yahoo.no", "Name": "VibeOS" }],
+    "Id": "VibeOS-PacificDawn",
+    "License": "CC-BY-SA-4.0",
+    "Name": "VibeOS Pacific Dawn"
+  },
+  "X-KDE-PluginInfo-Name": "VibeOS-PacificDawn"
+}

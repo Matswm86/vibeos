@@ -1,0 +1,8 @@
+src/look-and-feel/org.vibeos.pacific-dawn    usr/share/plasma/look-and-feel/
+src/color-schemes/*.colors                    usr/share/color-schemes/
+src/wallpapers/VibeOS-PacificDawn             usr/share/wallpapers/
+src/plymouth/vibeos-pacific-dawn              usr/share/plymouth/themes/
+src/sddm-config/vibeos-sddm.conf              usr/lib/sddm/sddm.conf.d/
+src/systemd-boot/loader.conf                  usr/share/vibeos-desktop/
+src/branding/os-release                       usr/lib/vibeos/
+src/fonts/                                    usr/share/fonts/truetype/vibeos/

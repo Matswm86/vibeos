@@ -19,6 +19,7 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
     debootstrap \
     dpkg-dev devscripts debhelper dh-python \
     fakeroot \
+    librsvg2-bin imagemagick \
     squashfs-tools xorriso mtools \
     dosfstools e2fsprogs \
     cpio zstd xz-utils \

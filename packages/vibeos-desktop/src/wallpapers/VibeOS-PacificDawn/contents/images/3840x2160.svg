@@ -1,0 +1,82 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- VibeOS Pacific Dawn — sunrise variant.
+     Warm cream base, soft pink horizon, golden sun, plum silhouette hills.
+     Rendered at 3840x2160 so KDE Plasma picks it up as the primary 4K variant. -->
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 3840 2160"
+     width="3840" height="2160" preserveAspectRatio="xMidYMid slice">
+  <defs>
+    <linearGradient id="sky" x1="0" x2="0" y1="0" y2="1">
+      <stop offset="0%"  stop-color="#FFF4E6"/>
+      <stop offset="35%" stop-color="#FFE6D0"/>
+      <stop offset="60%" stop-color="#FFC79E"/>
+      <stop offset="85%" stop-color="#FF7A00"/>
+      <stop offset="100%" stop-color="#FF5A8F"/>
+    </linearGradient>
+    <radialGradient id="sun" cx="0.5" cy="0.5" r="0.5">
+      <stop offset="0%"  stop-color="#FFFFFF" stop-opacity="1"/>
+      <stop offset="45%" stop-color="#FFB627" stop-opacity="0.95"/>
+      <stop offset="100%" stop-color="#FF7A00" stop-opacity="0"/>
+    </radialGradient>
+    <linearGradient id="water" x1="0" x2="0" y1="0" y2="1">
+      <stop offset="0%"  stop-color="#FF5A8F" stop-opacity="0.55"/>
+      <stop offset="60%" stop-color="#2D1B3E" stop-opacity="0.78"/>
+      <stop offset="100%" stop-color="#2D1B3E" stop-opacity="1"/>
+    </linearGradient>
+  </defs>
+
+  <!-- sky -->
+  <rect width="3840" height="1550" fill="url(#sky)"/>
+
+  <!-- sun -->
+  <circle cx="1920" cy="1440" r="520" fill="url(#sun)"/>
+  <circle cx="1920" cy="1440" r="240" fill="#FFE4A3"/>
+
+  <!-- distant mountain silhouette, Pacific Dawn plum -->
+  <path d="M0 1550
+           L 280 1380
+           L 520 1430
+           L 780 1300
+           L 1080 1390
+           L 1400 1280
+           L 1760 1360
+           L 2100 1250
+           L 2480 1330
+           L 2820 1220
+           L 3200 1340
+           L 3520 1260
+           L 3840 1380
+           L 3840 1550 Z"
+        fill="#6A4A6E" opacity="0.55"/>
+
+  <!-- closer ridge -->
+  <path d="M0 1620
+           L 360 1500
+           L 720 1560
+           L 1160 1470
+           L 1560 1550
+           L 2040 1460
+           L 2520 1540
+           L 2980 1450
+           L 3440 1530
+           L 3840 1500
+           L 3840 1620 Z"
+        fill="#4A2F4A" opacity="0.8"/>
+
+  <!-- water -->
+  <rect y="1550" width="3840" height="610" fill="url(#water)"/>
+
+  <!-- sun reflection shimmer -->
+  <ellipse cx="1920" cy="1620" rx="480" ry="30" fill="#FFE4A3" opacity="0.55"/>
+  <ellipse cx="1920" cy="1700" rx="380" ry="18" fill="#FFB627" opacity="0.45"/>
+  <ellipse cx="1920" cy="1780" rx="280" ry="12" fill="#FF7A00" opacity="0.35"/>
+
+  <!-- subtle grain / noise via dots, so the gradient doesn't band -->
+  <g fill="#FFFFFF" opacity="0.04">
+    <circle cx="240"  cy="180"  r="2"/>
+    <circle cx="860"  cy="520"  r="2"/>
+    <circle cx="1420" cy="320"  r="2"/>
+    <circle cx="2240" cy="640"  r="2"/>
+    <circle cx="3100" cy="420"  r="2"/>
+    <circle cx="3580" cy="220"  r="2"/>
+  </g>
+</svg>

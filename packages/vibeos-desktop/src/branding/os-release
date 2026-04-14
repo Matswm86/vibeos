@@ -1,0 +1,12 @@
+PRETTY_NAME="VibeOS 2.0.0 — Pacific Dawn"
+NAME="VibeOS"
+VERSION_ID="2.0.0"
+VERSION="2.0.0 (Pacific Dawn)"
+VERSION_CODENAME=pacific-dawn
+ID=vibeos
+ID_LIKE=ubuntu
+HOME_URL="https://vibeos.mwmai.no/"
+SUPPORT_URL="https://vibeos.mwmai.no/docs/"
+BUG_REPORT_URL="https://github.com/Matswm86/vibeos/issues"
+UBUNTU_CODENAME=noble
+LOGO=vibeos

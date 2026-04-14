@@ -1,0 +1,14 @@
+{
+  "KPlugin": {
+    "Authors": [{ "Email": "matswm86@yahoo.no", "Name": "VibeOS" }],
+    "Category": "",
+    "Description": "Warm sunrise palette — cream, hot pink, sunset orange, plum ink.",
+    "EnabledByDefault": true,
+    "Id": "org.vibeos.pacific-dawn",
+    "License": "GPL",
+    "Name": "VibeOS Pacific Dawn",
+    "Version": "2.0.0",
+    "Website": "https://vibeos.mwmai.no/"
+  },
+  "X-Plasma-APIVersion": "5.0"
+}

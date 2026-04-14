@@ -1,0 +1,35 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- VibeOS Pacific Dawn — noon variant.
+     Bright cream, soft coral, high-hanging sun. Same composition, brighter. -->
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 3840 2160"
+     width="3840" height="2160" preserveAspectRatio="xMidYMid slice">
+  <defs>
+    <linearGradient id="sky" x1="0" x2="0" y1="0" y2="1">
+      <stop offset="0%"  stop-color="#FFFFFF"/>
+      <stop offset="50%" stop-color="#FFF4E6"/>
+      <stop offset="80%" stop-color="#FFC79E"/>
+      <stop offset="100%" stop-color="#FF9A5C"/>
+    </linearGradient>
+    <radialGradient id="sun" cx="0.5" cy="0.5" r="0.5">
+      <stop offset="0%"  stop-color="#FFFFFF" stop-opacity="1"/>
+      <stop offset="40%" stop-color="#FFE4A3" stop-opacity="0.95"/>
+      <stop offset="100%" stop-color="#FFB627" stop-opacity="0"/>
+    </radialGradient>
+    <linearGradient id="water" x1="0" x2="0" y1="0" y2="1">
+      <stop offset="0%"  stop-color="#FF9A5C" stop-opacity="0.4"/>
+      <stop offset="60%" stop-color="#2D1B3E" stop-opacity="0.7"/>
+      <stop offset="100%" stop-color="#2D1B3E" stop-opacity="1"/>
+    </linearGradient>
+  </defs>
+  <rect width="3840" height="1550" fill="url(#sky)"/>
+  <circle cx="1920" cy="720" r="440" fill="url(#sun)"/>
+  <circle cx="1920" cy="720" r="180" fill="#FFFFFF"/>
+  <path d="M0 1550 L 280 1380 L 520 1430 L 780 1300 L 1080 1390 L 1400 1280
+           L 1760 1360 L 2100 1250 L 2480 1330 L 2820 1220 L 3200 1340
+           L 3520 1260 L 3840 1380 L 3840 1550 Z"
+        fill="#8A6A8E" opacity="0.5"/>
+  <path d="M0 1620 L 360 1500 L 720 1560 L 1160 1470 L 1560 1550 L 2040 1460
+           L 2520 1540 L 2980 1450 L 3440 1530 L 3840 1500 L 3840 1620 Z"
+        fill="#5A3F5A" opacity="0.8"/>
+  <rect y="1550" width="3840" height="610" fill="url(#water)"/>
+</svg>

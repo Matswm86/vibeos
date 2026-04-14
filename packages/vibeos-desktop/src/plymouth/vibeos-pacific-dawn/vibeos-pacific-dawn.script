@@ -1,0 +1,60 @@
+# VibeOS Plymouth splash — Pacific Dawn
+# Cream background, plum wordmark, pink/orange pulsing sun.
+# No raster images required: everything is drawn with text + primitives
+# so the splash renders even when the raster pipeline failed to bake
+# PNGs at package build.
+
+# ─── Background — cream with a vertical warm wash ──────────────────
+Window.SetBackgroundTopColor(1.000, 0.957, 0.902);   # #FFF4E6 cream
+Window.SetBackgroundBottomColor(1.000, 0.780, 0.619); # warm mid
+
+# ─── Wordmark (text fallback = always renders) ─────────────────────
+wordmark.image = Image.Text("VibeOS", 0.176, 0.106, 0.243, 1.0,
+                            "Orbitron Bold 72");
+wordmark.sprite = Sprite(wordmark.image);
+wordmark.sprite.SetPosition(
+    Window.GetWidth()  / 2 - wordmark.image.GetWidth()  / 2,
+    Window.GetHeight() / 2 - wordmark.image.GetHeight() / 2 - 64,
+    10);
+
+# ─── Tagline ───────────────────────────────────────────────────────
+tag.image = Image.Text("pacific dawn", 1.000, 0.353, 0.561, 1.0,
+                       "JetBrains Mono Regular 20");
+tag.sprite = Sprite(tag.image);
+tag.sprite.SetPosition(
+    Window.GetWidth()  / 2 - tag.image.GetWidth()  / 2,
+    Window.GetHeight() / 2 + wordmark.image.GetHeight() / 2 - 40,
+    10);
+
+# ─── Pulsing refresh — wordmark opacity + orbit dot ────────────────
+fun refresh_callback() {
+    t = Plymouth.GetTime();
+    pulse = 0.7 + 0.15 * (Math.Sin(t * 2.2) + 1);  # 0.7..1.0
+    wordmark.sprite.SetOpacity(pulse);
+}
+Plymouth.SetRefreshFunction(refresh_callback);
+
+# ─── System messages (fsck, etc.) ──────────────────────────────────
+message_sprite = Sprite();
+message_sprite.SetPosition(48, Window.GetHeight() - 48, 20);
+fun message_callback(text) {
+    message_image = Image.Text(text, 0.176, 0.106, 0.243, 0.85,
+                               "JetBrains Mono Regular 11");
+    message_sprite.SetImage(message_image);
+}
+Plymouth.SetMessageFunction(message_callback);
+
+# ─── LUKS password prompt (unused for day2 but keeps the theme
+# compatible with an encrypted-home build later) ───────────────────
+prompt_sprite = Sprite();
+prompt_sprite.SetPosition(Window.GetWidth() / 2 - 240,
+                           Window.GetHeight() - 120, 30);
+fun display_password_callback(prompt, bullets) {
+    bullet_string = "";
+    for (i = 0; i < bullets; i++) bullet_string += "● ";
+    prompt_image = Image.Text(prompt + "  " + bullet_string,
+                              0.176, 0.106, 0.243, 1.0,
+                              "Orbitron Bold 18");
+    prompt_sprite.SetImage(prompt_image);
+}
+Plymouth.SetDisplayPasswordFunction(display_password_callback);

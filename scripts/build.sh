@@ -36,8 +36,8 @@ fi
 ACTION="${1:-build}"
 case "$ACTION" in
     clean)
-        info "wiping mkosi.output/ and mkosi.cache/"
-        rm -rf mkosi.output/ mkosi.cache/
+        info "wiping mkosi.output/, mkosi.cache/, packages/local/"
+        rm -rf mkosi.output/ mkosi.cache/ packages/local/
         ok "clean"
         exit 0
         ;;
@@ -48,11 +48,21 @@ case "$ACTION" in
             "$IMAGE_TAG" bash
         ;;
     build|"")
+        # Always refresh our local .debs before the mkosi run so the
+        # Packages= resolution picks up the latest vibeos-desktop. Skip
+        # with SKIP_DEB=1 when iterating on mkosi config alone.
+        if [ "${SKIP_DEB:-0}" != "1" ]; then
+            info "rebuilding VibeOS .debs into packages/local/"
+            "$REPO_ROOT/scripts/build-deb.sh" || err "deb build failed"
+        else
+            info "SKIP_DEB=1 — reusing existing packages/local/*.deb"
+        fi
+
         info "building VibeOS ISO (~10 min first time, faster on rebuild)"
         docker run --rm -i --privileged \
             -v "$REPO_ROOT:/work" \
             "$IMAGE_TAG" \
-            bash -c 'cd /work && mkosi --directory mkosi build'
+            bash -c 'cd /work && mkosi --directory mkosi --force build'
         ;;
     *)
         err "unknown action: $ACTION (try: build / clean / shell)"

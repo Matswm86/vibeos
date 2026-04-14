@@ -1,0 +1,83 @@
+#!/bin/bash
+# mkosi.prepare.chroot — runs INSIDE the chroot after the base system is
+# bootstrapped but BEFORE the [Packages=] list is installed. This is our
+# only chance to register extra apt repositories so that firefox resolves
+# to the real .debs instead of the Ubuntu Noble snap-transition stubs.
+#
+# Day 1 discovery: Noble's `firefox` in the archive is a transitional
+# package that installs snapd and pulls firefox as a snap. We removed
+# snapd, so firefox ended up missing from the image. Fix: add the
+# official Mozilla Team PPA and pin it above the archive version.
+
+set -euo pipefail
+
+echo "[mkosi.prepare] registering Mozilla Team PPA for real Firefox .deb"
+
+# Ensure apt has what it needs to fetch https + dearmor gpg keys.
+# In the chroot at this phase we already have base-files + apt but not
+# always gnupg/ca-certificates. Install them via apt so the keyserver
+# fetch below works.
+apt-get update
+apt-get install -y --no-install-recommends \
+    gnupg ca-certificates
+
+install -d -m 0755 /etc/apt/keyrings
+
+# Fetch Mozilla Team PPA signing key from Ubuntu keyserver. Fingerprint
+# published on Launchpad: 0AB215679C571D1C8325275B9BDB3D89CE49EC21.
+# Keyserver path is stable and used by add-apt-repository under the hood.
+MOZ_KEY_FPR="0AB215679C571D1C8325275B9BDB3D89CE49EC21"
+
+TMP_GPG="$(mktemp -d)"
+trap 'rm -rf "$TMP_GPG"' EXIT
+
+GNUPGHOME="$TMP_GPG" gpg --batch --no-default-keyring \
+    --keyring "$TMP_GPG/moz.gpg" \
+    --keyserver hkps://keyserver.ubuntu.com \
+    --recv-keys "$MOZ_KEY_FPR"
+
+GNUPGHOME="$TMP_GPG" gpg --no-default-keyring \
+    --keyring "$TMP_GPG/moz.gpg" \
+    --export "$MOZ_KEY_FPR" \
+    > /etc/apt/keyrings/mozillateam.gpg
+chmod 0644 /etc/apt/keyrings/mozillateam.gpg
+
+# Apt sources entry in deb822 format with Signed-By pinned to our keyring.
+cat > /etc/apt/sources.list.d/mozillateam-ubuntu-ppa-noble.sources <<'EOF'
+Types: deb
+URIs: https://ppa.launchpadcontent.net/mozillateam/ppa/ubuntu
+Suites: noble
+Components: main
+Signed-By: /etc/apt/keyrings/mozillateam.gpg
+EOF
+
+# Pin Mozilla PPA above the archive so firefox resolves to the PPA
+# version instead of the snap-transition stub. Belt-and-braces pinning:
+# include every origin string Launchpad might produce for this PPA.
+# 1001 > 1000 beats Ubuntu's own ubuntu-pro preferences too.
+cat > /etc/apt/preferences.d/mozillateam-firefox <<'EOF'
+Package: firefox*
+Pin: release o=LP-PPA-mozillateam
+Pin-Priority: 1001
+
+Package: firefox*
+Pin: release o=LP-PPA-mozillateam-ppa
+Pin-Priority: 1001
+
+Package: firefox*
+Pin: origin ppa.launchpadcontent.net
+Pin-Priority: 1001
+EOF
+
+# Refresh package index so Packages= resolution picks up the new repo.
+apt-get update
+
+# Install firefox HERE, in prepare — at this point the Mozilla PPA is
+# registered + pinned, so the real .deb comes down. Doing it later (in
+# Packages= or postinst) occasionally lost to the snap-transition stub
+# because RemovePackages=snapd cascades firefox removal. Installing
+# early guarantees the PPA version lands and survives finalisation.
+DEBIAN_FRONTEND=noninteractive apt-get install -y --no-install-recommends firefox
+
+echo "[mkosi.prepare] Mozilla PPA ready, firefox installed from PPA"
+echo "[mkosi.prepare] firefox version: $(dpkg-query -W -f='${Version}' firefox 2>/dev/null || echo missing)"

@@ -1,0 +1,38 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- VibeOS Pacific Dawn — dusk variant.
+     Deeper plum sky, hot pink horizon, small sun sinking into water. -->
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 3840 2160"
+     width="3840" height="2160" preserveAspectRatio="xMidYMid slice">
+  <defs>
+    <linearGradient id="sky" x1="0" x2="0" y1="0" y2="1">
+      <stop offset="0%"  stop-color="#2D1B3E"/>
+      <stop offset="35%" stop-color="#5A2F5A"/>
+      <stop offset="65%" stop-color="#FF5A8F"/>
+      <stop offset="88%" stop-color="#FF7A00"/>
+      <stop offset="100%" stop-color="#FFB627"/>
+    </linearGradient>
+    <radialGradient id="sun" cx="0.5" cy="0.5" r="0.5">
+      <stop offset="0%"  stop-color="#FFB627" stop-opacity="1"/>
+      <stop offset="60%" stop-color="#FF7A00" stop-opacity="0.9"/>
+      <stop offset="100%" stop-color="#FF5A8F" stop-opacity="0"/>
+    </radialGradient>
+    <linearGradient id="water" x1="0" x2="0" y1="0" y2="1">
+      <stop offset="0%"  stop-color="#FF5A8F" stop-opacity="0.7"/>
+      <stop offset="55%" stop-color="#2D1B3E" stop-opacity="0.88"/>
+      <stop offset="100%" stop-color="#0D0818" stop-opacity="1"/>
+    </linearGradient>
+  </defs>
+  <rect width="3840" height="1550" fill="url(#sky)"/>
+  <circle cx="1920" cy="1540" r="360" fill="url(#sun)"/>
+  <circle cx="1920" cy="1540" r="150" fill="#FFB627"/>
+  <path d="M0 1550 L 280 1380 L 520 1430 L 780 1300 L 1080 1390 L 1400 1280
+           L 1760 1360 L 2100 1250 L 2480 1330 L 2820 1220 L 3200 1340
+           L 3520 1260 L 3840 1380 L 3840 1550 Z"
+        fill="#3A2348" opacity="0.7"/>
+  <path d="M0 1620 L 360 1500 L 720 1560 L 1160 1470 L 1560 1550 L 2040 1460
+           L 2520 1540 L 2980 1450 L 3440 1530 L 3840 1500 L 3840 1620 Z"
+        fill="#1A0E26" opacity="0.9"/>
+  <rect y="1550" width="3840" height="610" fill="url(#water)"/>
+  <ellipse cx="1920" cy="1620" rx="360" ry="22" fill="#FFB627" opacity="0.6"/>
+  <ellipse cx="1920" cy="1700" rx="260" ry="14" fill="#FF7A00" opacity="0.5"/>
+</svg>

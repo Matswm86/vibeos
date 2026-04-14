@@ -58,29 +58,63 @@ Relogin=false
 EOF
 fi
 
-# ─── Install Calamares launcher on live desktop ─────────────────────
-# Day 2 replaces this with the branded version. For Day 1 we just need
-# the launcher to exist so we can verify the install flow works.
-if [ -f /usr/share/applications/calamares.desktop ]; then
+# ─── Install branded "Install VibeOS" shortcut on live desktop ───────
+# The vibeos-desktop.deb provides the Pacific Dawn L&F. We ship a clean
+# shortcut pointing at Calamares, branded with our product name + icon.
+if [ -f /usr/bin/calamares ]; then
     mkdir -p /home/vibeos/Desktop
-    cp /usr/share/applications/calamares.desktop /home/vibeos/Desktop/
-    chmod +x /home/vibeos/Desktop/calamares.desktop
+    cat > /home/vibeos/Desktop/install-vibeos.desktop <<'SHORTCUT_EOF'
+[Desktop Entry]
+Type=Application
+Name=Install VibeOS
+Comment=Install Pacific Dawn to this computer
+Exec=pkexec calamares
+Icon=/usr/share/calamares/branding/vibeos/vibeos-icon.svg
+Terminal=false
+Categories=System;
+SHORTCUT_EOF
+    chmod +x /home/vibeos/Desktop/install-vibeos.desktop
     chown -R vibeos:vibeos /home/vibeos/Desktop
 fi
 
-# ─── os-release branding (will be overridden by vibeos-desktop.deb on Day 2) ─
-cat > /etc/os-release <<EOF
-PRETTY_NAME="VibeOS 2.0.0-dev"
-NAME="VibeOS"
-VERSION_ID="2.0.0-dev"
-VERSION="2.0.0-dev"
-ID=vibeos
-ID_LIKE=ubuntu
-HOME_URL="https://vibeos.mwmai.no/"
-SUPPORT_URL="https://vibeos.mwmai.no/docs/"
-BUG_REPORT_URL="https://github.com/Matswm86/vibeos/issues"
-UBUNTU_CODENAME=noble
-EOF
+# ─── Plymouth default theme ──────────────────────────────────────────
+# update-alternatives can fail in chroot, so write plymouthd.conf
+# directly — the daemon reads Theme= from there at boot, which trumps
+# the /etc/alternatives symlink. Belt-and-braces: also try the usual
+# helpers so future upgrades don't clobber our choice.
+install -d -m 0755 /etc/plymouth
+cat > /etc/plymouth/plymouthd.conf <<'PLYEOF'
+[Daemon]
+Theme=vibeos-pacific-dawn
+ShowDelay=0
+DeviceTimeout=8
+PLYEOF
+
+if command -v plymouth-set-default-theme >/dev/null 2>&1; then
+    plymouth-set-default-theme vibeos-pacific-dawn || true
+fi
+
+# Register our theme with the alternatives system so Ubuntu's own
+# triggers don't overwrite the choice on next apt update.
+if command -v update-alternatives >/dev/null 2>&1; then
+    update-alternatives --install \
+        /usr/share/plymouth/themes/default.plymouth default.plymouth \
+        /usr/share/plymouth/themes/vibeos-pacific-dawn/vibeos-pacific-dawn.plymouth \
+        200 2>/dev/null || true
+    update-alternatives --set default.plymouth \
+        /usr/share/plymouth/themes/vibeos-pacific-dawn/vibeos-pacific-dawn.plymouth \
+        2>/dev/null || true
+fi
+
+# update-initramfs in chroot usually fails (no running kernel), but
+# try anyway — mkosi regenerates the initrd from the rootfs later and
+# picks up /etc/plymouth/plymouthd.conf at that stage.
+update-initramfs -u -k all 2>/dev/null || true
+
+# ─── os-release ─ keep vibeos-desktop.deb's version authoritative ────
+if [ -f /usr/lib/vibeos/os-release ]; then
+    install -m 0644 /usr/lib/vibeos/os-release /etc/os-release
+fi
 
 # ─── Clean up apt cache to shave ~300MB off the ISO ─────────────────
 apt-get clean

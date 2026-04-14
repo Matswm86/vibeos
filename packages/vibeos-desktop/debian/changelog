@@ -1,0 +1,12 @@
+vibeos-desktop (2.0.0-day2) noble; urgency=medium
+
+  * Initial Pacific Dawn branding package (v2 Day 2).
+  * KDE Look-and-Feel package org.vibeos.pacific-dawn.
+  * Color scheme VibeOS-PacificDawn.
+  * Three Pacific Dawn wallpapers (sunrise / noon / dusk).
+  * Plymouth boot splash vibeos-pacific-dawn.
+  * SDDM Breeze overrides using Pacific Dawn palette.
+  * Orbitron + JetBrains Mono fonts.
+  * VibeOS /etc/os-release.
+
+ -- Mats Mjåtvedt <matswm86@yahoo.no>  Tue, 14 Apr 2026 00:00:00 +0200

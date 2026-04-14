@@ -1,0 +1,39 @@
+/* VibeOS Calamares — Pacific Dawn stylesheet.
+ * Overrides Calamares' default look to match the OS theme:
+ *   cream background, plum ink text, hot pink + sunset orange accents.
+ */
+
+#mainApp {
+    background-color: #FFF4E6;
+    color: #2D1B3E;
+}
+
+QPushButton {
+    background-color: #FF5A8F;
+    color: #FFFFFF;
+    border: none;
+    border-radius: 6px;
+    padding: 8px 18px;
+    font-weight: bold;
+}
+
+QPushButton:hover    { background-color: #FF7A00; }
+QPushButton:pressed  { background-color: #E94A7F; }
+QPushButton:disabled { background-color: #FFD4B5; color: #A090A8; }
+
+QLabel {
+    color: #2D1B3E;
+}
+
+QProgressBar {
+    background-color: #FFE6D0;
+    border: 1px solid #FFB627;
+    border-radius: 6px;
+    text-align: center;
+    color: #2D1B3E;
+}
+
+QProgressBar::chunk {
+    background-color: #FF7A00;
+    border-radius: 5px;
+}

@@ -1,0 +1,28 @@
+Source: vibeos-desktop
+Section: misc
+Priority: optional
+Maintainer: Mats Mjåtvedt <matswm86@yahoo.no>
+Build-Depends: debhelper-compat (= 13)
+Standards-Version: 4.6.2
+Homepage: https://vibeos.mwmai.no/
+
+Package: vibeos-desktop
+Architecture: all
+Depends:
+ ${misc:Depends},
+ plasma-workspace,
+ sddm,
+ plymouth,
+ plymouth-themes,
+ libplasma3 | plasma-framework,
+ kde-cli-tools
+Recommends:
+ papirus-icon-theme,
+ breeze
+Description: VibeOS desktop branding and Pacific Dawn theme
+ Ships the VibeOS Pacific Dawn KDE Look-and-Feel package, matching
+ color scheme, wallpaper set, Plymouth splash, SDDM theming config,
+ Orbitron + JetBrains Mono fonts, and the /etc/os-release branding.
+ .
+ After install the Look-and-Feel theme is applied system-wide and
+ Plymouth is switched to the vibeos-pacific-dawn boot splash.

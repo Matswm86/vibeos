@@ -1,0 +1,8 @@
+[Plymouth Theme]
+Name=VibeOS Pacific Dawn
+Description=Cream sunrise boot splash — wordmark + pulsing sun
+ModuleName=script
+
+[script]
+ImageDir=/usr/share/plymouth/themes/vibeos-pacific-dawn
+ScriptFile=/usr/share/plymouth/themes/vibeos-pacific-dawn/vibeos-pacific-dawn.script

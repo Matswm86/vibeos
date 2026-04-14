@@ -1,0 +1,72 @@
+#!/bin/sh
+# vibeos-desktop postinst — activate Pacific Dawn theme system-wide.
+
+set -e
+
+case "$1" in
+    configure)
+        # ─── Activate Plymouth Pacific Dawn splash ──────────────────
+        if command -v plymouth-set-default-theme >/dev/null 2>&1; then
+            plymouth-set-default-theme -R vibeos-pacific-dawn || \
+                echo "vibeos-desktop: plymouth theme activation deferred (update-initramfs not yet runnable)"
+        fi
+
+        # ─── Refresh font cache so Orbitron + JetBrains Mono are usable ─
+        if command -v fc-cache >/dev/null 2>&1; then
+            fc-cache -f -s >/dev/null 2>&1 || true
+        fi
+
+        # ─── Install VibeOS os-release into /etc/os-release ─────────
+        if [ -f /usr/lib/vibeos/os-release ]; then
+            install -m 0644 /usr/lib/vibeos/os-release /etc/os-release
+        fi
+
+        # ─── Override systemd-boot loader branding (timeout, title) ──
+        if [ -d /boot/efi/loader ] && [ -f /usr/share/vibeos-desktop/loader.conf ]; then
+            install -m 0644 /usr/share/vibeos-desktop/loader.conf \
+                /boot/efi/loader/loader.conf || true
+        fi
+
+        # ─── Set Pacific Dawn as default KDE Look-and-Feel ──────────
+        # Written to the system-wide kdeglobals defaults so every new
+        # user gets Pacific Dawn on first login. lookandfeeltool -a is
+        # per-user; the default for the live/installed user is set via
+        # /etc/xdg/kdeglobals (see kdeglobals file below).
+        install -d -m 0755 /etc/xdg
+        cat > /etc/xdg/kdeglobals <<'KDEGLOBALS_EOF'
+[KDE]
+LookAndFeelPackage=org.vibeos.pacific-dawn
+
+[General]
+ColorScheme=VibeOS-PacificDawn
+Name=VibeOS-PacificDawn
+shadeSortColumn=true
+
+[Icons]
+Theme=Papirus
+
+[KScreen]
+ScreenScaleFactors=
+
+[WM]
+activeBackground=255,244,230
+activeBlend=45,27,62
+activeForeground=45,27,62
+inactiveBackground=255,244,230
+inactiveBlend=45,27,62
+inactiveForeground=128,110,146
+KDEGLOBALS_EOF
+        ;;
+
+    abort-upgrade|abort-remove|abort-deconfigure)
+        ;;
+
+    *)
+        echo "postinst called with unknown argument \`$1'" >&2
+        exit 1
+        ;;
+esac
+
+#DEBHELPER#
+
+exit 0

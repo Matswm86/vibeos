@@ -1,0 +1,21 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 800 450" width="800" height="450">
+  <defs>
+    <linearGradient id="sky" x1="0" x2="0" y1="0" y2="1">
+      <stop offset="0%"  stop-color="#FFF4E6"/>
+      <stop offset="60%" stop-color="#FFC79E"/>
+      <stop offset="100%" stop-color="#FF5A8F"/>
+    </linearGradient>
+    <radialGradient id="sun" cx="0.5" cy="0.5" r="0.5">
+      <stop offset="0%"  stop-color="#FFFFFF" stop-opacity="1"/>
+      <stop offset="55%" stop-color="#FFB627" stop-opacity="0.9"/>
+      <stop offset="100%" stop-color="#FF7A00" stop-opacity="0"/>
+    </radialGradient>
+  </defs>
+  <rect width="800" height="450" fill="url(#sky)"/>
+  <circle cx="400" cy="300" r="120" fill="url(#sun)"/>
+  <text x="400" y="220" text-anchor="middle" font-family="Orbitron, sans-serif"
+        font-size="56" font-weight="bold" fill="#2D1B3E">VibeOS</text>
+  <text x="400" y="260" text-anchor="middle" font-family="JetBrains Mono, monospace"
+        font-size="18" fill="#FF5A8F">pacific dawn // 2.0.0</text>
+</svg>

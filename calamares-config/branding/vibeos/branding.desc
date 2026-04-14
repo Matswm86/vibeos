@@ -1,0 +1,37 @@
+---
+componentName:  vibeos
+
+welcomeStyleCalamares: true
+welcomeExpandingLogo:  true
+
+windowExpanding: normal
+windowSize:       900px,600px
+windowPlacement:  center
+
+strings:
+    productName:         VibeOS
+    shortProductName:    VibeOS
+    version:             "2.0.0 — Pacific Dawn"
+    shortVersion:        "2.0.0"
+    versionedName:       "VibeOS 2.0.0"
+    shortVersionedName:  "VibeOS 2.0.0"
+    bootloaderEntryName: VibeOS
+    productUrl:          https://vibeos.mwmai.no/
+    supportUrl:          https://vibeos.mwmai.no/docs/
+    knownIssuesUrl:      https://github.com/Matswm86/vibeos/issues
+    releaseNotesUrl:     https://vibeos.mwmai.no/releases/
+    donateUrl:           ""
+
+images:
+    productLogo:         "vibeos-logo.svg"
+    productIcon:         "vibeos-icon.svg"
+    productWelcome:      "vibeos-welcome.svg"
+
+slideshow:               "show.qml"
+slideshowAPI:            2
+
+style:
+    sidebarBackground:      "#FFF4E6"
+    sidebarText:            "#2D1B3E"
+    sidebarTextSelect:      "#FF5A8F"
+    sidebarTextHighlight:   "#FF7A00"
