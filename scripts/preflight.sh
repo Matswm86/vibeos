@@ -143,9 +143,13 @@ INI_FILES=(
     "$THEMING/plymouth/vibeos/vibeos.plymouth"
     "$THEMING/os-release/os-release"
     "$THEMING/os-release/lsb-release"
-    "$THEMING/skel/.config/kdeglobals"
-    "$THEMING/skel/.config/plasmarc"
-    "$THEMING/skel/.config/kwinrc"
+    # System-wide KDE fallbacks (0.4.3+: moved out of /etc/skel to avoid
+    # KWin crash on MSI when Backend=OpenGL + aurorae overrides collided;
+    # these are now installed to /etc/xdg by chroot-inject step 5.5).
+    "$THEMING/xdg/kdeglobals"
+    "$THEMING/xdg/plasmarc"
+    "$THEMING/xdg/kwinrc"
+    "$THEMING/xdg/kcminputrc"
     "$THEMING/skel/.config/konsolerc"
     "$THEMING/skel/.config/autostart/vibeos-first-run.desktop"
 )

@@ -1,0 +1,14 @@
+[Desktop Entry]
+Type=Application
+Version=1.0
+Name=VibeOS Apply Look-and-Feel
+GenericName=VibeOS Theme Bootstrap
+Comment=Apply org.vibeos.neon Plasma L&F once on first login (DBus needed, so only runs inside the real session — chroot cannot do this). After success writes ~/.config/vibeos-lnf-applied marker and becomes a no-op.
+Exec=sh -c 'test -f "$HOME/.config/vibeos-lnf-applied" || { command -v lookandfeeltool >/dev/null 2>&1 && lookandfeeltool -a org.vibeos.neon && touch "$HOME/.config/vibeos-lnf-applied"; }'
+Icon=vibeos-logo
+Terminal=false
+Categories=System;
+X-GNOME-Autostart-enabled=true
+X-KDE-autostart-after=panel
+X-KDE-autostart-phase=1
+OnlyShowIn=KDE;
