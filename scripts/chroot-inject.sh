@@ -821,10 +821,21 @@ if [ "${VIBEOS_BAKE_OLLAMA:-1}" = "1" ]; then
         [ -f /etc/systemd/system/ollama.service ] && OLLAMA_UNIT=/etc/systemd/system/ollama.service
         [ -z "$OLLAMA_UNIT" ] && [ -f /usr/lib/systemd/system/ollama.service ] && OLLAMA_UNIT=/usr/lib/systemd/system/ollama.service
         if [ -n "$OLLAMA_UNIT" ]; then
-            mkdir -p /etc/systemd/system/multi-user.target.wants
-            systemctl enable ollama.service 2>/dev/null \
-                || ln -sf "$OLLAMA_UNIT" /etc/systemd/system/multi-user.target.wants/ollama.service
-            if [ -L /etc/systemd/system/multi-user.target.wants/ollama.service ]; then
+            # Ollama ships with `[Install] WantedBy=default.target`, so
+            # `systemctl enable` creates the symlink under
+            # default.target.wants, NOT multi-user.target.wants. Try the
+            # proper tool first, then belt-and-suspenders link into
+            # default.target.wants explicitly. Verify the symlink in
+            # whichever location systemd used.
+            mkdir -p /etc/systemd/system/default.target.wants \
+                     /etc/systemd/system/multi-user.target.wants
+            systemctl enable ollama.service 2>/dev/null || true
+            if [ ! -L /etc/systemd/system/default.target.wants/ollama.service ] \
+               && [ ! -L /etc/systemd/system/multi-user.target.wants/ollama.service ]; then
+                ln -sf "$OLLAMA_UNIT" /etc/systemd/system/default.target.wants/ollama.service
+            fi
+            if [ -L /etc/systemd/system/default.target.wants/ollama.service ] \
+               || [ -L /etc/systemd/system/multi-user.target.wants/ollama.service ]; then
                 ok "ollama.service enabled for first boot"
             else
                 warn "ollama.service enable failed — Vibbey will ask user to start it manually"
