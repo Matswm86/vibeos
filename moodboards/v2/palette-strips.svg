@@ -1,0 +1,142 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1600 900" width="1600" height="900">
+  <title>VibeOS v2 · Palette Strips</title>
+  <style>
+    .label   { font-family: Orbitron, sans-serif; font-size: 22px; font-weight: bold; fill: #2D1B3E; }
+    .sublbl  { font-family: monospace; font-size: 13px; fill: #2D1B3E; opacity: 0.7; }
+    .hex     { font-family: monospace; font-size: 12px; }
+  </style>
+
+  <rect width="1600" height="900" fill="#FFFAF2"/>
+
+  <!-- ===================== CONCEPT 1 ===================== -->
+  <text x="40" y="50" class="label">① Pacific Dawn</text>
+  <text x="40" y="72" class="sublbl">light · cream · upbeat · day</text>
+  <g transform="translate(40, 90)">
+    <rect x="0"   y="0" width="150" height="120" fill="#FFF4E6"/>
+    <rect x="150" y="0" width="150" height="120" fill="#FFD1BC"/>
+    <rect x="300" y="0" width="150" height="120" fill="#FF7A00"/>
+    <rect x="450" y="0" width="150" height="120" fill="#FF5A8F"/>
+    <rect x="600" y="0" width="150" height="120" fill="#FFB627"/>
+    <rect x="750" y="0" width="150" height="120" fill="#E96D7F"/>
+    <rect x="900" y="0" width="150" height="120" fill="#2D1B3E"/>
+    <rect x="1050" y="0" width="150" height="120" fill="#FFFFFF" stroke="#E0D5C0"/>
+
+    <text x="75"   y="145" text-anchor="middle" class="hex" fill="#2D1B3E">#FFF4E6</text>
+    <text x="225"  y="145" text-anchor="middle" class="hex" fill="#2D1B3E">#FFD1BC</text>
+    <text x="375"  y="145" text-anchor="middle" class="hex" fill="#FFFFFF">#FF7A00</text>
+    <text x="525"  y="145" text-anchor="middle" class="hex" fill="#FFFFFF">#FF5A8F</text>
+    <text x="675"  y="145" text-anchor="middle" class="hex" fill="#2D1B3E">#FFB627</text>
+    <text x="825"  y="145" text-anchor="middle" class="hex" fill="#FFFFFF">#E96D7F</text>
+    <text x="975"  y="145" text-anchor="middle" class="hex" fill="#FFFFFF">#2D1B3E</text>
+    <text x="1125" y="145" text-anchor="middle" class="hex" fill="#2D1B3E">#FFFFFF</text>
+
+    <text x="75"   y="165" text-anchor="middle" class="sublbl">bg</text>
+    <text x="225"  y="165" text-anchor="middle" class="sublbl">surface</text>
+    <text x="375"  y="165" text-anchor="middle" class="sublbl">primary</text>
+    <text x="525"  y="165" text-anchor="middle" class="sublbl">secondary</text>
+    <text x="675"  y="165" text-anchor="middle" class="sublbl">accent</text>
+    <text x="825"  y="165" text-anchor="middle" class="sublbl">hover</text>
+    <text x="975"  y="165" text-anchor="middle" class="sublbl">text</text>
+    <text x="1125" y="165" text-anchor="middle" class="sublbl">card</text>
+  </g>
+
+  <!-- ===================== CONCEPT 2 ===================== -->
+  <text x="40" y="280" class="label">② Outrun Boulevard</text>
+  <text x="40" y="302" class="sublbl">dark · synthwave · night · dramatic</text>
+  <g transform="translate(40, 320)">
+    <rect x="0"   y="0" width="150" height="120" fill="#1A0933"/>
+    <rect x="150" y="0" width="150" height="120" fill="#2A0A3E"/>
+    <rect x="300" y="0" width="150" height="120" fill="#FF006E"/>
+    <rect x="450" y="0" width="150" height="120" fill="#FF5A8F"/>
+    <rect x="600" y="0" width="150" height="120" fill="#FF7A00"/>
+    <rect x="750" y="0" width="150" height="120" fill="#FFB627"/>
+    <rect x="900" y="0" width="150" height="120" fill="#01F9FF"/>
+    <rect x="1050" y="0" width="150" height="120" fill="#F8F0FF"/>
+
+    <text x="75"   y="145" text-anchor="middle" class="hex" fill="#FFFFFF">#1A0933</text>
+    <text x="225"  y="145" text-anchor="middle" class="hex" fill="#FFFFFF">#2A0A3E</text>
+    <text x="375"  y="145" text-anchor="middle" class="hex" fill="#FFFFFF">#FF006E</text>
+    <text x="525"  y="145" text-anchor="middle" class="hex" fill="#FFFFFF">#FF5A8F</text>
+    <text x="675"  y="145" text-anchor="middle" class="hex" fill="#FFFFFF">#FF7A00</text>
+    <text x="825"  y="145" text-anchor="middle" class="hex" fill="#2D1B3E">#FFB627</text>
+    <text x="975"  y="145" text-anchor="middle" class="hex" fill="#2D1B3E">#01F9FF</text>
+    <text x="1125" y="145" text-anchor="middle" class="hex" fill="#2D1B3E">#F8F0FF</text>
+
+    <text x="75"   y="165" text-anchor="middle" class="sublbl">bg</text>
+    <text x="225"  y="165" text-anchor="middle" class="sublbl">surface</text>
+    <text x="375"  y="165" text-anchor="middle" class="sublbl">primary</text>
+    <text x="525"  y="165" text-anchor="middle" class="sublbl">secondary</text>
+    <text x="675"  y="165" text-anchor="middle" class="sublbl">accent1</text>
+    <text x="825"  y="165" text-anchor="middle" class="sublbl">accent2</text>
+    <text x="975"  y="165" text-anchor="middle" class="sublbl">highlight</text>
+    <text x="1125" y="165" text-anchor="middle" class="sublbl">text</text>
+  </g>
+
+  <!-- ===================== CONCEPT 3 ===================== -->
+  <text x="40" y="510" class="label">③ Miami Pastel</text>
+  <text x="40" y="532" class="sublbl">warm · art-deco · mid-tone · day</text>
+  <g transform="translate(40, 550)">
+    <rect x="0"   y="0" width="150" height="120" fill="#FFF4E6"/>
+    <rect x="150" y="0" width="150" height="120" fill="#FFEEE0"/>
+    <rect x="300" y="0" width="150" height="120" fill="#E9446A"/>
+    <rect x="450" y="0" width="150" height="120" fill="#FF6F9E"/>
+    <rect x="600" y="0" width="150" height="120" fill="#FFA26B"/>
+    <rect x="750" y="0" width="150" height="120" fill="#8FE4C0"/>
+    <rect x="900" y="0" width="150" height="120" fill="#4A2545"/>
+    <rect x="1050" y="0" width="150" height="120" fill="#FFFFFF" stroke="#E0D5C0"/>
+
+    <text x="75"   y="145" text-anchor="middle" class="hex" fill="#2D1B3E">#FFF4E6</text>
+    <text x="225"  y="145" text-anchor="middle" class="hex" fill="#2D1B3E">#FFEEE0</text>
+    <text x="375"  y="145" text-anchor="middle" class="hex" fill="#FFFFFF">#E9446A</text>
+    <text x="525"  y="145" text-anchor="middle" class="hex" fill="#FFFFFF">#FF6F9E</text>
+    <text x="675"  y="145" text-anchor="middle" class="hex" fill="#2D1B3E">#FFA26B</text>
+    <text x="825"  y="145" text-anchor="middle" class="hex" fill="#2D1B3E">#8FE4C0</text>
+    <text x="975"  y="145" text-anchor="middle" class="hex" fill="#FFFFFF">#4A2545</text>
+    <text x="1125" y="145" text-anchor="middle" class="hex" fill="#2D1B3E">#FFFFFF</text>
+
+    <text x="75"   y="165" text-anchor="middle" class="sublbl">bg</text>
+    <text x="225"  y="165" text-anchor="middle" class="sublbl">surface</text>
+    <text x="375"  y="165" text-anchor="middle" class="sublbl">primary</text>
+    <text x="525"  y="165" text-anchor="middle" class="sublbl">secondary</text>
+    <text x="675"  y="165" text-anchor="middle" class="sublbl">accent1</text>
+    <text x="825"  y="165" text-anchor="middle" class="sublbl">accent2</text>
+    <text x="975"  y="165" text-anchor="middle" class="sublbl">text</text>
+    <text x="1125" y="165" text-anchor="middle" class="sublbl">card</text>
+  </g>
+
+  <!-- Sample window preview for each -->
+  <g transform="translate(40, 740)">
+    <text x="0" y="-10" class="sublbl">How a Konsole / Dolphin window header would read in each palette:</text>
+
+    <!-- concept 1 preview -->
+    <rect x="0" y="0" width="500" height="110" fill="#FFFFFF" stroke="#FFD1BC" stroke-width="2" rx="10"/>
+    <rect x="0" y="0" width="500" height="36" fill="#FFF4E6" rx="10"/>
+    <circle cx="22"  cy="18" r="8" fill="#FF5A8F"/>
+    <circle cx="46"  cy="18" r="8" fill="#FFB627"/>
+    <circle cx="70"  cy="18" r="8" fill="#FF7A00"/>
+    <text x="250" y="24" text-anchor="middle" class="hex" fill="#2D1B3E" font-size="14">Pacific Dawn — Konsole</text>
+    <text x="20"  y="72" class="hex" fill="#2D1B3E" font-size="14">$ vibbey</text>
+    <text x="20"  y="95" class="hex" fill="#E96D7F" font-size="14">› hello, let's build</text>
+
+    <!-- concept 2 preview -->
+    <rect x="540" y="0" width="500" height="110" fill="#1A0933" stroke="#FF006E" stroke-width="2" rx="10"/>
+    <rect x="540" y="0" width="500" height="36" fill="#2A0A3E" rx="10"/>
+    <circle cx="562" cy="18" r="8" fill="#FF006E"/>
+    <circle cx="586" cy="18" r="8" fill="#FFB627"/>
+    <circle cx="610" cy="18" r="8" fill="#01F9FF"/>
+    <text x="790" y="24" text-anchor="middle" class="hex" fill="#F8F0FF" font-size="14">Outrun Boulevard — Konsole</text>
+    <text x="560" y="72" class="hex" fill="#01F9FF" font-size="14">$ vibbey</text>
+    <text x="560" y="95" class="hex" fill="#FF5A8F" font-size="14">› hello, let's build</text>
+
+    <!-- concept 3 preview -->
+    <rect x="1080" y="0" width="480" height="110" fill="#FFFFFF" stroke="#FF6F9E" stroke-width="2" rx="10"/>
+    <rect x="1080" y="0" width="480" height="36" fill="#FFEEE0" rx="10"/>
+    <circle cx="1102" cy="18" r="8" fill="#E9446A"/>
+    <circle cx="1126" cy="18" r="8" fill="#FFA26B"/>
+    <circle cx="1150" cy="18" r="8" fill="#8FE4C0"/>
+    <text x="1320" y="24" text-anchor="middle" class="hex" fill="#4A2545" font-size="14">Miami Pastel — Konsole</text>
+    <text x="1100" y="72" class="hex" fill="#4A2545" font-size="14">$ vibbey</text>
+    <text x="1100" y="95" class="hex" fill="#E9446A" font-size="14">› hello, let's build</text>
+  </g>
+</svg>

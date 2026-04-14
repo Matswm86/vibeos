@@ -1,0 +1,93 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 3840 2160" width="3840" height="2160">
+  <title>VibeOS · Pacific Dawn</title>
+
+  <defs>
+    <!-- Sky: cream → peach → soft pink, vertical -->
+    <linearGradient id="sky" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0"   stop-color="#FFF4E6"/>
+      <stop offset="0.45" stop-color="#FFE4D6"/>
+      <stop offset="0.7" stop-color="#FFD1BC"/>
+      <stop offset="1"   stop-color="#FFB89E"/>
+    </linearGradient>
+
+    <!-- Sun: golden → sunset orange, radial -->
+    <radialGradient id="sun" cx="0.5" cy="0.5" r="0.5">
+      <stop offset="0"   stop-color="#FFE29A"/>
+      <stop offset="0.55" stop-color="#FFB627"/>
+      <stop offset="1"   stop-color="#FF7A00"/>
+    </radialGradient>
+
+    <!-- Distant range: pale rose -->
+    <linearGradient id="range1" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#FFB6A0"/>
+      <stop offset="1" stop-color="#FFC5B0"/>
+    </linearGradient>
+
+    <!-- Mid range: coral -->
+    <linearGradient id="range2" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#FF9277"/>
+      <stop offset="1" stop-color="#FFA890"/>
+    </linearGradient>
+
+    <!-- Near range: deep rose -->
+    <linearGradient id="range3" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#E96D7F"/>
+      <stop offset="1" stop-color="#F1849A"/>
+    </linearGradient>
+  </defs>
+
+  <!-- Sky fill -->
+  <rect width="3840" height="2160" fill="url(#sky)"/>
+
+  <!-- Subtle horizontal light rays, low opacity -->
+  <g opacity="0.08" stroke="#FF7A00" stroke-width="2">
+    <line x1="0" y1="900"  x2="3840" y2="900"/>
+    <line x1="0" y1="1020" x2="3840" y2="1020"/>
+    <line x1="0" y1="1120" x2="3840" y2="1120"/>
+    <line x1="0" y1="1200" x2="3840" y2="1200"/>
+    <line x1="0" y1="1260" x2="3840" y2="1260"/>
+  </g>
+
+  <!-- Sun: half-disk rising from horizon -->
+  <circle cx="1920" cy="1350" r="520" fill="url(#sun)"/>
+
+  <!-- Horizon line (the VibeOS moment) -->
+  <line x1="0" y1="1350" x2="3840" y2="1350"
+        stroke="#FF5A8F" stroke-width="2" opacity="0.55"/>
+
+  <!-- Distant mountains -->
+  <path d="M 0 1420
+           L 300 1280 L 600 1360 L 900 1250 L 1200 1340 L 1500 1290
+           L 1800 1330 L 2100 1270 L 2400 1360 L 2700 1290 L 3000 1340
+           L 3300 1270 L 3600 1350 L 3840 1300 L 3840 1500 L 0 1500 Z"
+        fill="url(#range1)" opacity="0.75"/>
+
+  <!-- Mid mountains -->
+  <path d="M 0 1600
+           L 250 1450 L 500 1550 L 800 1400 L 1100 1520 L 1400 1420
+           L 1700 1500 L 2050 1410 L 2350 1520 L 2700 1430 L 3000 1520
+           L 3350 1420 L 3600 1510 L 3840 1460 L 3840 1700 L 0 1700 Z"
+        fill="url(#range2)" opacity="0.85"/>
+
+  <!-- Near mountains -->
+  <path d="M 0 1800
+           L 200 1640 L 450 1730 L 750 1580 L 1050 1700 L 1380 1600
+           L 1680 1720 L 1980 1600 L 2280 1710 L 2600 1610 L 2920 1720
+           L 3200 1620 L 3500 1700 L 3840 1660 L 3840 2160 L 0 2160 Z"
+        fill="url(#range3)"/>
+
+  <!-- Ocean reflection suggestion — thin horizontal strokes at bottom -->
+  <g stroke="#FFF0E0" stroke-width="1.5" opacity="0.35">
+    <line x1="400"  y1="1950" x2="700"  y2="1950"/>
+    <line x1="1100" y1="1980" x2="1500" y2="1980"/>
+    <line x1="1800" y1="1970" x2="2150" y2="1970"/>
+    <line x1="2400" y1="2000" x2="2750" y2="2000"/>
+    <line x1="3000" y1="1990" x2="3350" y2="1990"/>
+  </g>
+
+  <!-- Small wordmark bottom-right, very subtle -->
+  <text x="3720" y="2100" fill="#2D1B3E" opacity="0.25"
+        font-family="Orbitron, sans-serif" font-size="34"
+        text-anchor="end" letter-spacing="8">VibeOS</text>
+</svg>

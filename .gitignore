@@ -5,3 +5,30 @@ __pycache__/
 *.pyc
 .DS_Store
 node_modules/
+
+# Build artifacts
+mkosi.output/
+*.iso
+*.iso.sha256
+build/
+dist/
+
+# Debian build byproducts
+packages/*/debian/.debhelper/
+packages/*/debian/debhelper-build-stamp
+packages/*/debian/files
+packages/*/debian/*.substvars
+packages/*/debian/*.debhelper.log
+packages/*/*.deb
+packages/*/*.buildinfo
+packages/*/*.changes
+
+# apt-repo state (pool/dists populated by reprepro, not checked in)
+apt-repo/db/
+apt-repo/pool/
+apt-repo/dists/
+
+# mkosi secrets
+mkosi/mkosi.rootpw
+mkosi/mkosi.key
+mkosi/mkosi.crt
