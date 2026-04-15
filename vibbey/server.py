@@ -4,15 +4,17 @@ ThreadingHTTPServer so chat POSTs don't block static asset delivery. Picks a
 free port from 8765-8770, falls back to an OS-assigned port.
 
 Routes:
-  GET  /                → static/index.html
-  GET  /*.{html,js,css} → static/*
-  GET  /clippy.glb      → static/clippy.glb (shipped with the package)
-  GET  /api/config      → active model + tier (frontend reads on load)
-  GET  /api/models      → proxies Ollama /api/tags so frontend can list models
-  GET  /api/tier        → current chat backend tier + tool list
-  GET  /api/knowledge   → full knowledge pack (debug)
-  POST /api/chat        → Groq (BYO key > bootstrap) with Ollama fallback
-  POST /api/run         → executes one allowlisted tool, returns stdout/exit
+  GET  /                    → static/index.html
+  GET  /install-helper      → static/install-helper.html (live-session sidebar)
+  GET  /*.{html,js,css}     → static/*
+  GET  /clippy.glb          → static/clippy.glb (shipped with the package)
+  GET  /api/config          → active model + tier (frontend reads on load)
+  GET  /api/models          → proxies Ollama /api/tags so frontend can list models
+  GET  /api/tier            → current chat backend tier + tool list
+  GET  /api/knowledge       → full knowledge pack (debug)
+  GET  /api/calamares-step  → current Calamares installer step (for sidebar)
+  POST /api/chat            → Groq (BYO key > bootstrap) with Ollama fallback
+  POST /api/run             → executes one allowlisted tool, returns stdout/exit
 
 Kept stdlib-only so it runs on a fresh VibeOS install without pip.
 Model defaults come from os.environ (populated by config.py from
@@ -78,6 +80,9 @@ class VibbeyHandler(SimpleHTTPRequestHandler):
             return
         if self.path == "/api/knowledge":
             self._serve_knowledge()
+            return
+        if self.path == "/api/calamares-step":
+            self._serve_calamares_step()
             return
         super().do_GET()
 
@@ -274,6 +279,68 @@ class VibbeyHandler(SimpleHTTPRequestHandler):
             "memory_summary": vibbey_memory.summarize_for_prompt(),
         }).encode()
         self._send_json(200, body)
+
+    def _serve_calamares_step(self) -> None:
+        """Return the Calamares module currently showing/executing.
+
+        Tails /var/log/calamares/session.log backwards looking for the most
+        recent module marker. Calamares logs lines like:
+          [   1] [INFO ]: Loaded module "welcome" ...
+          [   7] [INFO ]: QML step "welcome"
+          [  12] [INFO ]: Starting module "partition".
+          [  34] [INFO ]: Starting job "..." (execution phase modules)
+        We extract the last module name seen and map it to our known steps.
+        """
+        step = "welcome"  # sensible default before Calamares writes anything
+        log_path = Path("/var/log/calamares/session.log")
+        if not log_path.exists():
+            self._send_json(200, json.dumps({"step": step}).encode())
+            return
+
+        known = {
+            "welcome", "locale", "keyboard", "partition",
+            "users", "summary",
+        }
+        exec_markers = {
+            "mount", "unpackfs", "machineid", "fstab", "localecfg",
+            "networkcfg", "hwclock", "services-systemd", "bootloader",
+            "contextualprocess", "umount",
+        }
+        try:
+            # Read tail only — 64 KB is plenty (log lines are short)
+            with log_path.open("rb") as f:
+                f.seek(0, 2)
+                size = f.tell()
+                f.seek(max(0, size - 65536))
+                tail = f.read().decode("utf-8", errors="replace")
+        except OSError:
+            self._send_json(200, json.dumps({"step": step}).encode())
+            return
+
+        for line in reversed(tail.splitlines()):
+            # Prefer the explicit "Starting module" marker when present
+            if 'Starting module "' in line:
+                try:
+                    name = line.split('Starting module "', 1)[1].split('"', 1)[0]
+                except IndexError:
+                    continue
+                if name in known:
+                    step = name
+                    break
+                if name in exec_markers:
+                    step = "exec"
+                    break
+            # Fall back on the "QML step" marker (view phase)
+            if 'QML step "' in line:
+                try:
+                    name = line.split('QML step "', 1)[1].split('"', 1)[0]
+                except IndexError:
+                    continue
+                if name in known:
+                    step = name
+                    break
+
+        self._send_json(200, json.dumps({"step": step}).encode())
 
     def _proxy_ollama_tags(self) -> None:
         """Expose Ollama's /api/tags so the frontend can list models."""

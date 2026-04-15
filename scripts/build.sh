@@ -48,6 +48,17 @@ case "$ACTION" in
             "$IMAGE_TAG" bash
         ;;
     build|"")
+        # Pre-bake the heavy payloads (Ollama model + Claude CLI) into
+        # mkosi.extra/. The chroot has no network, so everything must be
+        # in place before mkosi runs. Skip with SKIP_BAKE=1 when iterating
+        # on mkosi config alone.
+        if [ "${SKIP_BAKE:-0}" != "1" ]; then
+            info "baking mkosi.extra/ (ollama model + claude cli + live marker)"
+            "$REPO_ROOT/scripts/bake-extras.sh" || err "bake-extras failed"
+        else
+            info "SKIP_BAKE=1 — reusing existing mkosi.extra/"
+        fi
+
         # Always refresh our local .debs before the mkosi run so the
         # Packages= resolution picks up the latest vibeos-desktop. Skip
         # with SKIP_DEB=1 when iterating on mkosi config alone.
@@ -72,6 +83,14 @@ esac
 if [ -f mkosi.output/vibeos.raw ]; then
     SIZE=$(du -h mkosi.output/vibeos.raw | cut -f1)
     ok "ISO built: mkosi.output/vibeos.raw ($SIZE)"
+    # Loop-mount + assert every critical baked artifact is present. Any
+    # miss fails the whole build so we never ship a quietly-broken ISO.
+    if [ "${SKIP_VERIFY:-0}" != "1" ]; then
+        info "verifying ISO payload (loop-mount assertions)"
+        "$REPO_ROOT/scripts/verify-iso.sh" || err "ISO verification FAILED — see errors above"
+    else
+        info "SKIP_VERIFY=1 — skipping ISO verification (not recommended)"
+    fi
     info "next step: ./scripts/qemu-boot.sh"
 else
     err "ISO not produced — check mkosi output above for errors"

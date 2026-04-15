@@ -43,3 +43,10 @@ apt-repo/dists/
 mkosi/mkosi.rootpw
 mkosi/mkosi.key
 mkosi/mkosi.crt
+
+# Baked extras (1.9GB) — populated by scripts/bake-extras.sh, never committed
+mkosi/mkosi.extra/usr/share/ollama/
+mkosi/mkosi.extra/usr/lib/node_modules/@anthropic-ai/
+mkosi/mkosi.extra/usr/bin/claude
+mkosi/mkosi.extra/usr/share/vibeos/CLAUDE_BAKED_VERSION
+mkosi/mkosi.extra/etc/vibeos/live-session

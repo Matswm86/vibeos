@@ -1,0 +1,272 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Vibbey — installing VibeOS</title>
+<style>
+  :root {
+    --cream: #fff4e6;
+    --cream-warm: #ffc79f;
+    --plum: #2d1b3e;
+    --plum-soft: #4a2f5e;
+    --pink: #ff5a8f;
+    --orange: #ff884a;
+    --accent: linear-gradient(135deg, #ff5a8f, #ff884a);
+  }
+  * { box-sizing: border-box; }
+  html, body {
+    margin: 0; padding: 0; height: 100%;
+    background: var(--cream);
+    color: var(--plum);
+    font-family: 'JetBrains Mono', ui-monospace, 'SF Mono', Menlo, monospace;
+    font-size: 14px;
+    line-height: 1.55;
+    overflow-x: hidden;
+  }
+  header {
+    padding: 20px 24px 14px;
+    border-bottom: 1px solid rgba(45, 27, 62, 0.12);
+    position: sticky; top: 0;
+    background: linear-gradient(180deg, var(--cream) 70%, rgba(255, 244, 230, 0.6));
+    backdrop-filter: blur(6px);
+    z-index: 10;
+  }
+  .wordmark {
+    font-family: 'Orbitron', 'JetBrains Mono', monospace;
+    font-weight: 700;
+    font-size: 22px;
+    letter-spacing: 0.02em;
+    color: var(--plum);
+  }
+  .wordmark em {
+    font-style: normal;
+    background: var(--accent);
+    -webkit-background-clip: text;
+    background-clip: text;
+    color: transparent;
+  }
+  .tagline { font-size: 12px; color: var(--plum-soft); margin-top: 4px; }
+  main { padding: 16px 24px 32px; }
+  .step {
+    border-left: 3px solid rgba(45, 27, 62, 0.14);
+    padding: 10px 14px 14px;
+    margin-bottom: 14px;
+    border-radius: 0 8px 8px 0;
+    background: rgba(255, 255, 255, 0.55);
+    transition: border-color 0.25s, background 0.25s, transform 0.25s;
+  }
+  .step.active {
+    border-left-color: var(--pink);
+    background: rgba(255, 90, 143, 0.08);
+    transform: translateX(2px);
+  }
+  .step.done {
+    border-left-color: rgba(56, 166, 117, 0.6);
+    background: rgba(56, 166, 117, 0.06);
+    opacity: 0.75;
+  }
+  .step.done .step-title::after {
+    content: " ✓";
+    color: #38a675;
+    font-weight: 700;
+  }
+  .step-num {
+    display: inline-block;
+    font-size: 10px;
+    color: var(--plum-soft);
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    margin-bottom: 2px;
+  }
+  .step-title {
+    font-family: 'Orbitron', 'JetBrains Mono', monospace;
+    font-weight: 700;
+    font-size: 15px;
+    margin: 0 0 6px;
+  }
+  .step p { margin: 6px 0; }
+  .hint {
+    margin-top: 8px;
+    padding: 8px 10px;
+    border-radius: 6px;
+    background: rgba(255, 136, 74, 0.1);
+    border: 1px solid rgba(255, 136, 74, 0.25);
+    font-size: 13px;
+  }
+  .hint strong { color: var(--orange); }
+  .choice {
+    margin: 6px 0;
+    padding: 6px 10px;
+    background: rgba(255, 255, 255, 0.65);
+    border-radius: 4px;
+  }
+  .choice .label {
+    font-weight: 700;
+    color: var(--plum);
+  }
+  .choice .label em {
+    background: var(--accent);
+    -webkit-background-clip: text;
+    background-clip: text;
+    color: transparent;
+    font-style: normal;
+  }
+  footer {
+    padding: 12px 24px 24px;
+    font-size: 11px;
+    color: var(--plum-soft);
+    text-align: center;
+    border-top: 1px solid rgba(45, 27, 62, 0.08);
+    margin-top: 20px;
+  }
+  .pulse-dot {
+    display: inline-block; width: 8px; height: 8px;
+    background: var(--pink); border-radius: 50%;
+    margin-right: 6px;
+    animation: pulse 1.4s ease-in-out infinite;
+  }
+  @keyframes pulse {
+    0%, 100% { opacity: 0.4; transform: scale(0.85); }
+    50%      { opacity: 1;   transform: scale(1.15); }
+  }
+</style>
+</head>
+<body>
+<header>
+  <div class="wordmark">Vibe<em>OS</em></div>
+  <div class="tagline"><span class="pulse-dot"></span>Vibbey is watching the installer — pick wisely.</div>
+</header>
+
+<main id="steps">
+
+  <section class="step" data-step="welcome">
+    <div class="step-num">Step 1</div>
+    <h2 class="step-title">Welcome</h2>
+    <p>Pick your language. This only affects the installer — you can change
+       the system language later in Plasma's settings.</p>
+    <div class="hint"><strong>Requirements:</strong> 15 GB free disk, 2 GB RAM,
+       plugged in. Calamares will warn if any are missing.</div>
+  </section>
+
+  <section class="step" data-step="locale">
+    <div class="step-num">Step 2</div>
+    <h2 class="step-title">Location</h2>
+    <p>Pick your region (usually auto-detected from your IP). This sets the
+       timezone — the clock on the installed system will be correct from the
+       first boot.</p>
+  </section>
+
+  <section class="step" data-step="keyboard">
+    <div class="step-num">Step 3</div>
+    <h2 class="step-title">Keyboard</h2>
+    <p>Pick your layout. Norwegian users: <strong>Norwegian</strong>.
+       US/UK users: default. Test the layout by typing a few characters in
+       the preview field.</p>
+  </section>
+
+  <section class="step" data-step="partition">
+    <div class="step-num">Step 4</div>
+    <h2 class="step-title">Partitions</h2>
+    <p>This is the screen to take slowly. Three choices:</p>
+
+    <div class="choice">
+      <div class="label"><em>Erase disk</em> — clean install</div>
+      <p>Pick this if the drive should be <strong>VibeOS only</strong>.
+         Every partition is wiped. Do not pick this if there's anything on
+         the drive you want to keep.</p>
+    </div>
+
+    <div class="choice">
+      <div class="label"><em>Install alongside</em> — dual-boot</div>
+      <p>Pick this if you want to keep <strong>Windows, macOS, or another
+         Linux</strong> on the same drive. Calamares shrinks the existing OS
+         partition and installs VibeOS next to it. At boot, you'll get a menu
+         to pick which OS to run.</p>
+      <div class="hint">Always <strong>back up before shrinking.</strong>
+         Shrinking is safe in 99% of cases — the 1% is bad sectors or a
+         nearly-full source partition.</div>
+    </div>
+
+    <div class="choice">
+      <div class="label"><em>Manual partitioning</em> — expert</div>
+      <p>Pick this if you want to reuse an existing Linux partition, split
+         your disk by hand, or add separate /home or encrypted partitions.
+         If you're unsure, don't pick this.</p>
+    </div>
+
+    <div class="hint"><strong>File system:</strong> VibeOS uses <code>ext4</code>.
+       <strong>EFI partition:</strong> 512 MB, auto-created.
+       <strong>Swap:</strong> a swap file (enables suspend-to-disk on laptops).</div>
+  </section>
+
+  <section class="step" data-step="users">
+    <div class="step-num">Step 5</div>
+    <h2 class="step-title">Create your user</h2>
+    <p>Pick a name, username, password, and hostname (the name this
+       computer announces on the network). The password protects your
+       login and <code>sudo</code>.</p>
+    <div class="hint"><strong>Tip:</strong> VibeOS auto-logs you in if
+       you tick "Log in automatically." For a laptop you carry around,
+       leave that unchecked.</div>
+  </section>
+
+  <section class="step" data-step="summary">
+    <div class="step-num">Step 6</div>
+    <h2 class="step-title">Summary — last chance</h2>
+    <p>Calamares shows <strong>exactly</strong> which device and partitions
+       will be changed. Read it. If anything looks wrong, click
+       <strong>Back</strong> and fix it. Hitting <strong>Install</strong>
+       starts writing to disk — at that point the previous partition table
+       is gone.</p>
+  </section>
+
+  <section class="step" data-step="exec">
+    <div class="step-num">Installing</div>
+    <h2 class="step-title">Writing VibeOS to disk</h2>
+    <p>Filesystems get formatted, files copy across, GRUB is installed.
+       Five to ten minutes on an SSD. You can minimize Vibbey and
+       watch the Calamares progress bar — both work.</p>
+    <p>When it's done, click <strong>Restart now</strong>, remove the USB
+       stick when the screen goes black, and boot into your new VibeOS.</p>
+    <div class="hint">First login after install: Vibbey comes back in
+       chat mode with qwen2.5:3b loaded locally.</div>
+  </section>
+
+</main>
+
+<footer>
+  Vibbey install helper — no chat, no internet needed, same voice.
+</footer>
+
+<script>
+  const steps = Array.from(document.querySelectorAll('.step'));
+  const byId = new Map(steps.map(s => [s.dataset.step, s]));
+  const order = ['welcome', 'locale', 'keyboard', 'partition', 'users', 'summary', 'exec'];
+
+  let lastStep = null;
+  async function pollStep() {
+    try {
+      const r = await fetch('/api/calamares-step', { cache: 'no-store' });
+      if (!r.ok) return;
+      const j = await r.json();
+      const step = j.step;
+      if (!step || step === lastStep) return;
+      lastStep = step;
+      const idx = order.indexOf(step);
+      steps.forEach((el) => {
+        el.classList.remove('active', 'done');
+        const elIdx = order.indexOf(el.dataset.step);
+        if (elIdx === -1) return;
+        if (idx >= 0 && elIdx < idx) el.classList.add('done');
+        if (elIdx === idx) el.classList.add('active');
+      });
+      const active = byId.get(step);
+      if (active) active.scrollIntoView({ behavior: 'smooth', block: 'center' });
+    } catch (_) { /* silent — static content still readable */ }
+  }
+  pollStep();
+  setInterval(pollStep, 1800);
+</script>
+</body>
+</html>

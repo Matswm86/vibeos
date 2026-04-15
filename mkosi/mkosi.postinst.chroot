@@ -58,10 +58,48 @@ Relogin=false
 EOF
 fi
 
-# ─── Install branded "Install VibeOS" shortcut on live desktop ───────
-# The vibeos-desktop.deb provides the Pacific Dawn L&F. We ship a clean
-# shortcut pointing at Calamares, branded with our product name + icon.
+# ─── Live-session autostart: Calamares + Vibbey install-helper ────────
+# On the live ISO, we autostart Calamares + Vibbey's install-helper
+# sidebar the moment Plasma loads. The wrapper script checks for the
+# /etc/vibeos/live-session marker (present only on the live ISO; removed
+# from the target by Calamares' contextualprocess during install) so
+# nothing autostarts on the real installed system.
 if [ -f /usr/bin/calamares ]; then
+    # 1. Wrapper script that gates on the live-session marker
+    install -d -m 0755 /usr/libexec/vibeos
+    cat > /usr/libexec/vibeos/live-autostart <<'LIVE_EOF'
+#!/bin/sh
+# Runs at Plasma session start. Only acts in the live ISO session.
+[ -f /etc/vibeos/live-session ] || exit 0
+# Launch Vibbey install-helper first (right-pinned sidebar) so the
+# guidance appears alongside Calamares, not behind it.
+/usr/bin/vibbey --install-helper >/tmp/vibbey-install-helper.log 2>&1 &
+# Give Vibbey 300 ms to claim the right edge before Calamares opens
+sleep 0.3
+# Calamares needs root via pkexec on Ubuntu Noble
+exec pkexec /usr/bin/calamares
+LIVE_EOF
+    chmod 0755 /usr/libexec/vibeos/live-autostart
+
+    # 2. Autostart .desktop entry (system-wide — applies to every user
+    # including the live `vibeos` autologin account)
+    install -d -m 0755 /etc/xdg/autostart
+    cat > /etc/xdg/autostart/vibeos-live-installer.desktop <<'AUTOSTART_EOF'
+[Desktop Entry]
+Type=Application
+Name=VibeOS Live Installer
+Comment=Launches Calamares + Vibbey guidance on first login to the live session
+Exec=/usr/libexec/vibeos/live-autostart
+Icon=/usr/share/calamares/branding/vibeos/vibeos-icon.svg
+Terminal=false
+X-GNOME-Autostart-enabled=true
+# Skip if the live marker was stripped by Calamares (installed system)
+TryExec=/usr/libexec/vibeos/live-autostart
+AUTOSTART_EOF
+
+    # 3. Keep a clickable desktop shortcut as a belt-and-braces fallback,
+    # in case the user closes Calamares without installing and wants
+    # to re-open it. Still branded; uses the same pkexec wrapper.
     mkdir -p /home/vibeos/Desktop
     cat > /home/vibeos/Desktop/install-vibeos.desktop <<'SHORTCUT_EOF'
 [Desktop Entry]
@@ -75,6 +113,15 @@ Categories=System;
 SHORTCUT_EOF
     chmod +x /home/vibeos/Desktop/install-vibeos.desktop
     chown -R vibeos:vibeos /home/vibeos/Desktop
+fi
+
+# ─── Vibbey first-run autostart must SKIP live session ────────────────
+# vibeos-vibbey.deb ships /etc/xdg/autostart/vibbey-first-run.desktop
+# which ran Vibbey chat in BOTH live session AND installed system.
+# Rewrite Exec= so it short-circuits when /etc/vibeos/live-session exists.
+VFR=/etc/xdg/autostart/vibbey-first-run.desktop
+if [ -f "$VFR" ]; then
+    sed -i 's|^Exec=.*|Exec=/bin/sh -c "test ! -f /etc/vibeos/live-session \&\& test ! -f $HOME/.vibeos/first-run-complete \&\& /usr/bin/vibbey"|' "$VFR"
 fi
 
 # ─── Plymouth default theme ──────────────────────────────────────────
@@ -116,61 +163,45 @@ if [ -f /usr/lib/vibeos/os-release ]; then
     install -m 0644 /usr/lib/vibeos/os-release /etc/os-release
 fi
 
-# ─── Ollama: pre-pull qwen2.5:3b into the ISO ───────────────────────
-# vibeos-vibbey.deb installs Ollama and enables ollama.service. Here we
-# pre-pull qwen2.5:3b so the model is baked into the ISO — no internet
-# required after install. We start Ollama as the ollama system user
-# (same as in production), wait for readiness, pull, then shut down.
-if command -v ollama >/dev/null 2>&1 && id ollama >/dev/null 2>&1; then
-    echo "[mkosi.postinst] starting Ollama daemon to pre-pull qwen2.5:3b"
-    export OLLAMA_HOST=127.0.0.1:11434
-    su -s /bin/sh -c 'OLLAMA_HOST=127.0.0.1:11434 ollama serve' ollama &
-    OLLAMA_PID=$!
+# ─── Baked-extras ownership + HARD assertions ───────────────────────
+# scripts/bake-extras.sh pre-populates:
+#   /usr/share/ollama/.ollama/models/  — qwen2.5:3b (1.9 GB)
+#   /usr/lib/node_modules/@anthropic-ai/claude-code/ + /usr/bin/claude (64 MB)
+#   /etc/vibeos/live-session (marker, removed by Calamares during install)
+# The chroot has no network, so all three MUST already be in place here.
+# Anything missing is a build-kill bug — do NOT ship a "quietly broken" ISO.
 
-    # Wait up to 30 s for Ollama to be ready
-    for i in $(seq 1 30); do
-        if curl -sf http://127.0.0.1:11434/api/tags >/dev/null 2>&1; then
-            echo "[mkosi.postinst] Ollama ready after ${i}s"
-            break
-        fi
-        sleep 1
-    done
+echo "[mkosi.postinst] verifying baked extras"
 
-    # Pull the default model into the ollama user's model store
-    su -s /bin/sh -c 'OLLAMA_HOST=127.0.0.1:11434 ollama pull qwen2.5:3b' ollama \
-        || echo "[mkosi.postinst] WARNING: qwen2.5:3b pull failed (CI without internet?)"
+# Ollama model
+if ! id ollama >/dev/null 2>&1; then
+    echo "[mkosi.postinst] FATAL: ollama user missing (vibeos-vibbey.deb/ollama.deb didn't run postinst)" >&2
+    exit 1
+fi
+if [ ! -f /usr/share/ollama/.ollama/models/manifests/registry.ollama.ai/library/qwen2.5/3b ]; then
+    echo "[mkosi.postinst] FATAL: qwen2.5:3b manifest missing — run scripts/bake-extras.sh before build" >&2
+    exit 1
+fi
+# Fix ownership (tar copy from mkosi.extra lands as root)
+chown -R ollama:ollama /usr/share/ollama
+echo "[mkosi.postinst] ollama model qwen2.5:3b verified + chowned"
 
-    kill "$OLLAMA_PID" 2>/dev/null || true
-    wait "$OLLAMA_PID" 2>/dev/null || true
-    echo "[mkosi.postinst] Ollama daemon stopped"
-else
-    echo "[mkosi.postinst] skipping model pre-pull (ollama not installed)"
+# Claude Code CLI
+if [ ! -x /usr/bin/claude ] || [ ! -d /usr/lib/node_modules/@anthropic-ai/claude-code ]; then
+    echo "[mkosi.postinst] FATAL: Claude Code not baked — run scripts/bake-extras.sh before build" >&2
+    exit 1
+fi
+if [ -f /usr/share/vibeos/CLAUDE_BAKED_VERSION ]; then
+    CLAUDE_VER=$(cat /usr/share/vibeos/CLAUDE_BAKED_VERSION)
+    echo "[mkosi.postinst] claude verified: $CLAUDE_VER"
 fi
 
-# ─── Claude Code CLI baked globally via npm ─────────────────────────
-# vibeos-claude-code.deb ships the setup wizard + profile hook + shortcut
-# but deliberately does NOT depend on the npm package (apt can't install
-# from npm). We bake @anthropic-ai/claude-code here so `claude` is on PATH
-# from first boot without any user action. Pinning behaviour: unpinned on
-# purpose — the package updates daily and users should be able to `apt`
-# new VibeOS images with the current Claude CLI. If this step fails (no
-# internet in CI), the ISO still boots and the wizard explains how to
-# install it manually.
-if command -v npm >/dev/null 2>&1; then
-    echo "[mkosi.postinst] installing @anthropic-ai/claude-code globally"
-    # --omit=optional shaves ~40MB (native deps Claude CLI falls back on)
-    # --no-audit --no-fund skip network chatter that slows CI
-    npm install -g --omit=optional --no-audit --no-fund \
-        @anthropic-ai/claude-code \
-        || echo "[mkosi.postinst] WARNING: claude-code npm install failed (offline CI?)"
-    # Sanity check: record the version that landed so we can inspect the
-    # ISO later without booting it.
-    if command -v claude >/dev/null 2>&1; then
-        claude --version > /usr/share/vibeos/claude-code-docs/BAKED_VERSION 2>&1 || true
-    fi
-else
-    echo "[mkosi.postinst] skipping claude-code install (npm not present)"
+# Live-session marker (must be present on live ISO; Calamares strips it)
+if [ ! -f /etc/vibeos/live-session ]; then
+    echo "[mkosi.postinst] FATAL: /etc/vibeos/live-session missing — bake-extras.sh drops this" >&2
+    exit 1
 fi
+echo "[mkosi.postinst] live-session marker present"
 
 # ─── Clean up apt cache to shave ~300MB off the ISO ─────────────────
 apt-get clean
