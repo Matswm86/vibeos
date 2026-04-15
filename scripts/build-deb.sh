@@ -30,18 +30,97 @@ fi
 
 mkdir -p packages/local
 
-# ─── Fetch Ollama .deb (pinned version, placed in local apt repo) ─────────────
-# vibeos-vibbey Depends: ollama, so mkosi needs it in packages/local/.
-# We use the official GitHub release .deb for reproducible builds.
-OLLAMA_VERSION="${OLLAMA_VERSION:-0.6.5}"
+# ─── Fetch + repack Ollama tarball as a local .deb ────────────────────────────
+# vibeos-vibbey Depends: ollama, so mkosi needs it resolvable from
+# packages/local/. Upstream Ollama stopped shipping .deb in 2025 and only
+# publishes ollama-linux-amd64.tar.zst. We unpack it and assemble a minimal
+# control.tar+data.tar into our own .deb — same mkosi integration, no
+# upstream packaging dependency.
+OLLAMA_VERSION="${OLLAMA_VERSION:-0.20.7}"
 OLLAMA_DEB_NAME="ollama_${OLLAMA_VERSION}_amd64.deb"
 if [ ! -f "packages/local/${OLLAMA_DEB_NAME}" ]; then
-    info "downloading Ollama ${OLLAMA_VERSION} .deb"
-    # GitHub release filename is ollama-linux-amd64.deb; rename to include version
-    curl -fsSL \
-        "https://github.com/ollama/ollama/releases/download/v${OLLAMA_VERSION}/ollama-linux-amd64.deb" \
-        -o "packages/local/${OLLAMA_DEB_NAME}" \
-        || err "failed to download Ollama .deb — check OLLAMA_VERSION=${OLLAMA_VERSION}"
+    info "building Ollama ${OLLAMA_VERSION} .deb from upstream tarball"
+    docker run --rm -i \
+        -v "$REPO_ROOT:/work" \
+        -w /work \
+        -e OLLAMA_VERSION="$OLLAMA_VERSION" \
+        -e OLLAMA_DEB_NAME="$OLLAMA_DEB_NAME" \
+        "$IMAGE_TAG" \
+        bash -euo pipefail -c '
+            TMP=$(mktemp -d)
+            trap "rm -rf $TMP" EXIT
+            URL="https://github.com/ollama/ollama/releases/download/v${OLLAMA_VERSION}/ollama-linux-amd64.tar.zst"
+            echo "[ollama-deb] fetching $URL"
+            curl -fsSL "$URL" -o "$TMP/ollama.tar.zst"
+            mkdir -p "$TMP/root/usr"
+            tar --zstd -xf "$TMP/ollama.tar.zst" -C "$TMP/root/usr"
+            test -x "$TMP/root/usr/bin/ollama" || { echo "no ollama binary in tarball"; exit 1; }
+            # Build the debian/ control tree
+            mkdir -p "$TMP/root/DEBIAN"
+            cat > "$TMP/root/DEBIAN/control" <<CTRL
+Package: ollama
+Version: ${OLLAMA_VERSION}
+Architecture: amd64
+Maintainer: VibeOS <release@mwmai.no>
+Installed-Size: $(du -sk "$TMP/root/usr" | cut -f1)
+Depends: libc6, libstdc++6
+Section: utils
+Priority: optional
+Homepage: https://ollama.com
+Description: Ollama large language model runner (repackaged by VibeOS)
+ Upstream Ollama ships a .tar.zst tarball on GitHub releases; this
+ .deb is a thin repackage produced by scripts/build-deb.sh for local
+ apt-resolvable installation inside the VibeOS ISO.
+CTRL
+            # Drop a minimal systemd unit + ollama user so the service works.
+            mkdir -p "$TMP/root/lib/systemd/system"
+            cat > "$TMP/root/lib/systemd/system/ollama.service" <<UNIT
+[Unit]
+Description=Ollama Service
+After=network-online.target
+
+[Service]
+ExecStart=/usr/bin/ollama serve
+User=ollama
+Group=ollama
+Restart=always
+RestartSec=3
+Environment=PATH=/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin
+
+[Install]
+WantedBy=default.target
+UNIT
+            cat > "$TMP/root/DEBIAN/postinst" <<POSTINST
+#!/bin/sh
+set -e
+if ! getent passwd ollama >/dev/null; then
+    useradd -r -s /bin/false -U -m -d /usr/share/ollama ollama
+fi
+if ! getent group ollama >/dev/null; then
+    groupadd -r ollama
+fi
+if command -v systemctl >/dev/null 2>&1; then
+    systemctl daemon-reload || true
+    systemctl enable ollama.service || true
+fi
+exit 0
+POSTINST
+            chmod 0755 "$TMP/root/DEBIAN/postinst"
+            cat > "$TMP/root/DEBIAN/prerm" <<PRERM
+#!/bin/sh
+set -e
+if command -v systemctl >/dev/null 2>&1; then
+    systemctl disable --now ollama.service 2>/dev/null || true
+fi
+exit 0
+PRERM
+            chmod 0755 "$TMP/root/DEBIAN/prerm"
+            # Fix ownership — everything root:root inside the .deb
+            chown -R 0:0 "$TMP/root"
+            # Build the .deb
+            dpkg-deb --root-owner-group --build "$TMP/root" "packages/local/${OLLAMA_DEB_NAME}"
+            echo "[ollama-deb] built packages/local/${OLLAMA_DEB_NAME}"
+        ' || err "Ollama .deb build failed"
     ok "ollama .deb → packages/local/${OLLAMA_DEB_NAME}"
 else
     info "using cached Ollama .deb: ${OLLAMA_DEB_NAME}"

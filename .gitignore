@@ -29,6 +29,11 @@ packages/*/debian/vibeos-desktop/
 packages/*/debian/.debhelper/
 packages/*/debian/tmp/
 
+# Rendered wallpapers (rsvg-convert output from SVG sources at .deb build time)
+packages/vibeos-desktop/src/wallpapers/VibeOS-Miami/contents/images/*.png
+packages/vibeos-desktop/src/wallpapers/VibeOS-NeonGrid/contents/images/*.png
+packages/vibeos-desktop/src/wallpapers/VibeOS-Outrun/contents/images/*.png
+
 # apt-repo state (pool/dists populated by reprepro, not checked in)
 apt-repo/db/
 apt-repo/pool/
