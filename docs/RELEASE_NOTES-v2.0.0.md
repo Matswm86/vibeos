@@ -22,7 +22,7 @@ Ubuntu Noble + KDE Plasma, replacing the v1 Cubic-based Kubuntu build.
   `~/workspace/` + desktop shortcut).
 - **Calamares installer** with Pacific Dawn branding and a
   confirmation screen before any disk is touched.
-- **apt repo** at `repo.mwmai.no` pre-configured — `apt update`
+- **apt repo** at `vibeos.mwmai.no` pre-configured — `apt update`
   works out of the box for VibeOS-specific updates.
 
 ### Download

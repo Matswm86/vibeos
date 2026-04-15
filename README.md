@@ -28,14 +28,14 @@ Write to USB with `dd`, Ventoy, or Balena Etcher. Boot, pick disk, wait ~5 minut
 
 VibeOS ships the apt repo pre-configured. `sudo apt update && sudo apt upgrade`
 pulls security patches from Ubuntu Noble + any VibeOS-specific fixes from
-`repo.mwmai.no`. No manual repo setup needed.
+`vibeos.mwmai.no`. No manual repo setup needed.
 
 To add the VibeOS apt repo to a vanilla Ubuntu 24.04 install:
 
 ```bash
-curl -fsSL https://repo.mwmai.no/vibeos.gpg \
+curl -fsSL https://vibeos.mwmai.no/vibeos.gpg \
   | sudo tee /etc/apt/trusted.gpg.d/vibeos.asc >/dev/null
-echo 'deb [signed-by=/etc/apt/trusted.gpg.d/vibeos.asc] https://repo.mwmai.no/ noble main' \
+echo 'deb [signed-by=/etc/apt/trusted.gpg.d/vibeos.asc] https://vibeos.mwmai.no/ noble main' \
   | sudo tee /etc/apt/sources.list.d/vibeos.list
 sudo apt update
 ```

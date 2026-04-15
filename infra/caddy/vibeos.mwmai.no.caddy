@@ -1,9 +1,9 @@
 # Caddy snippet: VibeOS apt repo
 # Add as an @import or paste into the main Caddyfile on mwmai.no VPS.
 # ACME over HTTP-01 via the existing Caddy config; no extra DNS needed
-# beyond an A record for repo.mwmai.no → 204.168.244.173.
+# beyond an A record for vibeos.mwmai.no → 204.168.244.173.
 
-repo.mwmai.no {
+vibeos.mwmai.no {
 	# Static file server, serves reprepro's /srv/apt-repo/ layout:
 	#   /dists/noble/Release{,.gpg,.asc}
 	#   /dists/noble/main/binary-amd64/Packages{,.gz}
