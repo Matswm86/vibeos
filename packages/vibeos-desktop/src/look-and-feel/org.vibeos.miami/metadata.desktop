@@ -1,0 +1,14 @@
+[Desktop Entry]
+Name=VibeOS Miami
+Comment=Pastel poolside — peach cream, coral, teal, palm plum.
+X-KDE-PluginInfo-Author=VibeOS
+X-KDE-PluginInfo-Email=matswm86@yahoo.no
+X-KDE-PluginInfo-Name=org.vibeos.miami
+X-KDE-PluginInfo-Version=2.0.0
+X-KDE-PluginInfo-Website=https://vibeos.mwmai.no/
+X-KDE-PluginInfo-Category=
+X-KDE-PluginInfo-Depends=
+X-KDE-PluginInfo-License=GPL
+X-KDE-PluginInfo-EnabledByDefault=false
+X-KDE-ServiceTypes=Plasma/LookAndFeel
+Type=Service

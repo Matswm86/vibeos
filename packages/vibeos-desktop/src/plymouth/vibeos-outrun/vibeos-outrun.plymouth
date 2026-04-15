@@ -1,0 +1,8 @@
+[Plymouth Theme]
+Name=VibeOS Outrun
+Description=Synthwave boot splash — magenta wordmark on deep violet
+ModuleName=script
+
+[script]
+ImageDir=/usr/share/plymouth/themes/vibeos-outrun
+ScriptFile=/usr/share/plymouth/themes/vibeos-outrun/vibeos-outrun.script

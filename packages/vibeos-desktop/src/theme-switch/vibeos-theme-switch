@@ -1,0 +1,47 @@
+#!/bin/bash
+# vibeos-theme-switch — hard-allowlisted wrapper around lookandfeeltool.
+#
+# Invoked by Vibbey (see vibbey/tools.py "theme_switch") or by the user
+# from a terminal. Accepts exactly one argument: a short theme name
+# matching ^(pacific-dawn|outrun|miami|neon-grid)$. Anything else exits
+# nonzero with a usage banner.
+#
+# Why a wrapper? The Vibbey allowlist requires a fixed argv[0]. The
+# wrapper pins argv[0] to lookandfeeltool and guards the -a argument
+# so a malicious prompt can't smuggle `; rm -rf /` through.
+
+set -euo pipefail
+
+VALID='^(pacific-dawn|outrun|miami|neon-grid)$'
+
+usage() {
+    cat >&2 <<EOF
+vibeos-theme-switch <theme>
+
+Switch the active KDE Plasma Look-and-Feel to one of the four
+VibeOS themes:
+
+  pacific-dawn   warm sunrise (default)
+  outrun         synthwave night
+  miami          pastel poolside
+  neon-grid      black chrome terminal
+
+No logout required — the switch is live.
+EOF
+    exit 2
+}
+
+[ $# -eq 1 ] || usage
+
+theme="$1"
+[[ "$theme" =~ $VALID ]] || {
+    printf 'vibeos-theme-switch: unknown theme %q\n' "$theme" >&2
+    usage
+}
+
+if ! command -v lookandfeeltool >/dev/null 2>&1; then
+    echo "vibeos-theme-switch: lookandfeeltool not found on PATH" >&2
+    exit 3
+fi
+
+exec lookandfeeltool -a "org.vibeos.${theme}"

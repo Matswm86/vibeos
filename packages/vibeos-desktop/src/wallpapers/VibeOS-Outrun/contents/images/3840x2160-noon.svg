@@ -1,0 +1,55 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- VibeOS Outrun — neon-noon variant.
+     Lighter purple sky, smaller sun high up, same perspective grid. -->
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 3840 2160"
+     width="3840" height="2160" preserveAspectRatio="xMidYMid slice">
+  <defs>
+    <linearGradient id="sky" x1="0" x2="0" y1="0" y2="1">
+      <stop offset="0%"  stop-color="#2A0E64"/>
+      <stop offset="55%" stop-color="#6D2EFF"/>
+      <stop offset="100%" stop-color="#FF6FB3"/>
+    </linearGradient>
+    <linearGradient id="sun" x1="0" x2="0" y1="0" y2="1">
+      <stop offset="0%"  stop-color="#FFE066"/>
+      <stop offset="55%" stop-color="#FF2E88"/>
+      <stop offset="100%" stop-color="#6D2EFF"/>
+    </linearGradient>
+    <linearGradient id="floor" x1="0" x2="0" y1="0" y2="1">
+      <stop offset="0%"  stop-color="#24094F"/>
+      <stop offset="100%" stop-color="#0B0020"/>
+    </linearGradient>
+  </defs>
+  <rect width="3840" height="1280" fill="url(#sky)"/>
+  <g>
+    <circle cx="1920" cy="780" r="340" fill="url(#sun)"/>
+    <rect x="1520" y="740" width="800" height="10" fill="#2A0E64"/>
+    <rect x="1520" y="770" width="800" height="12" fill="#2A0E64"/>
+    <rect x="1520" y="808" width="800" height="14" fill="#2A0E64"/>
+  </g>
+  <path d="M0 1280 L 400 1140 L 760 1200 L 1120 1040 L 1520 1170
+           L 1920 980 L 2320 1170 L 2720 1040 L 3080 1200 L 3440 1120
+           L 3840 1220 L 3840 1280 Z"
+        fill="#1A0640" opacity="0.9"/>
+  <rect y="1280" width="3840" height="880" fill="url(#floor)"/>
+  <g stroke="#00E5FF" stroke-width="3" fill="none" opacity="0.85">
+    <line x1="0" y1="1340" x2="3840" y2="1340"/>
+    <line x1="0" y1="1410" x2="3840" y2="1410"/>
+    <line x1="0" y1="1495" x2="3840" y2="1495"/>
+    <line x1="0" y1="1600" x2="3840" y2="1600"/>
+    <line x1="0" y1="1730" x2="3840" y2="1730"/>
+    <line x1="0" y1="1890" x2="3840" y2="1890"/>
+    <line x1="0" y1="2080" x2="3840" y2="2080"/>
+  </g>
+  <g stroke="#FF2E88" stroke-width="3" fill="none" opacity="0.7">
+    <line x1="1920" y1="1280" x2="-1600" y2="2160"/>
+    <line x1="1920" y1="1280" x2="-200" y2="2160"/>
+    <line x1="1920" y1="1280" x2="800" y2="2160"/>
+    <line x1="1920" y1="1280" x2="1400" y2="2160"/>
+    <line x1="1920" y1="1280" x2="1780" y2="2160"/>
+    <line x1="1920" y1="1280" x2="2060" y2="2160"/>
+    <line x1="1920" y1="1280" x2="2440" y2="2160"/>
+    <line x1="1920" y1="1280" x2="3040" y2="2160"/>
+    <line x1="1920" y1="1280" x2="4040" y2="2160"/>
+    <line x1="1920" y1="1280" x2="5440" y2="2160"/>
+  </g>
+</svg>

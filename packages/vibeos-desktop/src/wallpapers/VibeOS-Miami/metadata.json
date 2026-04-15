@@ -1,0 +1,9 @@
+{
+  "KPlugin": {
+    "Authors": [{ "Email": "matswm86@yahoo.no", "Name": "VibeOS" }],
+    "Id": "VibeOS-Miami",
+    "License": "CC-BY-SA-4.0",
+    "Name": "VibeOS Miami"
+  },
+  "X-KDE-PluginInfo-Name": "VibeOS-Miami"
+}

@@ -1,0 +1,9 @@
+{
+  "KPlugin": {
+    "Authors": [{ "Email": "matswm86@yahoo.no", "Name": "VibeOS" }],
+    "Id": "VibeOS-Outrun",
+    "License": "CC-BY-SA-4.0",
+    "Name": "VibeOS Outrun"
+  },
+  "X-KDE-PluginInfo-Name": "VibeOS-Outrun"
+}

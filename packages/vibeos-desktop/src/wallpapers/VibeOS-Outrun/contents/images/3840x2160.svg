@@ -1,0 +1,82 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- VibeOS Outrun — synthwave night.
+     Deep violet sky, magenta sun with horizontal cutlines, perspective grid. -->
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 3840 2160"
+     width="3840" height="2160" preserveAspectRatio="xMidYMid slice">
+  <defs>
+    <linearGradient id="sky" x1="0" x2="0" y1="0" y2="1">
+      <stop offset="0%"  stop-color="#0B0020"/>
+      <stop offset="45%" stop-color="#1E0A4C"/>
+      <stop offset="78%" stop-color="#6D2EFF"/>
+      <stop offset="100%" stop-color="#FF2E88"/>
+    </linearGradient>
+    <linearGradient id="sun" x1="0" x2="0" y1="0" y2="1">
+      <stop offset="0%"  stop-color="#FFB627"/>
+      <stop offset="55%" stop-color="#FF2E88"/>
+      <stop offset="100%" stop-color="#6D2EFF"/>
+    </linearGradient>
+    <linearGradient id="floor" x1="0" x2="0" y1="0" y2="1">
+      <stop offset="0%"  stop-color="#1A0640"/>
+      <stop offset="100%" stop-color="#0B0020"/>
+    </linearGradient>
+  </defs>
+
+  <!-- sky -->
+  <rect width="3840" height="1280" fill="url(#sky)"/>
+
+  <!-- sun disc with horizontal cutouts (classic Outrun trick) -->
+  <g>
+    <circle cx="1920" cy="1280" r="560" fill="url(#sun)"/>
+    <!-- cutline bands carved out of the sun by painting bg-colored stripes -->
+    <rect x="1280" y="1200" width="1280" height="14" fill="#1E0A4C"/>
+    <rect x="1280" y="1240" width="1280" height="16" fill="#1E0A4C"/>
+    <rect x="1280" y="1282" width="1280" height="18" fill="#1E0A4C"/>
+    <rect x="1280" y="1326" width="1280" height="20" fill="#1E0A4C"/>
+  </g>
+
+  <!-- distant mountain silhouette -->
+  <path d="M0 1280 L 360 1120 L 700 1180 L 1080 1000 L 1480 1150
+           L 1920 950 L 2360 1150 L 2760 1000 L 3140 1180 L 3480 1100
+           L 3840 1200 L 3840 1280 Z"
+        fill="#0B0020" opacity="0.85"/>
+
+  <!-- ground plane (below horizon) -->
+  <rect y="1280" width="3840" height="880" fill="url(#floor)"/>
+
+  <!-- perspective grid: horizontal lines -->
+  <g stroke="#FF2E88" stroke-width="3" fill="none" opacity="0.85">
+    <line x1="0" y1="1340" x2="3840" y2="1340"/>
+    <line x1="0" y1="1410" x2="3840" y2="1410"/>
+    <line x1="0" y1="1495" x2="3840" y2="1495"/>
+    <line x1="0" y1="1600" x2="3840" y2="1600"/>
+    <line x1="0" y1="1730" x2="3840" y2="1730"/>
+    <line x1="0" y1="1890" x2="3840" y2="1890"/>
+    <line x1="0" y1="2080" x2="3840" y2="2080"/>
+  </g>
+
+  <!-- perspective grid: vanishing vertical lines -->
+  <g stroke="#00E5FF" stroke-width="3" fill="none" opacity="0.7">
+    <line x1="1920" y1="1280" x2="-1600" y2="2160"/>
+    <line x1="1920" y1="1280" x2="-200" y2="2160"/>
+    <line x1="1920" y1="1280" x2="800" y2="2160"/>
+    <line x1="1920" y1="1280" x2="1400" y2="2160"/>
+    <line x1="1920" y1="1280" x2="1780" y2="2160"/>
+    <line x1="1920" y1="1280" x2="2060" y2="2160"/>
+    <line x1="1920" y1="1280" x2="2440" y2="2160"/>
+    <line x1="1920" y1="1280" x2="3040" y2="2160"/>
+    <line x1="1920" y1="1280" x2="4040" y2="2160"/>
+    <line x1="1920" y1="1280" x2="5440" y2="2160"/>
+  </g>
+
+  <!-- star specks -->
+  <g fill="#F5E9FF" opacity="0.7">
+    <circle cx="220"  cy="180"  r="2"/>
+    <circle cx="640"  cy="420"  r="2"/>
+    <circle cx="1080" cy="260"  r="1.5"/>
+    <circle cx="1680" cy="160"  r="2"/>
+    <circle cx="2280" cy="340"  r="1.5"/>
+    <circle cx="2820" cy="200"  r="2"/>
+    <circle cx="3240" cy="460"  r="1.5"/>
+    <circle cx="3600" cy="220"  r="2"/>
+  </g>
+</svg>

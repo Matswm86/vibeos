@@ -1,0 +1,55 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- VibeOS Outrun — deep dusk variant.
+     Near-black sky, huge half-sunk magenta sun, crimson horizon. -->
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 3840 2160"
+     width="3840" height="2160" preserveAspectRatio="xMidYMid slice">
+  <defs>
+    <linearGradient id="sky" x1="0" x2="0" y1="0" y2="1">
+      <stop offset="0%"  stop-color="#05000F"/>
+      <stop offset="50%" stop-color="#2A0948"/>
+      <stop offset="85%" stop-color="#8C1E5C"/>
+      <stop offset="100%" stop-color="#FF2E88"/>
+    </linearGradient>
+    <linearGradient id="sun" x1="0" x2="0" y1="0" y2="1">
+      <stop offset="0%"  stop-color="#FFB627"/>
+      <stop offset="60%" stop-color="#FF2E88"/>
+      <stop offset="100%" stop-color="#2A0948"/>
+    </linearGradient>
+    <linearGradient id="floor" x1="0" x2="0" y1="0" y2="1">
+      <stop offset="0%"  stop-color="#0B0020"/>
+      <stop offset="100%" stop-color="#000000"/>
+    </linearGradient>
+  </defs>
+  <rect width="3840" height="1440" fill="url(#sky)"/>
+  <g>
+    <circle cx="1920" cy="1440" r="720" fill="url(#sun)"/>
+    <rect x="1180" y="1360" width="1480" height="18" fill="#2A0948"/>
+    <rect x="1180" y="1402" width="1480" height="22" fill="#2A0948"/>
+  </g>
+  <rect y="1440" width="3840" height="720" fill="url(#floor)"/>
+  <g stroke="#FF2E88" stroke-width="3" fill="none" opacity="0.9">
+    <line x1="0" y1="1500" x2="3840" y2="1500"/>
+    <line x1="0" y1="1580" x2="3840" y2="1580"/>
+    <line x1="0" y1="1690" x2="3840" y2="1690"/>
+    <line x1="0" y1="1830" x2="3840" y2="1830"/>
+    <line x1="0" y1="2020" x2="3840" y2="2020"/>
+  </g>
+  <g stroke="#00E5FF" stroke-width="3" fill="none" opacity="0.6">
+    <line x1="1920" y1="1440" x2="-1200" y2="2160"/>
+    <line x1="1920" y1="1440" x2="200"  y2="2160"/>
+    <line x1="1920" y1="1440" x2="1200" y2="2160"/>
+    <line x1="1920" y1="1440" x2="1760" y2="2160"/>
+    <line x1="1920" y1="1440" x2="2080" y2="2160"/>
+    <line x1="1920" y1="1440" x2="2640" y2="2160"/>
+    <line x1="1920" y1="1440" x2="3640" y2="2160"/>
+    <line x1="1920" y1="1440" x2="5040" y2="2160"/>
+  </g>
+  <g fill="#FFE066" opacity="0.7">
+    <circle cx="320"  cy="240"  r="2"/>
+    <circle cx="780"  cy="480"  r="2.5"/>
+    <circle cx="1380" cy="200"  r="2"/>
+    <circle cx="2580" cy="300"  r="2"/>
+    <circle cx="3240" cy="520"  r="2.5"/>
+    <circle cx="3620" cy="180"  r="2"/>
+  </g>
+</svg>

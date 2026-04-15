@@ -1,0 +1,8 @@
+[Plymouth Theme]
+Name=VibeOS Neon Grid
+Description=Black chrome boot splash — neon green wordmark, cyan tagline
+ModuleName=script
+
+[script]
+ImageDir=/usr/share/plymouth/themes/vibeos-neon-grid
+ScriptFile=/usr/share/plymouth/themes/vibeos-neon-grid/vibeos-neon-grid.script

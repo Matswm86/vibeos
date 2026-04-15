@@ -1,0 +1,46 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- VibeOS Miami — dusk variant.
+     Deep plum sky, hot coral horizon, palm silhouette right side. -->
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 3840 2160"
+     width="3840" height="2160" preserveAspectRatio="xMidYMid slice">
+  <defs>
+    <linearGradient id="sky" x1="0" x2="0" y1="0" y2="1">
+      <stop offset="0%"  stop-color="#1A0A30"/>
+      <stop offset="45%" stop-color="#4A1F5A"/>
+      <stop offset="78%" stop-color="#FF6F91"/>
+      <stop offset="100%" stop-color="#FFB38A"/>
+    </linearGradient>
+    <radialGradient id="sun" cx="0.5" cy="0.5" r="0.5">
+      <stop offset="0%"  stop-color="#FFE066"/>
+      <stop offset="55%" stop-color="#FF6F91" stop-opacity="0.85"/>
+      <stop offset="100%" stop-color="#4A1F5A" stop-opacity="0"/>
+    </radialGradient>
+    <linearGradient id="water" x1="0" x2="0" y1="0" y2="1">
+      <stop offset="0%"  stop-color="#FF6F91" stop-opacity="0.6"/>
+      <stop offset="55%" stop-color="#004A50" stop-opacity="0.9"/>
+      <stop offset="100%" stop-color="#000F12"/>
+    </linearGradient>
+  </defs>
+  <rect width="3840" height="1550" fill="url(#sky)"/>
+  <circle cx="1320" cy="1480" r="340" fill="url(#sun)"/>
+  <circle cx="1320" cy="1480" r="140" fill="#FFE066"/>
+
+  <rect y="1540" width="3840" height="14" fill="#000F12"/>
+  <rect y="1550" width="3840" height="610" fill="url(#water)"/>
+  <ellipse cx="1320" cy="1620" rx="280" ry="18" fill="#FFE066" opacity="0.55"/>
+  <ellipse cx="1320" cy="1700" rx="180" ry="10" fill="#FF6F91" opacity="0.5"/>
+
+  <!-- right-side palm silhouette -->
+  <g fill="#000F12">
+    <path d="M3320 2160 C 3340 1600, 3300 1180, 3380 780
+             C 3390 760, 3410 760, 3415 780
+             C 3430 1150, 3410 1580, 3430 2160 Z"/>
+  </g>
+  <g stroke="#000F12" stroke-width="18" fill="none" stroke-linecap="round">
+    <path d="M3398 780 Q 3200 680, 3060 740"/>
+    <path d="M3398 780 Q 3200 740, 3060 880"/>
+    <path d="M3398 780 Q 3580 680, 3720 740"/>
+    <path d="M3398 780 Q 3580 720, 3720 860"/>
+    <path d="M3398 780 Q 3410 600, 3450 540"/>
+  </g>
+</svg>

@@ -1,0 +1,14 @@
+{
+  "KPlugin": {
+    "Authors": [{ "Email": "matswm86@yahoo.no", "Name": "VibeOS" }],
+    "Category": "",
+    "Description": "Black chrome terminal — near-black base, neon green, cyan lines.",
+    "EnabledByDefault": false,
+    "Id": "org.vibeos.neon-grid",
+    "License": "GPL",
+    "Name": "VibeOS Neon Grid",
+    "Version": "2.0.0",
+    "Website": "https://vibeos.mwmai.no/"
+  },
+  "X-Plasma-APIVersion": "5.0"
+}

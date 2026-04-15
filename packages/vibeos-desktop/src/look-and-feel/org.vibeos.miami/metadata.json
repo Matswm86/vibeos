@@ -1,0 +1,14 @@
+{
+  "KPlugin": {
+    "Authors": [{ "Email": "matswm86@yahoo.no", "Name": "VibeOS" }],
+    "Category": "",
+    "Description": "Pastel poolside — peach cream, coral, teal, palm plum.",
+    "EnabledByDefault": false,
+    "Id": "org.vibeos.miami",
+    "License": "GPL",
+    "Name": "VibeOS Miami",
+    "Version": "2.0.0",
+    "Website": "https://vibeos.mwmai.no/"
+  },
+  "X-Plasma-APIVersion": "5.0"
+}

@@ -1,0 +1,8 @@
+[Plymouth Theme]
+Name=VibeOS Miami
+Description=Pastel boot splash — plum wordmark on peach cream
+ModuleName=script
+
+[script]
+ImageDir=/usr/share/plymouth/themes/vibeos-miami
+ScriptFile=/usr/share/plymouth/themes/vibeos-miami/vibeos-miami.script

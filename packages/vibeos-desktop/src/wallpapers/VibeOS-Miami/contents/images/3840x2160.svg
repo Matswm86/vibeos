@@ -1,0 +1,63 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- VibeOS Miami — pastel evening.
+     Peach-to-coral sky, teal water, plum palm silhouettes. -->
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 3840 2160"
+     width="3840" height="2160" preserveAspectRatio="xMidYMid slice">
+  <defs>
+    <linearGradient id="sky" x1="0" x2="0" y1="0" y2="1">
+      <stop offset="0%"  stop-color="#FFE5D4"/>
+      <stop offset="45%" stop-color="#FFCFCF"/>
+      <stop offset="78%" stop-color="#FF6F91"/>
+      <stop offset="100%" stop-color="#7A4FFF"/>
+    </linearGradient>
+    <radialGradient id="sun" cx="0.5" cy="0.5" r="0.5">
+      <stop offset="0%"  stop-color="#FFFFFF"/>
+      <stop offset="55%" stop-color="#FFB38A" stop-opacity="0.9"/>
+      <stop offset="100%" stop-color="#FF6F91" stop-opacity="0"/>
+    </radialGradient>
+    <linearGradient id="water" x1="0" x2="0" y1="0" y2="1">
+      <stop offset="0%"  stop-color="#7A4FFF" stop-opacity="0.55"/>
+      <stop offset="55%" stop-color="#00B8B0" stop-opacity="0.85"/>
+      <stop offset="100%" stop-color="#003F46"/>
+    </linearGradient>
+  </defs>
+
+  <rect width="3840" height="1550" fill="url(#sky)"/>
+
+  <!-- sun -->
+  <circle cx="2540" cy="1360" r="420" fill="url(#sun)"/>
+  <circle cx="2540" cy="1360" r="190" fill="#FFFBE9"/>
+
+  <!-- distant horizon strip -->
+  <rect y="1540" width="3840" height="18" fill="#2E1A47" opacity="0.7"/>
+
+  <!-- water -->
+  <rect y="1550" width="3840" height="610" fill="url(#water)"/>
+
+  <!-- sun reflection -->
+  <ellipse cx="2540" cy="1620" rx="360" ry="22" fill="#FFFBE9" opacity="0.5"/>
+  <ellipse cx="2540" cy="1700" rx="240" ry="12" fill="#FFB38A" opacity="0.4"/>
+
+  <!-- palm trunks (left side) -->
+  <g fill="#2E1A47">
+    <path d="M360 2160 C 380 1600, 340 1200, 410 820
+             C 420 800, 440 800, 445 820
+             C 460 1180, 440 1600, 460 2160 Z"/>
+    <path d="M620 2160 C 640 1500, 600 1150, 680 760
+             C 690 740, 710 740, 718 760
+             C 735 1120, 720 1520, 740 2160 Z"/>
+  </g>
+  <!-- palm fronds -->
+  <g stroke="#2E1A47" stroke-width="18" fill="none" stroke-linecap="round">
+    <path d="M428 820 Q 240 720, 120 800"/>
+    <path d="M428 820 Q 240 780, 100 920"/>
+    <path d="M428 820 Q 600 720, 760 780"/>
+    <path d="M428 820 Q 600 760, 780 900"/>
+    <path d="M428 820 Q 440 640, 480 580"/>
+    <path d="M700 760 Q 520 660, 380 720"/>
+    <path d="M700 760 Q 520 710, 380 840"/>
+    <path d="M700 760 Q 880 660, 1020 720"/>
+    <path d="M700 760 Q 880 700, 1020 820"/>
+    <path d="M700 760 Q 720 580, 760 520"/>
+  </g>
+</svg>

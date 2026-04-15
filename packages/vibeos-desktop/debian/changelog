@@ -1,3 +1,17 @@
+vibeos-desktop (2.0.0-day5) noble; urgency=medium
+
+  * Add three additional KDE Look-and-Feel packages:
+    - org.vibeos.outrun  (synthwave: violet + magenta + cyan)
+    - org.vibeos.miami   (pastel: peach + coral + teal)
+    - org.vibeos.neon-grid (black chrome: neon green + cyan)
+  * Add matching color schemes: VibeOS-Outrun, VibeOS-Miami, VibeOS-NeonGrid.
+  * Add three wallpaper packs (3 time-of-day variants each, rendered from SVG).
+  * Add three Plymouth boot splashes matching each theme.
+  * Add four Konsole color schemes (Pacific Dawn + three new themes).
+  * Ship /usr/bin/vibeos-theme-switch wrapper for safe lookandfeeltool calls.
+
+ -- Mats Mjåtvedt <matswm86@yahoo.no>  Wed, 15 Apr 2026 00:00:00 +0200
+
 vibeos-desktop (2.0.0-day2) noble; urgency=medium
 
   * Initial Pacific Dawn branding package (v2 Day 2).

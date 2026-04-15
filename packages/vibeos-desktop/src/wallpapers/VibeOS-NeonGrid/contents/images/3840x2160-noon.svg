@@ -1,0 +1,59 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- VibeOS Neon Grid — cyan-noon variant.
+     Same wireframe composition, cyan-dominant palette with white highlights. -->
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 3840 2160"
+     width="3840" height="2160" preserveAspectRatio="xMidYMid slice">
+  <defs>
+    <linearGradient id="sky" x1="0" x2="0" y1="0" y2="1">
+      <stop offset="0%"   stop-color="#000814"/>
+      <stop offset="70%"  stop-color="#001A2A"/>
+      <stop offset="95%"  stop-color="#003846"/>
+      <stop offset="100%" stop-color="#007080"/>
+    </linearGradient>
+    <linearGradient id="horizon" x1="0" x2="1" y1="0" y2="0">
+      <stop offset="0%"   stop-color="#00FFD1" stop-opacity="0"/>
+      <stop offset="50%"  stop-color="#00FFD1" stop-opacity="1"/>
+      <stop offset="100%" stop-color="#00FFD1" stop-opacity="0"/>
+    </linearGradient>
+    <linearGradient id="floor" x1="0" x2="0" y1="0" y2="1">
+      <stop offset="0%"   stop-color="#001018"/>
+      <stop offset="100%" stop-color="#000000"/>
+    </linearGradient>
+  </defs>
+  <rect width="3840" height="1280" fill="url(#sky)"/>
+  <rect y="1276" width="3840" height="8" fill="url(#horizon)"/>
+  <rect y="1280" width="3840" height="880" fill="url(#floor)"/>
+  <g stroke="#00FFD1" stroke-width="3" fill="none" opacity="0.9">
+    <line x1="0" y1="1340" x2="3840" y2="1340"/>
+    <line x1="0" y1="1410" x2="3840" y2="1410"/>
+    <line x1="0" y1="1495" x2="3840" y2="1495"/>
+    <line x1="0" y1="1600" x2="3840" y2="1600"/>
+    <line x1="0" y1="1730" x2="3840" y2="1730"/>
+    <line x1="0" y1="1890" x2="3840" y2="1890"/>
+    <line x1="0" y1="2080" x2="3840" y2="2080"/>
+  </g>
+  <g stroke="#FFFFFF" stroke-width="3" fill="none" opacity="0.8">
+    <line x1="1920" y1="1280" x2="-2000" y2="2160"/>
+    <line x1="1920" y1="1280" x2="-600"  y2="2160"/>
+    <line x1="1920" y1="1280" x2="400"   y2="2160"/>
+    <line x1="1920" y1="1280" x2="1100"  y2="2160"/>
+    <line x1="1920" y1="1280" x2="1560"  y2="2160"/>
+    <line x1="1920" y1="1280" x2="1800"  y2="2160"/>
+    <line x1="1920" y1="1280" x2="2040"  y2="2160"/>
+    <line x1="1920" y1="1280" x2="2280"  y2="2160"/>
+    <line x1="1920" y1="1280" x2="2740"  y2="2160"/>
+    <line x1="1920" y1="1280" x2="3440"  y2="2160"/>
+    <line x1="1920" y1="1280" x2="4440"  y2="2160"/>
+    <line x1="1920" y1="1280" x2="5840"  y2="2160"/>
+  </g>
+  <g fill="#FFFFFF" opacity="0.7">
+    <circle cx="180"  cy="140"  r="2"/>
+    <circle cx="640"  cy="340"  r="1.8"/>
+    <circle cx="1080" cy="200"  r="1.8"/>
+    <circle cx="1720" cy="100"  r="2"/>
+    <circle cx="2280" cy="280"  r="1.8"/>
+    <circle cx="2820" cy="160"  r="2"/>
+    <circle cx="3240" cy="400"  r="1.8"/>
+    <circle cx="3600" cy="180"  r="2"/>
+  </g>
+</svg>

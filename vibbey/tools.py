@@ -45,6 +45,11 @@ class ToolSpec:
 # Max 64 chars. No shell metachars.
 _MODEL_NAME_RE = re.compile(r"^[A-Za-z0-9][A-Za-z0-9._\-:/]{0,63}$")
 
+# Theme name regex: one of four fixed ids. The wrapper
+# /usr/bin/vibeos-theme-switch validates this again before exec'ing
+# lookandfeeltool, so even a bug here cannot smuggle shell metachars.
+_THEME_NAME_RE = re.compile(r"^(pacific-dawn|outrun|miami|neon-grid)$")
+
 
 ALLOWED: dict[str, ToolSpec] = {
     # ── Claude Code ────────────────────────────────────────
@@ -128,6 +133,19 @@ ALLOWED: dict[str, ToolSpec] = {
     "node_version": ToolSpec(
         argv=["node", "--version"],
         description="Show Node.js version",
+    ),
+
+    # ── Theme switch ───────────────────────────────────────
+    "theme_switch": ToolSpec(
+        argv=["/usr/bin/vibeos-theme-switch"],
+        description=(
+            "Switch the active KDE Plasma Look-and-Feel "
+            "(pacific-dawn | outrun | miami | neon-grid)"
+        ),
+        accepts_arg=True,
+        arg_pattern=_THEME_NAME_RE,
+        arg_builder=lambda t: ["/usr/bin/vibeos-theme-switch", t],
+        timeout_s=15,
     ),
 
     # ── Installer ──────────────────────────────────────────

@@ -1,0 +1,46 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- VibeOS Miami — noon variant.
+     Bright teal sky, pale peach haze, small bright sun high up. -->
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 3840 2160"
+     width="3840" height="2160" preserveAspectRatio="xMidYMid slice">
+  <defs>
+    <linearGradient id="sky" x1="0" x2="0" y1="0" y2="1">
+      <stop offset="0%"  stop-color="#A8ECEA"/>
+      <stop offset="60%" stop-color="#FFE5D4"/>
+      <stop offset="100%" stop-color="#FFB38A"/>
+    </linearGradient>
+    <radialGradient id="sun" cx="0.5" cy="0.5" r="0.5">
+      <stop offset="0%"  stop-color="#FFFFFF"/>
+      <stop offset="50%" stop-color="#FFE066" stop-opacity="0.9"/>
+      <stop offset="100%" stop-color="#FFB38A" stop-opacity="0"/>
+    </radialGradient>
+    <linearGradient id="water" x1="0" x2="0" y1="0" y2="1">
+      <stop offset="0%"  stop-color="#5ED3CC"/>
+      <stop offset="70%" stop-color="#00B8B0"/>
+      <stop offset="100%" stop-color="#003F46"/>
+    </linearGradient>
+  </defs>
+  <rect width="3840" height="1550" fill="url(#sky)"/>
+  <circle cx="1920" cy="640" r="360" fill="url(#sun)"/>
+  <circle cx="1920" cy="640" r="150" fill="#FFFFFF"/>
+
+  <!-- soft clouds -->
+  <g fill="#FFFFFF" opacity="0.55">
+    <ellipse cx="520"  cy="420" rx="260" ry="36"/>
+    <ellipse cx="3100" cy="500" rx="320" ry="42"/>
+    <ellipse cx="1180" cy="280" rx="200" ry="26"/>
+    <ellipse cx="2600" cy="340" rx="180" ry="22"/>
+  </g>
+
+  <rect y="1540" width="3840" height="14" fill="#2E1A47" opacity="0.5"/>
+  <rect y="1550" width="3840" height="610" fill="url(#water)"/>
+
+  <!-- gentle water highlights -->
+  <g stroke="#FFFFFF" stroke-width="3" fill="none" opacity="0.35">
+    <line x1="200"  y1="1680" x2="420"  y2="1680"/>
+    <line x1="1020" y1="1740" x2="1220" y2="1740"/>
+    <line x1="1780" y1="1820" x2="1960" y2="1820"/>
+    <line x1="2680" y1="1700" x2="2880" y2="1700"/>
+    <line x1="3340" y1="1860" x2="3560" y2="1860"/>
+  </g>
+</svg>

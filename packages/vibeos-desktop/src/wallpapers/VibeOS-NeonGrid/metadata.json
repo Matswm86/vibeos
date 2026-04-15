@@ -1,0 +1,9 @@
+{
+  "KPlugin": {
+    "Authors": [{ "Email": "matswm86@yahoo.no", "Name": "VibeOS" }],
+    "Id": "VibeOS-NeonGrid",
+    "License": "CC-BY-SA-4.0",
+    "Name": "VibeOS Neon Grid"
+  },
+  "X-KDE-PluginInfo-Name": "VibeOS-NeonGrid"
+}
