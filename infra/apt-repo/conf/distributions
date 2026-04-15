@@ -1,0 +1,11 @@
+Origin: VibeOS
+Label: VibeOS
+Suite: stable
+Codename: noble
+Version: 2.0
+Architectures: amd64 source
+Components: main
+Description: VibeOS apt repository — Ubuntu Noble (24.04) base
+SignWith: 8F08022E65BC5F8F
+Contents: . .gz
+Tracking: minimal

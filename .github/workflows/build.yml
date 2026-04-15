@@ -1,0 +1,111 @@
+name: build
+
+on:
+  push:
+    branches: [v2, main]
+    tags: ['v2.*']
+  pull_request:
+    branches: [v2, main]
+  workflow_dispatch:
+  # Called from release.yml on tag pushes so the release job reuses the
+  # exact same build steps instead of duplicating them.
+  workflow_call:
+
+# One build per branch/PR at a time; cancel older runs on new push.
+concurrency:
+  group: build-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+
+jobs:
+  build-iso:
+    name: Build ISO (mkosi)
+    # ubuntu-24.04 matches the target Noble — same debootstrap metadata,
+    # fewer surprises than 22.04 building a 24.04 root.
+    runs-on: ubuntu-24.04
+    timeout-minutes: 60
+    outputs:
+      iso-size: ${{ steps.stat.outputs.size }}
+      iso-sha256: ${{ steps.stat.outputs.sha256 }}
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      # GHA ubuntu-24.04 runners have ~14 GB free disk after defaults.
+      # The ISO alone is ~8.7 GB plus mkosi.cache and the builder image,
+      # so we reclaim ~25 GB by dropping preinstalled toolchains we don't
+      # need (Android SDK, .NET, Haskell, CodeQL, etc).
+      - name: Free disk space
+        uses: jlumbroso/free-disk-space@v1.3.1
+        with:
+          tool-cache: true
+          android: true
+          dotnet: true
+          haskell: true
+          large-packages: false
+          swap-storage: false
+          docker-images: false
+
+      - name: Cache mkosi + apt
+        uses: actions/cache@v4
+        with:
+          path: |
+            mkosi.cache
+            packages/local
+          # Invalidate on any change to the distro layer, package lists,
+          # or the debian/ metadata of our own .debs.
+          key: mkosi-${{ runner.os }}-${{ hashFiles('mkosi/mkosi.conf', 'mkosi/mkosi.prepare.chroot', 'mkosi/mkosi.postinst.chroot', 'packages/*/debian/control', 'packages/*/debian/changelog') }}
+          restore-keys: |
+            mkosi-${{ runner.os }}-
+
+      - name: Show host state
+        run: |
+          df -h /
+          free -h
+          docker --version
+          uname -a
+
+      - name: Build ISO
+        run: ./scripts/build.sh
+        env:
+          # CI already scopes rebuilds per SHA, no need to skip.
+          SKIP_DEB: '0'
+
+      - name: Stat ISO
+        id: stat
+        run: |
+          ISO=mkosi.output/vibeos.raw
+          test -f "$ISO" || { echo "ISO missing"; exit 1; }
+          SIZE=$(stat -c%s "$ISO")
+          SHA=$(sha256sum "$ISO" | awk '{print $1}')
+          echo "size=$SIZE" >> "$GITHUB_OUTPUT"
+          echo "sha256=$SHA" >> "$GITHUB_OUTPUT"
+          echo "ISO size: $(du -h "$ISO" | cut -f1)"
+          echo "SHA256:   $SHA"
+          sha256sum "$ISO" > "$ISO.sha256"
+
+      # Kernel + initrd are produced alongside the ISO and are needed by
+      # the headless smoke test (direct-kernel-boot with console=ttyS0).
+      - name: Upload ISO artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: vibeos-iso
+          path: |
+            mkosi.output/vibeos.raw
+            mkosi.output/vibeos.raw.sha256
+            mkosi.output/vibeos.vmlinuz
+            mkosi.output/vibeos.initrd
+          if-no-files-found: error
+          retention-days: 14
+          compression-level: 0
+
+      - name: Upload .deb artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: vibeos-debs
+          path: packages/local/vibeos-*.deb
+          if-no-files-found: error
+          retention-days: 90

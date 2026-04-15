@@ -10,15 +10,35 @@ Download → install in 10 minutes → start coding with Claude in 5 more.
 
 ## Download
 
-> v2.0.0 not released yet. This section lands when Day 6 ships.
+```bash
+# ISO (hosted on iso.mwmai.no + GitHub Releases mirror)
+curl -LO https://iso.mwmai.no/vibeos-v2.0.0.iso
+curl -LO https://iso.mwmai.no/vibeos-v2.0.0.iso.sha256
+curl -LO https://iso.mwmai.no/vibeos-v2.0.0.iso.asc
 
-```
-# after release:
-curl -LO https://vibeos.mwmai.no/iso/vibeos-2.0.0.iso
-sha256sum -c vibeos-2.0.0.iso.sha256
+# Verify signature (D7C1 0B36 D2A7 CC98 253E A01D 8F08 022E 65BC 5F8F)
+gpg --keyserver keyserver.ubuntu.com --recv-keys 8F08022E65BC5F8F
+gpg --verify vibeos-v2.0.0.iso.asc vibeos-v2.0.0.iso
+sha256sum -c vibeos-v2.0.0.iso.sha256
 ```
 
 Write to USB with `dd`, Ventoy, or Balena Etcher. Boot, pick disk, wait ~5 minutes.
+
+### apt updates (post-install)
+
+VibeOS ships the apt repo pre-configured. `sudo apt update && sudo apt upgrade`
+pulls security patches from Ubuntu Noble + any VibeOS-specific fixes from
+`repo.mwmai.no`. No manual repo setup needed.
+
+To add the VibeOS apt repo to a vanilla Ubuntu 24.04 install:
+
+```bash
+curl -fsSL https://repo.mwmai.no/vibeos.gpg \
+  | sudo tee /etc/apt/trusted.gpg.d/vibeos.asc >/dev/null
+echo 'deb [signed-by=/etc/apt/trusted.gpg.d/vibeos.asc] https://repo.mwmai.no/ noble main' \
+  | sudo tee /etc/apt/sources.list.d/vibeos.list
+sudo apt update
+```
 
 ---
 

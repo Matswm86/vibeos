@@ -1,0 +1,5 @@
+# VibeOS apt repository — added by mkosi.extra/ during ISO build.
+# Public key lives at /etc/apt/trusted.gpg.d/vibeos.asc (also baked in).
+# Server is Caddy on the mwmai.no VPS; see infra/apt-repo/README.md in
+# the VibeOS source tree for deploy docs.
+deb [signed-by=/etc/apt/trusted.gpg.d/vibeos.asc] https://repo.mwmai.no/ noble main

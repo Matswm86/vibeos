@@ -1,0 +1,30 @@
+# Caddy snippet: VibeOS ISO download mirror
+# Files rsynced here by .github/workflows/release.yml on v2.* tag:
+#   /srv/iso/vibeos-v2.0.0.iso
+#   /srv/iso/vibeos-v2.0.0.iso.asc
+#   /srv/iso/vibeos-v2.0.0.iso.sha256
+
+iso.mwmai.no {
+	root * /srv/iso
+	file_server browse
+
+	# ISOs are ~9 GB — let Caddy stream without buffering the whole
+	# response in RAM, and set a long timeout for slow mobile links.
+	@iso path *.iso
+	header @iso {
+		Content-Type application/x-iso9660-image
+		# 1 hour cache on the CDN side is fine; releases are immutable
+		# once signed.
+		Cache-Control "public, max-age=3600, immutable"
+	}
+
+	# Signature + checksum files — don't cache as long (we may re-sign
+	# with a newer subkey later).
+	@sigs path *.asc *.sha256
+	header @sigs Cache-Control "public, max-age=300"
+
+	log {
+		output stdout
+		format json
+	}
+}

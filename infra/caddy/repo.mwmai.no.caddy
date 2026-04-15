@@ -1,0 +1,34 @@
+# Caddy snippet: VibeOS apt repo
+# Add as an @import or paste into the main Caddyfile on mwmai.no VPS.
+# ACME over HTTP-01 via the existing Caddy config; no extra DNS needed
+# beyond an A record for repo.mwmai.no → 204.168.244.173.
+
+repo.mwmai.no {
+	# Static file server, serves reprepro's /srv/apt-repo/ layout:
+	#   /dists/noble/Release{,.gpg,.asc}
+	#   /dists/noble/main/binary-amd64/Packages{,.gz}
+	#   /pool/main/v/vibeos-desktop/vibeos-desktop_2.0.0-day5_all.deb
+	#   /vibeos.gpg   (public key, copied from keys/vibeos-pubkey.asc)
+	root * /srv/apt-repo
+
+	# Needed so `apt-get update` sees correct Content-Length on Packages.gz.
+	encode gzip
+
+	# Directory listings help debugging; harmless for a public apt repo.
+	file_server browse
+
+	# apt clients expect these MIME types — Caddy guesses .deb as
+	# application/octet-stream already, but be explicit for .gpg/.asc.
+	@keyfiles path *.gpg *.asc
+	header @keyfiles Content-Type application/pgp-keys
+
+	# Access log for drift/abuse triage. Rotate via systemd-journald
+	# (mwmai.no convention).
+	log {
+		output stdout
+		format json
+	}
+
+	# No fancy headers (HSTS etc) — apt over HTTPS needs no-nonsense TLS.
+	# Caddy auto-manages the cert.
+}

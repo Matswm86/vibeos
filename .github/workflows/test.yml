@@ -1,0 +1,118 @@
+name: test
+
+on:
+  workflow_run:
+    workflows: ['build']
+    types: [completed]
+  workflow_dispatch:
+
+concurrency:
+  group: test-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+  actions: read
+
+jobs:
+  smoke-test:
+    name: Headless smoke test (multi-user.target)
+    # Only fire on successful build runs. Dispatch runs skip the guard.
+    if: ${{ github.event_name == 'workflow_dispatch' || github.event.workflow_run.conclusion == 'success' }}
+    runs-on: ubuntu-24.04
+    timeout-minutes: 30
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      # Pull the ISO + kernel + initrd produced by build.yml. On
+      # workflow_run we need run-id + github-token; on dispatch the
+      # download-artifact action falls back to the current run which
+      # won't have our artifact — fail fast in that case with a note.
+      - name: Download ISO artifact
+        if: ${{ github.event_name == 'workflow_run' }}
+        uses: actions/download-artifact@v4
+        with:
+          name: vibeos-iso
+          path: mkosi.output
+          run-id: ${{ github.event.workflow_run.id }}
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Dispatch-only note
+        if: ${{ github.event_name == 'workflow_dispatch' }}
+        run: |
+          echo "::error::test.yml on workflow_dispatch requires an ISO"
+          echo "Trigger build.yml first, then re-dispatch this workflow."
+          exit 1
+
+      - name: Install QEMU + OVMF
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y --no-install-recommends \
+            qemu-system-x86 qemu-utils ovmf
+          qemu-system-x86_64 --version
+
+      # scripts/smoke-test.sh boots vibeos.raw with systemd.unit=multi-user.target
+      # and watches the serial console for "Reached target ..." or "login:".
+      # We bypass its Docker wrapper since the runner has qemu installed
+      # natively — faster by ~90s.
+      - name: Run smoke test (inline QEMU)
+        timeout-minutes: 20
+        run: |
+          set -euo pipefail
+          ISO=mkosi.output/vibeos.raw
+          KERNEL=mkosi.output/vibeos.vmlinuz
+          INITRD=mkosi.output/vibeos.initrd
+          for f in "$ISO" "$KERNEL" "$INITRD"; do
+            test -f "$f" || { echo "::error::missing $f"; exit 1; }
+          done
+
+          LOG=/tmp/vibeos-smoke.log
+          # TCG (software) emulation — GHA runners have nested-KVM disabled.
+          # 7-min timeout matches scripts/smoke-test.sh default.
+          timeout 420 qemu-system-x86_64 \
+            -name vibeos-smoke \
+            -machine q35,accel=tcg \
+            -cpu qemu64 \
+            -m 2048 -smp 2 \
+            -kernel "$KERNEL" \
+            -initrd "$INITRD" \
+            -append "root=PARTLABEL=root-x86-64 rw console=ttyS0,115200 systemd.unit=multi-user.target quiet loglevel=4" \
+            -drive file="$ISO",format=raw,if=virtio \
+            -netdev user,id=net0 -device virtio-net-pci,netdev=net0 \
+            -nographic -serial mon:stdio \
+            -no-reboot \
+            2>&1 | tee "$LOG" \
+            | while IFS= read -r line; do
+                printf '%s\n' "$line"
+                if echo "$line" | grep -qE "Reached target (graphical|Multi-User|Login Prompts)|login:"; then
+                  echo "::notice::boot succeeded: $line"
+                  break
+                fi
+              done || true
+
+          echo "--- boot log tail ---"
+          tail -80 "$LOG" || true
+
+          if grep -qE "Reached target (graphical|Multi-User|Login Prompts)|login:" "$LOG"; then
+            echo "::notice::SMOKE TEST PASSED"
+            grep -oE "Reached target [A-Za-z -]+" "$LOG" | sort -u
+          elif grep -q "Kernel panic" "$LOG"; then
+            echo "::error::KERNEL PANIC"
+            exit 1
+          elif grep -q "Timed out waiting for device" "$LOG"; then
+            echo "::error::ROOT FS MOUNT FAILED"
+            exit 1
+          else
+            echo "::error::inconclusive — no success marker in boot log"
+            exit 1
+          fi
+
+      - name: Upload boot log on failure
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: smoke-test-log
+          path: /tmp/vibeos-smoke.log
+          retention-days: 14

@@ -1,0 +1,195 @@
+name: release
+
+on:
+  push:
+    tags: ['v2.*']
+  workflow_dispatch:
+    inputs:
+      tag:
+        description: Tag to release (must already exist, e.g. v2.0.0)
+        required: true
+
+permissions:
+  contents: write   # Needed to create GitHub Releases
+
+env:
+  # Set by scripts/generate-release-notes.sh below; read from debian/changelog
+  # if not overridden.
+  GPG_KEY_ID: 8F08022E65BC5F8F
+  GPG_KEY_FPR: D7C10B36D2A7CC98253EA01D8F08022E65BC5F8F
+
+jobs:
+  build:
+    name: Build release ISO
+    uses: ./.github/workflows/build.yml
+
+  sign-and-publish:
+    name: Sign + publish
+    needs: build
+    runs-on: ubuntu-24.04
+    timeout-minutes: 30
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Resolve tag
+        id: tag
+        run: |
+          if [ "${{ github.event_name }}" = "workflow_dispatch" ]; then
+            TAG='${{ inputs.tag }}'
+          else
+            TAG='${{ github.ref_name }}'
+          fi
+          case "$TAG" in
+            v2.*) ;;
+            *)    echo "::error::tag must match v2.*, got $TAG"; exit 1;;
+          esac
+          echo "tag=$TAG" >> "$GITHUB_OUTPUT"
+
+      - name: Download build artifacts
+        uses: actions/download-artifact@v4
+        with:
+          pattern: vibeos-*
+          path: artifacts
+          merge-multiple: false
+
+      - name: Stage release files
+        id: stage
+        run: |
+          set -euo pipefail
+          TAG='${{ steps.tag.outputs.tag }}'
+          mkdir -p release
+          mv artifacts/vibeos-iso/vibeos.raw     "release/vibeos-${TAG}.iso"
+          mv artifacts/vibeos-iso/vibeos.raw.sha256 "release/vibeos-${TAG}.iso.sha256" || true
+          mv artifacts/vibeos-debs/*.deb          release/
+          # Rewrite sha256 to use the renamed file so `sha256sum -c` works.
+          cd release
+          sha256sum "vibeos-${TAG}.iso" > "vibeos-${TAG}.iso.sha256"
+          sha256sum vibeos-*.deb        > "vibeos-${TAG}.debs.sha256"
+          ls -lh
+          echo "dir=release" >> "$GITHUB_OUTPUT"
+
+      # The GPG signing key is the same master key generated on your
+      # workstation (fingerprint above). For the VPS-side apt repo we
+      # recommend exporting a signing *subkey* only — but for the ISO
+      # release signature the master is acceptable since it's already
+      # the identity users trust.
+      - name: Import GPG signing key
+        env:
+          GPG_PRIVATE_KEY: ${{ secrets.VIBEOS_SIGNING_KEY_ASC }}
+          GPG_PASSPHRASE:  ${{ secrets.VIBEOS_SIGNING_KEY_PASSPHRASE }}
+        run: |
+          set -euo pipefail
+          if [ -z "${GPG_PRIVATE_KEY:-}" ]; then
+            echo "::error::secret VIBEOS_SIGNING_KEY_ASC not set"
+            echo "Export with: gpg --armor --export-secret-keys $GPG_KEY_ID"
+            echo "Then add as a repository secret named VIBEOS_SIGNING_KEY_ASC."
+            exit 1
+          fi
+          echo "$GPG_PRIVATE_KEY" | gpg --batch --import
+          # Trust the key ultimately so gpg --sign doesn't prompt.
+          echo "$GPG_KEY_FPR:6:" | gpg --import-ownertrust
+          gpg --list-secret-keys --keyid-format LONG
+
+      - name: Sign ISO + .debs (detached ASCII)
+        env:
+          GPG_PASSPHRASE: ${{ secrets.VIBEOS_SIGNING_KEY_PASSPHRASE }}
+        run: |
+          set -euo pipefail
+          cd release
+          for f in vibeos-*.iso vibeos-*.deb; do
+            gpg --batch --yes \
+                --pinentry-mode loopback \
+                --passphrase "$GPG_PASSPHRASE" \
+                --local-user "$GPG_KEY_ID" \
+                --armor --detach-sign \
+                --output "${f}.asc" \
+                "$f"
+            echo "signed: $f → ${f}.asc"
+          done
+          ls -lh
+
+      - name: Generate release notes
+        id: notes
+        run: |
+          set -euo pipefail
+          TAG='${{ steps.tag.outputs.tag }}'
+          NOTES_FILE="release/RELEASE_NOTES.md"
+          if [ -f "docs/RELEASE_NOTES-${TAG}.md" ]; then
+            cp "docs/RELEASE_NOTES-${TAG}.md" "$NOTES_FILE"
+          else
+            {
+              echo "## VibeOS ${TAG}"
+              echo
+              echo "### Download"
+              echo '```'
+              cat "release/vibeos-${TAG}.iso.sha256"
+              echo '```'
+              echo
+              echo "### Verify"
+              echo '```bash'
+              echo "gpg --keyserver keyserver.ubuntu.com --recv-keys $GPG_KEY_FPR"
+              echo "gpg --verify vibeos-${TAG}.iso.asc vibeos-${TAG}.iso"
+              echo "sha256sum -c vibeos-${TAG}.iso.sha256"
+              echo '```'
+              echo
+              echo "### Changelog"
+              awk '/^vibeos-/{if(n)exit;n=1}n' packages/vibeos-desktop/debian/changelog 2>/dev/null \
+                | head -50 || echo "(see packages/vibeos-desktop/debian/changelog)"
+            } > "$NOTES_FILE"
+          fi
+          cat "$NOTES_FILE"
+
+      - name: Create GitHub Release
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: ${{ steps.tag.outputs.tag }}
+          name: VibeOS ${{ steps.tag.outputs.tag }}
+          body_path: release/RELEASE_NOTES.md
+          fail_on_unmatched_files: true
+          files: |
+            release/vibeos-*.iso
+            release/vibeos-*.iso.asc
+            release/vibeos-*.iso.sha256
+            release/vibeos-*.deb
+            release/vibeos-*.deb.asc
+            release/vibeos-*.debs.sha256
+
+      # ─── mwmai.no publish (rsync + reprepro) ──────────────────────────────
+      # Gated on secrets — skip silently if they're not set, so the public
+      # GitHub Release still ships even before the VPS side is wired up.
+      - name: Publish to mwmai.no (iso + apt repo)
+        if: ${{ env.MWMAI_SSH_HOST != '' }}
+        env:
+          MWMAI_SSH_HOST:  ${{ secrets.MWMAI_SSH_HOST }}
+          MWMAI_SSH_USER:  ${{ secrets.MWMAI_SSH_USER }}
+          MWMAI_SSH_KEY:   ${{ secrets.MWMAI_SSH_KEY }}
+          MWMAI_ISO_PATH:  ${{ secrets.MWMAI_ISO_PATH }}   # e.g. /srv/iso
+          MWMAI_REPO_PATH: ${{ secrets.MWMAI_REPO_PATH }}  # e.g. /srv/apt-repo
+        run: |
+          set -euo pipefail
+          install -m 600 /dev/stdin ~/.ssh_vibeos_deploy <<< "$MWMAI_SSH_KEY"
+          SSH_OPTS="-i $HOME/.ssh_vibeos_deploy -o StrictHostKeyChecking=accept-new"
+
+          echo "→ rsync ISO → ${MWMAI_SSH_HOST}:${MWMAI_ISO_PATH}/"
+          rsync -avP -e "ssh $SSH_OPTS" \
+            release/vibeos-*.iso \
+            release/vibeos-*.iso.asc \
+            release/vibeos-*.iso.sha256 \
+            "${MWMAI_SSH_USER}@${MWMAI_SSH_HOST}:${MWMAI_ISO_PATH}/"
+
+          echo "→ scp .debs → tmp, then reprepro includedeb"
+          TMP=/tmp/vibeos-debs-$$
+          ssh $SSH_OPTS "${MWMAI_SSH_USER}@${MWMAI_SSH_HOST}" "mkdir -p $TMP"
+          scp $SSH_OPTS release/vibeos-*.deb \
+            "${MWMAI_SSH_USER}@${MWMAI_SSH_HOST}:$TMP/"
+          ssh $SSH_OPTS "${MWMAI_SSH_USER}@${MWMAI_SSH_HOST}" "\
+            set -e; \
+            cd '${MWMAI_REPO_PATH}'; \
+            for deb in $TMP/*.deb; do \
+              reprepro --keepunreferencedfiles includedeb noble \"\$deb\"; \
+            done; \
+            rm -rf $TMP; \
+            reprepro export noble"
+          rm -f ~/.ssh_vibeos_deploy
