@@ -147,7 +147,7 @@ The marker file is dropped during ISO build by `scripts/bake-extras.sh` and remo
 
 ---
 
-## Known issues (2026-04-15)
+## Known issues (still outstanding as of 2026-04-16)
 
 - **Bug A** — Plasma session startup shows "Error 404" (source unconfirmed, likely Vibbey install-helper during a startup race or Firefox fallback). Pickup in `memory/handoff-vibeos-v2-day8-stuck.md`.
 - **Bug B** — Desktop shortcut "Install VibeOS" does nothing when clicked. Likely polkit auth agent not running in live session. Fix = add `polkit-kde-agent-1` to `mkosi.conf` Packages=.
