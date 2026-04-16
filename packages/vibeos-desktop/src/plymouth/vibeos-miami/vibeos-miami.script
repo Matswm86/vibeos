@@ -5,7 +5,7 @@ Window.SetBackgroundTopColor(1.000, 0.898, 0.831);   # #FFE5D4 peach
 Window.SetBackgroundBottomColor(1.000, 0.812, 0.812); # #FFCFCF dusty pink
 
 wordmark.image = Image.Text("VibeOS", 0.180, 0.102, 0.278, 1.0,
-                            "Orbitron Bold 72");
+                            "Sans Bold 72");
 wordmark.sprite = Sprite(wordmark.image);
 wordmark.sprite.SetPosition(
     Window.GetWidth()  / 2 - wordmark.image.GetWidth()  / 2,
@@ -13,7 +13,7 @@ wordmark.sprite.SetPosition(
     10);
 
 tag.image = Image.Text("miami", 1.000, 0.435, 0.569, 1.0,
-                       "JetBrains Mono Regular 20");
+                       "Sans 20");
 tag.sprite = Sprite(tag.image);
 tag.sprite.SetPosition(
     Window.GetWidth()  / 2 - tag.image.GetWidth()  / 2,
@@ -31,7 +31,7 @@ message_sprite = Sprite();
 message_sprite.SetPosition(48, Window.GetHeight() - 48, 20);
 fun message_callback(text) {
     message_image = Image.Text(text, 0.180, 0.102, 0.278, 0.85,
-                               "JetBrains Mono Regular 11");
+                               "Monospace 11");
     message_sprite.SetImage(message_image);
 }
 Plymouth.SetMessageFunction(message_callback);
@@ -44,7 +44,7 @@ fun display_password_callback(prompt, bullets) {
     for (i = 0; i < bullets; i++) bullet_string += "● ";
     prompt_image = Image.Text(prompt + "  " + bullet_string,
                               0.180, 0.102, 0.278, 1.0,
-                              "Orbitron Bold 18");
+                              "Sans Bold 18");
     prompt_sprite.SetImage(prompt_image);
 }
 Plymouth.SetDisplayPasswordFunction(display_password_callback);

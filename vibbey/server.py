@@ -66,6 +66,9 @@ class VibbeyHandler(SimpleHTTPRequestHandler):
         return
 
     def do_GET(self):
+        # Extension-less convenience routes (Plymouth sidebar loads /install-helper)
+        if self.path == "/install-helper" or self.path == "/install-helper/":
+            self.path = "/install-helper.html"
         if self.path == "/clippy.glb":
             self._serve_glb()
             return
