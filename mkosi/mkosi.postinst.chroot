@@ -18,14 +18,11 @@ if [ -f /usr/bin/sddm ]; then
     systemctl enable sddm
 fi
 
-# ─── Default shell: zsh (we promised this in v2-plan.md) ─────────────
-# Ubuntu's useradd defaults still point at /bin/bash; flip the
-# system-wide default so both the live user and any post-install
-# accounts get zsh unless they override.
-if [ -x /usr/bin/zsh ]; then
-    sed -i 's|^SHELL=.*|SHELL=/usr/bin/zsh|' /etc/default/useradd || true
-    sed -i 's|^DSHELL=.*|DSHELL=/usr/bin/zsh|' /etc/adduser.conf || true
-fi
+# ─── Default shell: bash for live user ─────────────────────────────
+# zsh is still installed + available; Calamares-created accounts can
+# opt in. Live user stays on bash because the live ISO has no
+# /etc/zsh/zshrc loaded reliably (PATH ends up empty → Konsole breaks).
+# Install-time we can flip the system default back to zsh if desired.
 
 # ─── Flatpak + Flathub ──────────────────────────────────────────────
 if command -v flatpak >/dev/null 2>&1; then
@@ -46,8 +43,19 @@ if ! id vibeos >/dev/null 2>&1; then
     for g in sudo audio video plugdev netdev; do
         getent group "$g" >/dev/null 2>&1 && GROUPS="${GROUPS:+$GROUPS,}$g"
     done
-    useradd -m -s /usr/bin/zsh -G "$GROUPS" vibeos
+    useradd -m -s /bin/bash -G "$GROUPS" vibeos
     echo 'vibeos:vibeos' | chpasswd
+    # Passwordless sudo for the live user so the Install flow never
+    # depends on polkit agents, pkexec env preservation, or typed
+    # passwords. Calamares strips this via its contextualprocess hook
+    # when installing to the target.
+    install -d -m 0755 /etc/sudoers.d
+    cat > /etc/sudoers.d/99-vibeos-live <<'SUDO_EOF'
+# VibeOS live session — passwordless sudo for the live user.
+# Removed on installed systems by Calamares' contextualprocess module.
+vibeos ALL=(ALL) NOPASSWD: ALL
+SUDO_EOF
+    chmod 0440 /etc/sudoers.d/99-vibeos-live
     # Auto-login in the live session only — SDDM config
     mkdir -p /etc/sddm.conf.d
     cat > /etc/sddm.conf.d/autologin.conf <<EOF
@@ -65,23 +73,64 @@ fi
 # from the target by Calamares' contextualprocess during install) so
 # nothing autostarts on the real installed system.
 if [ -f /usr/bin/calamares ]; then
-    # 1. Wrapper script that gates on the live-session marker
     install -d -m 0755 /usr/libexec/vibeos
+
+    # 1. Robust Calamares launcher — single entry point used by BOTH
+    # the autostart wrapper and the Desktop shortcut. Day 9's naked
+    # `pkexec calamares` failed on MSI because:
+    #   (a) polkit-kde agent hadn't registered yet (0.3s was too short)
+    #   (b) pkexec scrubs DISPLAY/XAUTHORITY, so calamares had no X11
+    # This launcher fixes both + logs to /tmp for diagnosis.
+    cat > /usr/libexec/vibeos/launch-calamares <<'LAUNCH_EOF'
+#!/bin/bash
+# Launch Calamares as root. Prefers NOPASSWD sudo (set up for the live
+# user by mkosi.postinst.chroot), falls back to pkexec if sudo is
+# unavailable. sudo -E preserves DISPLAY/XAUTHORITY so the Qt GUI
+# actually renders.
+LOG=/tmp/vibeos-launch-calamares.log
+exec >>"$LOG" 2>&1
+echo "=== $(date -Is) launch-calamares PID=$$ ==="
+echo "USER=${USER:-?} UID=$(id -u) DISPLAY=${DISPLAY:-unset} XDG_SESSION_TYPE=${XDG_SESSION_TYPE:-?}"
+
+# Path A — passwordless sudo (live session default).
+if sudo -n /bin/true 2>/dev/null; then
+    echo "auth=sudo (NOPASSWD available)"
+    exec sudo -E \
+        DISPLAY="${DISPLAY:-:0}" \
+        XAUTHORITY="${XAUTHORITY:-}" \
+        XDG_RUNTIME_DIR="${XDG_RUNTIME_DIR:-/run/user/$(id -u)}" \
+        /usr/bin/calamares
+fi
+
+# Path B — pkexec fallback (only reached on an installed system where
+# NOPASSWD has been revoked; Calamares there is a re-run edge case).
+echo "auth=pkexec (sudo unavailable)"
+for i in $(seq 1 50); do
+    pgrep -f polkit-kde-authentication-agent-1 >/dev/null && break
+    sleep 0.2
+done
+exec pkexec env \
+    DISPLAY="${DISPLAY:-:0}" \
+    XAUTHORITY="${XAUTHORITY:-}" \
+    XDG_RUNTIME_DIR="${XDG_RUNTIME_DIR:-/run/user/$(id -u)}" \
+    /usr/bin/calamares
+LAUNCH_EOF
+    chmod 0755 /usr/libexec/vibeos/launch-calamares
+
+    # 2. Autostart wrapper that gates on the live-session marker +
+    # opens Vibbey first, then hands off to the robust launcher.
     cat > /usr/libexec/vibeos/live-autostart <<'LIVE_EOF'
 #!/bin/sh
 # Runs at Plasma session start. Only acts in the live ISO session.
 [ -f /etc/vibeos/live-session ] || exit 0
-# Launch Vibbey install-helper first (right-pinned sidebar) so the
-# guidance appears alongside Calamares, not behind it.
+# Vibbey install-helper sidebar (right edge).
 /usr/bin/vibbey --install-helper >/tmp/vibbey-install-helper.log 2>&1 &
-# Give Vibbey 300 ms to claim the right edge before Calamares opens
-sleep 0.3
-# Calamares needs root via pkexec on Ubuntu Noble
-exec pkexec /usr/bin/calamares
+# Calamares via robust launcher (waits for polkit, preserves env).
+exec /usr/libexec/vibeos/launch-calamares
 LIVE_EOF
     chmod 0755 /usr/libexec/vibeos/live-autostart
 
-    # 2. Autostart .desktop entry (system-wide — applies to every user
+    # 3. Autostart .desktop entry (system-wide — applies to every user
     # including the live `vibeos` autologin account)
     install -d -m 0755 /etc/xdg/autostart
     cat > /etc/xdg/autostart/vibeos-live-installer.desktop <<'AUTOSTART_EOF'
@@ -93,26 +142,41 @@ Exec=/usr/libexec/vibeos/live-autostart
 Icon=/usr/share/calamares/branding/vibeos/vibeos-icon.svg
 Terminal=false
 X-GNOME-Autostart-enabled=true
-# Skip if the live marker was stripped by Calamares (installed system)
 TryExec=/usr/libexec/vibeos/live-autostart
 AUTOSTART_EOF
 
-    # 3. Keep a clickable desktop shortcut as a belt-and-braces fallback,
-    # in case the user closes Calamares without installing and wants
-    # to re-open it. Still branded; uses the same pkexec wrapper.
+    # 4. Desktop shortcut — routes through the same robust launcher so
+    # user clicks never hit the naked `pkexec calamares` failure mode.
     mkdir -p /home/vibeos/Desktop
     cat > /home/vibeos/Desktop/install-vibeos.desktop <<'SHORTCUT_EOF'
 [Desktop Entry]
 Type=Application
 Name=Install VibeOS
 Comment=Install Pacific Dawn to this computer
-Exec=pkexec calamares
+Exec=/usr/libexec/vibeos/launch-calamares
 Icon=/usr/share/calamares/branding/vibeos/vibeos-icon.svg
 Terminal=false
 Categories=System;
 SHORTCUT_EOF
     chmod +x /home/vibeos/Desktop/install-vibeos.desktop
     chown -R vibeos:vibeos /home/vibeos/Desktop
+
+    # 5. Also expose it in the application launcher menu so Krunner /
+    # Kickoff / Activities can all find it (resilience for users whose
+    # Desktop widget config differs).
+    install -d -m 0755 /usr/share/applications
+    cat > /usr/share/applications/install-vibeos.desktop <<'MENU_EOF'
+[Desktop Entry]
+Type=Application
+Name=Install VibeOS
+GenericName=System Installer
+Comment=Install VibeOS to this computer
+Exec=/usr/libexec/vibeos/launch-calamares
+Icon=/usr/share/calamares/branding/vibeos/vibeos-icon.svg
+Terminal=false
+Categories=System;Settings;
+Keywords=install;calamares;setup;
+MENU_EOF
 fi
 
 # ─── Vibbey first-run autostart must SKIP live session ────────────────

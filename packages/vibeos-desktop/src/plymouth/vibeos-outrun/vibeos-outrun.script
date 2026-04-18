@@ -1,24 +1,21 @@
 # VibeOS Plymouth splash — Outrun
-# Deep violet background with magenta wordmark and cyan tagline.
-# Text-only; no raster assets required.
+# Deep violet background, pre-rendered wordmark + tagline PNGs.
 
 Window.SetBackgroundTopColor(0.043, 0.000, 0.125);   # #0B0020 deep violet
 Window.SetBackgroundBottomColor(0.224, 0.039, 0.298); # plum wash
 
-wordmark.image = Image.Text("VibeOS", 1.000, 0.180, 0.533, 1.0,
-                            "Sans Bold 72");
+wordmark.image = Image("wordmark.png");
 wordmark.sprite = Sprite(wordmark.image);
 wordmark.sprite.SetPosition(
     Window.GetWidth()  / 2 - wordmark.image.GetWidth()  / 2,
     Window.GetHeight() / 2 - wordmark.image.GetHeight() / 2 - 64,
     10);
 
-tag.image = Image.Text("outrun", 0.000, 0.898, 1.000, 1.0,
-                       "Sans 20");
+tag.image = Image("tagline.png");
 tag.sprite = Sprite(tag.image);
 tag.sprite.SetPosition(
     Window.GetWidth()  / 2 - tag.image.GetWidth()  / 2,
-    Window.GetHeight() / 2 + wordmark.image.GetHeight() / 2 - 40,
+    Window.GetHeight() / 2 + wordmark.image.GetHeight() / 2 - 16,
     10);
 
 fun refresh_callback() {
@@ -42,7 +39,7 @@ prompt_sprite.SetPosition(Window.GetWidth() / 2 - 240,
                            Window.GetHeight() - 120, 30);
 fun display_password_callback(prompt, bullets) {
     bullet_string = "";
-    for (i = 0; i < bullets; i++) bullet_string += "● ";
+    for (i = 0; i < bullets; i++) bullet_string += "* ";
     prompt_image = Image.Text(prompt + "  " + bullet_string,
                               1.000, 0.180, 0.533, 1.0,
                               "Sans Bold 18");

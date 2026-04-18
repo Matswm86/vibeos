@@ -1,23 +1,21 @@
 # VibeOS Plymouth splash — Miami
-# Peach-cream background, plum wordmark, coral tagline.
+# Peach-cream background, pre-rendered wordmark + tagline PNGs.
 
 Window.SetBackgroundTopColor(1.000, 0.898, 0.831);   # #FFE5D4 peach
 Window.SetBackgroundBottomColor(1.000, 0.812, 0.812); # #FFCFCF dusty pink
 
-wordmark.image = Image.Text("VibeOS", 0.180, 0.102, 0.278, 1.0,
-                            "Sans Bold 72");
+wordmark.image = Image("wordmark.png");
 wordmark.sprite = Sprite(wordmark.image);
 wordmark.sprite.SetPosition(
     Window.GetWidth()  / 2 - wordmark.image.GetWidth()  / 2,
     Window.GetHeight() / 2 - wordmark.image.GetHeight() / 2 - 64,
     10);
 
-tag.image = Image.Text("miami", 1.000, 0.435, 0.569, 1.0,
-                       "Sans 20");
+tag.image = Image("tagline.png");
 tag.sprite = Sprite(tag.image);
 tag.sprite.SetPosition(
     Window.GetWidth()  / 2 - tag.image.GetWidth()  / 2,
-    Window.GetHeight() / 2 + wordmark.image.GetHeight() / 2 - 40,
+    Window.GetHeight() / 2 + wordmark.image.GetHeight() / 2 - 16,
     10);
 
 fun refresh_callback() {
@@ -41,7 +39,7 @@ prompt_sprite.SetPosition(Window.GetWidth() / 2 - 240,
                            Window.GetHeight() - 120, 30);
 fun display_password_callback(prompt, bullets) {
     bullet_string = "";
-    for (i = 0; i < bullets; i++) bullet_string += "● ";
+    for (i = 0; i < bullets; i++) bullet_string += "* ";
     prompt_image = Image.Text(prompt + "  " + bullet_string,
                               0.180, 0.102, 0.278, 1.0,
                               "Sans Bold 18");

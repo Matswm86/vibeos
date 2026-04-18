@@ -1,3 +1,22 @@
+vibeos-desktop (2.0.0-day9c) noble; urgency=medium
+
+  * Plymouth PNGs re-rendered as PNG32 (RGBA). Indexed 8-bit PNGs
+    may have been silently misrendered by libply on some Plymouth
+    builds.
+
+ -- Mats Mjåtvedt <matswm86@yahoo.no>  Fri, 17 Apr 2026 01:00:00 +0200
+
+vibeos-desktop (2.0.0-day9b) noble; urgency=medium
+
+  * Plymouth: drop Image.Text(), ship pre-rendered wordmark.png +
+    tagline.png per theme (rendered at deb build via ImageMagick +
+    bundled Orbitron TTF). Fixes the "blurry / overlapping lines"
+    Pacific Dawn splash on MSI — initramfs had no fontconfig cache
+    matching the runtime, so Image.Text drifted. PNGs remove all
+    font-at-boot dependency.
+
+ -- Mats Mjåtvedt <matswm86@yahoo.no>  Fri, 17 Apr 2026 00:00:00 +0200
+
 vibeos-desktop (2.0.0-day5) noble; urgency=medium
 
   * Add three additional KDE Look-and-Feel packages:

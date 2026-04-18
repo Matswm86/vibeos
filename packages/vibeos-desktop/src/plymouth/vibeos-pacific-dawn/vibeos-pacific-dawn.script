@@ -1,45 +1,33 @@
 # VibeOS Plymouth splash — Pacific Dawn
-# Cream background, plum wordmark, pink/orange pulsing sun.
-# No raster images required: everything is drawn with text + primitives
-# so the splash renders even when the raster pipeline failed to bake
-# PNGs at package build.
+# Cream background, pre-rendered wordmark + tagline PNGs. Day 9 Image.Text
+# broke on MSI because fontconfig cache was incomplete in the initramfs;
+# switching to baked PNGs removes all font-at-boot dependency.
 
-# ─── Background — cream with a vertical warm wash ──────────────────
 Window.SetBackgroundTopColor(1.000, 0.957, 0.902);   # #FFF4E6 cream
 Window.SetBackgroundBottomColor(1.000, 0.780, 0.619); # warm mid
 
-# ─── Wordmark (text fallback = always renders) ─────────────────────
-# Use generic Sans family instead of Orbitron — Plymouth renders from
-# initramfs where vibeos-desktop's bundled fonts aren't available, so
-# Pango silently falls back to whatever it finds. Different font
-# metrics = text layout breaks + overlapping "blurry lines". Sans is
-# guaranteed present in every Ubuntu initramfs.
-wordmark.image = Image.Text("VibeOS", 0.176, 0.106, 0.243, 1.0,
-                            "Sans Bold 72");
+wordmark.image = Image("wordmark.png");
 wordmark.sprite = Sprite(wordmark.image);
 wordmark.sprite.SetPosition(
     Window.GetWidth()  / 2 - wordmark.image.GetWidth()  / 2,
     Window.GetHeight() / 2 - wordmark.image.GetHeight() / 2 - 64,
     10);
 
-# ─── Tagline ───────────────────────────────────────────────────────
-tag.image = Image.Text("pacific dawn", 1.000, 0.353, 0.561, 1.0,
-                       "Sans 20");
+tag.image = Image("tagline.png");
 tag.sprite = Sprite(tag.image);
 tag.sprite.SetPosition(
     Window.GetWidth()  / 2 - tag.image.GetWidth()  / 2,
-    Window.GetHeight() / 2 + wordmark.image.GetHeight() / 2 - 40,
+    Window.GetHeight() / 2 + wordmark.image.GetHeight() / 2 - 16,
     10);
 
-# ─── Pulsing refresh — wordmark opacity + orbit dot ────────────────
 fun refresh_callback() {
     t = Plymouth.GetTime();
-    pulse = 0.7 + 0.15 * (Math.Sin(t * 2.2) + 1);  # 0.7..1.0
+    pulse = 0.7 + 0.15 * (Math.Sin(t * 2.2) + 1);
     wordmark.sprite.SetOpacity(pulse);
 }
 Plymouth.SetRefreshFunction(refresh_callback);
 
-# ─── System messages (fsck, etc.) ──────────────────────────────────
+# fsck / LUKS prompt paths only; acceptable to stay on Image.Text.
 message_sprite = Sprite();
 message_sprite.SetPosition(48, Window.GetHeight() - 48, 20);
 fun message_callback(text) {
@@ -49,14 +37,12 @@ fun message_callback(text) {
 }
 Plymouth.SetMessageFunction(message_callback);
 
-# ─── LUKS password prompt (unused for day2 but keeps the theme
-# compatible with an encrypted-home build later) ───────────────────
 prompt_sprite = Sprite();
 prompt_sprite.SetPosition(Window.GetWidth() / 2 - 240,
                            Window.GetHeight() - 120, 30);
 fun display_password_callback(prompt, bullets) {
     bullet_string = "";
-    for (i = 0; i < bullets; i++) bullet_string += "● ";
+    for (i = 0; i < bullets; i++) bullet_string += "* ";
     prompt_image = Image.Text(prompt + "  " + bullet_string,
                               0.176, 0.106, 0.243, 1.0,
                               "Sans Bold 18");

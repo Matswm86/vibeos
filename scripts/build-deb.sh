@@ -149,6 +149,31 @@ for pkg in "${TARGETS[@]}"; do
                 rsvg-convert -w 3840 -h 2160 -o \"\$png\" \"\$svg\"
                 echo \"[build-deb] rendered \$png\"
             done
+            # Pre-render Plymouth wordmark + tagline PNGs per theme.
+            # Plymouth's Image.Text() renders in initramfs where fontconfig
+            # is incomplete, which broke text layout (overlapping blur on
+            # MSI). PNGs eliminate all font-at-boot dependency.
+            if [ -d src/plymouth ] && [ -f src/fonts/Orbitron-VariableFont_wght.ttf ]; then
+                FONT=\"\$(pwd)/src/fonts/Orbitron-VariableFont_wght.ttf\"
+                render_theme() {
+                    theme_dir=\"\$1\"; tagline=\"\$2\"; wc=\"\$3\"; tc=\"\$4\"
+                    # PNG32: forces RGBA output — libply in some
+                    # Plymouth builds mis-renders 8-bit indexed PNGs.
+                    convert -background none -fill \"\$wc\" \
+                            -font \"\$FONT\" -pointsize 200 \
+                            label:'VibeOS' -trim +repage \
+                            PNG32:\"\$theme_dir/wordmark.png\"
+                    convert -background none -fill \"\$tc\" \
+                            -font \"\$FONT\" -pointsize 56 \
+                            label:\"\$tagline\" -trim +repage \
+                            PNG32:\"\$theme_dir/tagline.png\"
+                    echo \"[build-deb] rendered Plymouth assets for \$(basename \$theme_dir)\"
+                }
+                render_theme src/plymouth/vibeos-pacific-dawn 'pacific dawn' '#2D1B3E' '#FF5A8F'
+                render_theme src/plymouth/vibeos-outrun        'outrun'        '#FF2E88' '#00E5FF'
+                render_theme src/plymouth/vibeos-miami         'miami'         '#2E1A47' '#FF6F91'
+                render_theme src/plymouth/vibeos-neon-grid     'neon grid'     '#39FF14' '#00FFD1'
+            fi
             # -d skips the build-dep check: the builder image has the
             # deps already (debhelper, fakeroot). Our .debs are arch:all
             # data packages — no compiler is invoked.
