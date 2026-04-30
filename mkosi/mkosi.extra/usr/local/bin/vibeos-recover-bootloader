@@ -1,0 +1,161 @@
+#!/bin/bash
+# /usr/local/bin/vibeos-recover-bootloader
+#
+# Run from the LIVE USB after an install that won't boot. Fixes the
+# installed system's ESP without re-running the installer.
+#
+#   sudo /usr/local/bin/vibeos-recover-bootloader
+
+set -uo pipefail
+
+LOG=/var/log/vibeos-recover.log
+exec > >(tee "$LOG") 2>&1
+
+say() { printf '\n=== %s ===\n' "$*"; }
+
+if [ "$(id -u)" -ne 0 ]; then
+    echo "must run as root — try: sudo $0"
+    exit 1
+fi
+
+say "block devices"
+lsblk -o NAME,FSTYPE,LABEL,SIZE,MOUNTPOINT,PARTTYPE
+blkid
+
+# ── 1. live ESP — find AND respect any existing mount ──────────────────
+LIVE_ROOT_DEV="$(findmnt -no SOURCE /)"
+say "live root is $LIVE_ROOT_DEV"
+LIVE_DISK="$(echo "$LIVE_ROOT_DEV" | sed -E 's|p?[0-9]+$||')"
+
+LIVE_ESP=""
+for p in $(lsblk -lnpo NAME "$LIVE_DISK" | tail -n +2); do
+    if blkid -s TYPE -o value "$p" 2>/dev/null | grep -q '^vfat$'; then
+        LIVE_ESP="$p"
+        break
+    fi
+done
+[ -n "$LIVE_ESP" ] || { echo "FATAL: could not find live ESP under $LIVE_DISK"; exit 2; }
+say "live ESP is $LIVE_ESP"
+
+# systemd-gpt-auto-generator already mounts it at /boot in the live
+# session — reuse that mount. Only mount if not already mounted.
+LIVE_ESP_MNT="$(findmnt -no TARGET "$LIVE_ESP" 2>/dev/null || true)"
+if [ -n "$LIVE_ESP_MNT" ]; then
+    say "live ESP already mounted at $LIVE_ESP_MNT — using existing mount"
+else
+    mkdir -p /mnt/live-esp
+    mount -o ro "$LIVE_ESP" /mnt/live-esp
+    LIVE_ESP_MNT=/mnt/live-esp
+    say "mounted live ESP at $LIVE_ESP_MNT"
+fi
+[ -d "$LIVE_ESP_MNT/vibeos" ] || { echo "FATAL: /vibeos missing on live ESP at $LIVE_ESP_MNT"; exit 3; }
+say "live ESP /vibeos contents:"
+ls -la "$LIVE_ESP_MNT/vibeos" "$LIVE_ESP_MNT/loader/entries"
+
+# ── 2. target disk — pick the most recently installed vibeos-root ──────
+say "looking for target disk (partlabel vibeos-root, NOT the live USB)"
+TARGET_CANDIDATES=$(blkid -t PARTLABEL=vibeos-root -o device | grep -v "^$LIVE_ROOT_DEV\$" || true)
+say "candidates:"
+echo "$TARGET_CANDIDATES"
+
+if [ -z "$TARGET_CANDIDATES" ]; then
+    echo "FATAL: no installed vibeos-root partitions found (other than live USB)"
+    exit 4
+fi
+
+# If multiple vibeos-root partitions (from previous install attempts on
+# different disks), pick the one whose mtime is newest.
+TARGET_ROOT_DEV=""
+NEWEST=0
+for p in $TARGET_CANDIDATES; do
+    mkdir -p /mnt/scan
+    if mount -o ro "$p" /mnt/scan 2>/dev/null; then
+        mt=$(stat -c %Y /mnt/scan/etc/fstab 2>/dev/null || echo 0)
+        if [ "$mt" -gt "$NEWEST" ]; then
+            NEWEST=$mt
+            TARGET_ROOT_DEV=$p
+        fi
+        umount /mnt/scan
+    fi
+done
+[ -n "$TARGET_ROOT_DEV" ] || { echo "FATAL: none of the candidates were mountable"; exit 5; }
+say "target root is $TARGET_ROOT_DEV (most recent install)"
+
+TARGET_DISK="$(echo "$TARGET_ROOT_DEV" | sed -E 's|p?[0-9]+$||')"
+TARGET_PARTNUM="$(echo "$TARGET_ROOT_DEV" | grep -oE '[0-9]+$')"
+TARGET_ESP_DEV="$(lsblk -lnpo NAME,FSTYPE "$TARGET_DISK" | awk '$2=="vfat" {print $1; exit}')"
+[ -n "$TARGET_ESP_DEV" ] || { echo "FATAL: target disk $TARGET_DISK has no vfat ESP"; exit 6; }
+say "target ESP is $TARGET_ESP_DEV   target disk is $TARGET_DISK"
+
+# ── 3. mount target rw ─────────────────────────────────────────────────
+mkdir -p /mnt/target /mnt/target-esp
+mount -o rw "$TARGET_ROOT_DEV" /mnt/target
+mount -o rw "$TARGET_ESP_DEV"  /mnt/target-esp
+say "target rootfs mounted; /etc/fstab:"
+cat /mnt/target/etc/fstab
+say "target ESP mounted; current contents:"
+ls -laR /mnt/target-esp
+
+# ── 4. copy /vibeos/ tree + loader entries from live to target ─────────
+say "copying /vibeos/ tree from live to target"
+rm -rf /mnt/target-esp/vibeos
+cp -aR "$LIVE_ESP_MNT/vibeos" /mnt/target-esp/
+mkdir -p /mnt/target-esp/loader/entries
+cp -f "$LIVE_ESP_MNT"/loader/entries/*.conf /mnt/target-esp/loader/entries/
+
+# ── 5. patch loader entries with root=UUID= ────────────────────────────
+ROOT_UUID="$(awk '$2=="/" && $3=="ext4" {print $1; exit}' /mnt/target/etc/fstab \
+            | sed 's|^UUID=||')"
+[ -n "$ROOT_UUID" ] || { echo "FATAL: target /etc/fstab has no root UUID"; exit 7; }
+say "target root UUID: $ROOT_UUID"
+
+CMDLINE="root=UUID=$ROOT_UUID rw quiet splash loglevel=3 systemd.show_status=auto"
+mkdir -p /mnt/target/etc/kernel
+echo "$CMDLINE" > /mnt/target/etc/kernel/cmdline
+
+for f in /mnt/target-esp/loader/entries/*.conf; do
+    [ -f "$f" ] || continue
+    if grep -q '^options' "$f"; then
+        if ! grep -q 'root=' "$f"; then
+            sed -i "s|^options[[:space:]]*|options root=UUID=$ROOT_UUID rw |" "$f"
+        fi
+    else
+        echo "options $CMDLINE" >> "$f"
+    fi
+    say "patched entry: $f"
+    cat "$f"
+done
+
+# ── 6. systemd-bootx64.efi belt-and-braces ─────────────────────────────
+mkdir -p /mnt/target-esp/EFI/BOOT /mnt/target-esp/EFI/systemd
+bootctl --esp-path=/mnt/target-esp --no-variables install || \
+bootctl --esp-path=/mnt/target-esp install || \
+echo "WARN: bootctl install non-zero (may be fine if files are present)"
+cp -f /usr/lib/systemd/boot/efi/systemd-bootx64.efi /mnt/target-esp/EFI/systemd/systemd-bootx64.efi
+cp -f /usr/lib/systemd/boot/efi/systemd-bootx64.efi /mnt/target-esp/EFI/BOOT/BOOTX64.EFI
+say "systemd-bootx64.efi placed in /EFI/systemd and /EFI/BOOT/BOOTX64.EFI"
+
+printf 'timeout 3\nconsole-mode max\n' > /mnt/target-esp/loader/loader.conf
+say "wrote loader.conf"
+
+# ── 7. retype target root partition to x86_64-root GPT type ────────────
+sgdisk -t "$TARGET_PARTNUM:4f68bce3-e8cd-4db1-96e7-fbcaf984b709" "$TARGET_DISK" \
+    && say "set $TARGET_ROOT_DEV GPT type to x86_64-root" \
+    || say "WARN: sgdisk could not retype $TARGET_ROOT_DEV"
+
+# ── 8. final dump ──────────────────────────────────────────────────────
+say "FINAL: target ESP layout"
+ls -laR /mnt/target-esp
+say "FINAL: target /etc/kernel/cmdline"
+cat /mnt/target/etc/kernel/cmdline
+say "FINAL: target /etc/fstab"
+cat /mnt/target/etc/fstab
+
+sync
+umount /mnt/target-esp
+umount /mnt/target
+[ "$LIVE_ESP_MNT" = "/mnt/live-esp" ] && umount /mnt/live-esp 2>/dev/null
+
+echo
+echo "Done. Reboot, F11 → pick the NVMe with vibeos-root (not USB, not Firmware Setup)."
+echo "Log saved to $LOG"

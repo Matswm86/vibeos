@@ -1,6 +1,7 @@
-// VibeOS Calamares install slideshow — minimal Pacific Dawn placeholder.
-// Day 2 ships the three-slide stub below. Real Vibbey-narrated animation
-// lands in a later sprint (not blocking v2.0.0).
+// VibeOS Calamares install slideshow — Pacific Dawn, hosted by Vibbey.
+// Five slides, each with the canonical Vibbey image and high-contrast
+// cream text on a deep ink-purple "night sky" backdrop. (Earlier
+// dawn-gradient lost cream text against the cream lower portion.)
 
 import QtQuick 2.15
 import QtQuick.Controls 2.15
@@ -11,74 +12,127 @@ Presentation {
 
     Timer {
         id: advanceTimer
-        interval:  8000
+        interval:  9000
         running:   presentation.activatedInCalamares
         repeat:    true
         onTriggered: presentation.goToNextSlide()
     }
 
+    component NightBg: Rectangle {
+        anchors.fill: parent
+        gradient: Gradient {
+            GradientStop { position: 0.00; color: "#1C102E" }
+            GradientStop { position: 0.55; color: "#3C2352" }
+            GradientStop { position: 1.00; color: "#2D1B3E" }
+        }
+    }
+
+    component Vibbey: Image {
+        source: "vibbey-mascot.png"
+        fillMode: Image.PreserveAspectFit
+        smooth: true
+        width: 220; height: 220
+    }
+
+    component Title: Text {
+        color: "#FFF4E6"
+        font.family: "Orbitron"
+        font.pixelSize: 36
+        font.bold: true
+        horizontalAlignment: Text.AlignHCenter
+        wrapMode: Text.WordWrap
+    }
+
+    component Body: Text {
+        color: "#FFC79E"
+        font.family: "JetBrains Mono"
+        font.pixelSize: 18
+        horizontalAlignment: Text.AlignHCenter
+        wrapMode: Text.WordWrap
+    }
+
+    component Hint: Text {
+        color: "#FF8FB8"
+        font.family: "JetBrains Mono"
+        font.pixelSize: 14
+        horizontalAlignment: Text.AlignHCenter
+        wrapMode: Text.WordWrap
+    }
+
     Slide {
-        Rectangle {
-            anchors.fill: parent
-            color: "#FFF4E6"
-
-            Column {
-                anchors.centerIn: parent
-                spacing: 24
-
-                Text {
-                    text: "Welcome to VibeOS"
-                    color: "#2D1B3E"
-                    font.family: "Orbitron"
-                    font.pixelSize: 48
-                    font.bold: true
-                    anchors.horizontalCenter: parent.horizontalCenter
-                }
-                Text {
-                    text: "Pacific Dawn — your AI-native desktop"
-                    color: "#FF5A8F"
-                    font.family: "JetBrains Mono"
-                    font.pixelSize: 22
-                    anchors.horizontalCenter: parent.horizontalCenter
-                }
+        NightBg {}
+        Column {
+            anchors.centerIn: parent
+            spacing: 16
+            Vibbey { anchors.horizontalCenter: parent.horizontalCenter }
+            Title  { text: "Welcome to VibeOS" ; anchors.horizontalCenter: parent.horizontalCenter }
+            Body   {
+                text: "Pacific Dawn — your AI-native desktop.\nVibbey will keep you company while we install."
+                anchors.horizontalCenter: parent.horizontalCenter
+            }
+            Hint   {
+                text: "Hit Enter at the login prompt — no password needed on the live session."
+                anchors.horizontalCenter: parent.horizontalCenter
             }
         }
     }
 
     Slide {
-        Rectangle {
-            anchors.fill: parent
-            color: "#FFF4E6"
-            Text {
-                anchors.centerIn: parent
-                text: "Vibbey — your local AI, always on,\nprivacy-safe, zero cloud round-trip."
-                color: "#2D1B3E"
-                font.family: "Orbitron"
-                font.pixelSize: 28
-                horizontalAlignment: Text.AlignHCenter
+        NightBg {}
+        Column {
+            anchors.centerIn: parent
+            spacing: 16
+            Vibbey { anchors.horizontalCenter: parent.horizontalCenter }
+            Title  { text: "Meet Vibbey" ; anchors.horizontalCenter: parent.horizontalCenter }
+            Body   {
+                text: "Your local AI sidekick — runs on-device with Ollama.\nPrivacy-safe, no cloud round-trip, always available."
+                anchors.horizontalCenter: parent.horizontalCenter
             }
         }
     }
 
     Slide {
-        Rectangle {
-            anchors.fill: parent
-            color: "#FFF4E6"
-            Text {
-                anchors.centerIn: parent
-                text: "Claude Code, baked in.\nOpen a terminal. Say hi. Ship code."
-                color: "#FF7A00"
-                font.family: "Orbitron"
-                font.pixelSize: 28
-                horizontalAlignment: Text.AlignHCenter
+        NightBg {}
+        Column {
+            anchors.centerIn: parent
+            spacing: 16
+            Vibbey { anchors.horizontalCenter: parent.horizontalCenter }
+            Title  { text: "Claude Code, baked in" ; anchors.horizontalCenter: parent.horizontalCenter }
+            Body   {
+                text: "Open a terminal, type `claude`, ship code.\nAnthropic's coding agent, ready out of the box."
+                anchors.horizontalCenter: parent.horizontalCenter
             }
         }
     }
 
-    function onActivate() {
-        advanceTimer.running = true
+    Slide {
+        NightBg {}
+        Column {
+            anchors.centerIn: parent
+            spacing: 16
+            Vibbey { anchors.horizontalCenter: parent.horizontalCenter }
+            Title  { text: "Yours, locally" ; anchors.horizontalCenter: parent.horizontalCenter }
+            Body   {
+                text: "No telemetry. No accounts required.\nYour memory graph and notes never leave the box\nunless you ask Vibbey to share."
+                anchors.horizontalCenter: parent.horizontalCenter
+            }
+        }
     }
-    function onLeave() {
-        advanceTimer.running = false
+
+    Slide {
+        NightBg {}
+        Column {
+            anchors.centerIn: parent
+            spacing: 16
+            Vibbey { anchors.horizontalCenter: parent.horizontalCenter }
+            Title  { text: "Almost there" ; anchors.horizontalCenter: parent.horizontalCenter }
+            Body   {
+                text: "When the install finishes, sign in and\nVibbey will say hi on first boot.\nWelcome to the dawn."
+                anchors.horizontalCenter: parent.horizontalCenter
+            }
+        }
     }
+
+    function onActivate() { advanceTimer.running = true }
+    function onLeave()    { advanceTimer.running = false }
 }

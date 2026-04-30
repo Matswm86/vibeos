@@ -1,37 +1,30 @@
-# VibeOS Plymouth splash — Pacific Dawn
-# Cream background, pre-rendered wordmark + tagline PNGs. Day 9 Image.Text
-# broke on MSI because fontconfig cache was incomplete in the initramfs;
-# switching to baked PNGs removes all font-at-boot dependency.
+# VibeOS Plymouth splash — Pacific Dawn (with Vibbey).
+# 480x320 PNG — fits any framebuffer including 640x480 VGA fallback,
+# so we never need to call Image.Scale() (which has shown aspect-ratio
+# quirks on some kernel/Plymouth combos).
 
-Window.SetBackgroundTopColor(1.000, 0.957, 0.902);   # #FFF4E6 cream
-Window.SetBackgroundBottomColor(1.000, 0.780, 0.619); # warm mid
+Window.SetBackgroundTopColor(0.110, 0.063, 0.180);    # #1C102E
+Window.SetBackgroundBottomColor(0.176, 0.106, 0.243); # #2D1B3E
 
-wordmark.image = Image("wordmark.png");
+wordmark.image  = Image("wordmark.png");
 wordmark.sprite = Sprite(wordmark.image);
 wordmark.sprite.SetPosition(
     Window.GetWidth()  / 2 - wordmark.image.GetWidth()  / 2,
-    Window.GetHeight() / 2 - wordmark.image.GetHeight() / 2 - 64,
-    10);
-
-tag.image = Image("tagline.png");
-tag.sprite = Sprite(tag.image);
-tag.sprite.SetPosition(
-    Window.GetWidth()  / 2 - tag.image.GetWidth()  / 2,
-    Window.GetHeight() / 2 + wordmark.image.GetHeight() / 2 - 16,
+    Window.GetHeight() / 2 - wordmark.image.GetHeight() / 2,
     10);
 
 fun refresh_callback() {
     t = Plymouth.GetTime();
-    pulse = 0.7 + 0.15 * (Math.Sin(t * 2.2) + 1);
+    pulse = 0.78 + 0.12 * (Math.Sin(t * 2.2) + 1);
     wordmark.sprite.SetOpacity(pulse);
 }
 Plymouth.SetRefreshFunction(refresh_callback);
 
-# fsck / LUKS prompt paths only; acceptable to stay on Image.Text.
+# fsck / LUKS prompt paths only.
 message_sprite = Sprite();
 message_sprite.SetPosition(48, Window.GetHeight() - 48, 20);
 fun message_callback(text) {
-    message_image = Image.Text(text, 0.176, 0.106, 0.243, 0.85,
+    message_image = Image.Text(text, 1.0, 0.957, 0.902, 0.85,
                                "Monospace 11");
     message_sprite.SetImage(message_image);
 }
@@ -44,7 +37,7 @@ fun display_password_callback(prompt, bullets) {
     bullet_string = "";
     for (i = 0; i < bullets; i++) bullet_string += "* ";
     prompt_image = Image.Text(prompt + "  " + bullet_string,
-                              0.176, 0.106, 0.243, 1.0,
+                              1.0, 0.957, 0.902, 1.0,
                               "Sans Bold 18");
     prompt_sprite.SetImage(prompt_image);
 }

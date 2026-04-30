@@ -1,21 +1,83 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 800 450" width="800" height="450">
+<svg xmlns="http://www.w3.org/2000/svg"
+     viewBox="0 0 900 600"
+     width="900" height="600"
+     preserveAspectRatio="xMidYMid meet">
   <defs>
     <linearGradient id="sky" x1="0" x2="0" y1="0" y2="1">
-      <stop offset="0%"  stop-color="#FFF4E6"/>
-      <stop offset="60%" stop-color="#FFC79E"/>
+      <stop offset="0%"   stop-color="#FFF4E6"/>
+      <stop offset="55%"  stop-color="#FFC79E"/>
       <stop offset="100%" stop-color="#FF5A8F"/>
     </linearGradient>
     <radialGradient id="sun" cx="0.5" cy="0.5" r="0.5">
-      <stop offset="0%"  stop-color="#FFFFFF" stop-opacity="1"/>
-      <stop offset="55%" stop-color="#FFB627" stop-opacity="0.9"/>
+      <stop offset="0%"   stop-color="#FFFFFF" stop-opacity="1"/>
+      <stop offset="55%"  stop-color="#FFB627" stop-opacity="0.9"/>
       <stop offset="100%" stop-color="#FF7A00" stop-opacity="0"/>
     </radialGradient>
+    <linearGradient id="sea" x1="0" x2="0" y1="0" y2="1">
+      <stop offset="0%"   stop-color="#FF8FB8"/>
+      <stop offset="100%" stop-color="#7A5C9E"/>
+    </linearGradient>
+    <linearGradient id="vibbey-body" x1="0" x2="0" y1="0" y2="1">
+      <stop offset="0%"   stop-color="#FFB1D2"/>
+      <stop offset="100%" stop-color="#FF5A8F"/>
+    </linearGradient>
   </defs>
-  <rect width="800" height="450" fill="url(#sky)"/>
-  <circle cx="400" cy="300" r="120" fill="url(#sun)"/>
-  <text x="400" y="220" text-anchor="middle" font-family="Orbitron, sans-serif"
-        font-size="56" font-weight="bold" fill="#2D1B3E">VibeOS</text>
-  <text x="400" y="260" text-anchor="middle" font-family="JetBrains Mono, monospace"
-        font-size="18" fill="#FF5A8F">pacific dawn // 2.0.0</text>
+
+  <!-- sky -->
+  <rect width="900" height="420" fill="url(#sky)"/>
+  <!-- sun -->
+  <circle cx="620" cy="380" r="150" fill="url(#sun)"/>
+  <!-- mountains -->
+  <polygon points="0,420 120,300 230,360 340,280 460,380 560,310 690,380 820,330 900,380 900,420"
+           fill="#7A3F6E" opacity="0.85"/>
+  <polygon points="0,420 80,360 180,400 290,340 400,400 510,360 640,410 760,370 900,400 900,420"
+           fill="#5C2F58" opacity="0.85"/>
+  <!-- sea -->
+  <rect y="420" width="900" height="180" fill="url(#sea)"/>
+
+  <!-- VibeOS wordmark -->
+  <text x="450" y="190" text-anchor="middle"
+        font-family="Orbitron, sans-serif" font-size="78" font-weight="bold"
+        fill="#2D1B3E" letter-spacing="2">VibeOS</text>
+  <text x="450" y="230" text-anchor="middle"
+        font-family="JetBrains Mono, monospace" font-size="20"
+        fill="#2D1B3E" opacity="0.85">pacific dawn // 2.0.0</text>
+
+  <!-- Vibbey: chubby cream paperclip-droid mascot, lower-left over the sea -->
+  <g transform="translate(170,470)">
+    <!-- shadow -->
+    <ellipse cx="0" cy="78" rx="58" ry="8" fill="#2D1B3E" opacity="0.25"/>
+    <!-- body -->
+    <rect x="-50" y="-48" width="100" height="120" rx="44" ry="44"
+          fill="url(#vibbey-body)" stroke="#2D1B3E" stroke-width="3"/>
+    <!-- screen / face panel -->
+    <rect x="-32" y="-26" width="64" height="44" rx="12" ry="12"
+          fill="#2D1B3E"/>
+    <!-- eyes -->
+    <circle cx="-14" cy="-4" r="5" fill="#FFC79E"/>
+    <circle cx="14"  cy="-4" r="5" fill="#FFC79E"/>
+    <!-- smile -->
+    <path d="M -12 8 Q 0 16 12 8" stroke="#FF8FB8" stroke-width="3"
+          fill="none" stroke-linecap="round"/>
+    <!-- antenna -->
+    <line x1="0" y1="-48" x2="0" y2="-72" stroke="#2D1B3E" stroke-width="3"/>
+    <circle cx="0" cy="-78" r="6" fill="#FFB627" stroke="#2D1B3E" stroke-width="2"/>
+    <!-- paperclip echo loop on the back-right (subtle nod to Clippy ancestry) -->
+    <path d="M 38 -10 Q 60 -10 60 14 Q 60 38 38 38 Q 22 38 22 22 Q 22 8 34 8"
+          fill="none" stroke="#2D1B3E" stroke-width="3" stroke-linecap="round"
+          opacity="0.75"/>
+    <!-- name tag -->
+    <text x="0" y="92" text-anchor="middle"
+          font-family="Orbitron, sans-serif" font-size="18" font-weight="bold"
+          fill="#2D1B3E">Vibbey</text>
+  </g>
+
+  <!-- "with Vibbey" caption next to the mascot -->
+  <text x="290" y="500"
+        font-family="JetBrains Mono, monospace" font-size="22"
+        fill="#FFF4E6" opacity="0.95">with Vibbey, your local AI</text>
+  <text x="290" y="528"
+        font-family="JetBrains Mono, monospace" font-size="14"
+        fill="#FFF4E6" opacity="0.8">always on · privacy-safe · zero cloud</text>
 </svg>

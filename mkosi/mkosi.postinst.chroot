@@ -8,6 +8,14 @@ set -euo pipefail
 
 echo "[mkosi.postinst] starting vibeos-specific postinst"
 
+# ─── Calamares post-bootloader fix script ─────────────────────────
+# /usr/local/sbin/vibeos-bootloader-fix.sh ships via mkosi.extra and
+# is invoked by Calamares' shellprocess@bootctl step. Just ensure it's
+# executable (mkosi.extra preserves mode but belt-and-braces).
+[ -f /usr/local/sbin/vibeos-bootloader-fix.sh ] && \
+    chmod 0755 /usr/local/sbin/vibeos-bootloader-fix.sh && \
+    echo "[mkosi.postinst] vibeos-bootloader-fix.sh +x"
+
 # ─── Display manager: SDDM is our greeter ────────────────────────────
 # Ubuntu 24.04 may install gdm3 alongside SDDM depending on metapackage
 # resolution. Force SDDM as the active display manager.
@@ -177,6 +185,34 @@ Terminal=false
 Categories=System;Settings;
 Keywords=install;calamares;setup;
 MENU_EOF
+
+    # 3. Patch Calamares unpackfs so its do_count find tolerates EACCES.
+    # On a mkosi-style "live IS rootfs" install, find / -type f hits
+    # /var/cache/private, /etc/credstore.encrypted, /root, /var/lib/private
+    # and exits 1 even as root. Stock unpackfs main.py uses
+    # host_env_process_output(["find", ...]) which is check_output under
+    # the hood — exit 1 raises CalledProcessError and the entire job
+    # dies before rsync ever starts. Wrap it in `sh -c "...; true"`.
+    UNPACKFS_PY=/usr/lib/x86_64-linux-gnu/calamares/modules/unpackfs/main.py
+    if [ -f "$UNPACKFS_PY" ]; then
+        if grep -qF 'host_env_process_output(["find", self.source, "-type", "f"]' "$UNPACKFS_PY"; then
+            python3 - "$UNPACKFS_PY" <<'PATCH_EOF'
+import sys, pathlib
+p = pathlib.Path(sys.argv[1])
+src = p.read_text()
+old = 'libcalamares.utils.host_env_process_output(["find", self.source, "-type", "f"], cb_count)'
+new = ('libcalamares.utils.host_env_process_output('
+       '["sh", "-c", "find " + shlex.quote(self.source) + " -type f 2>/dev/null; true"], '
+       'cb_count)')
+src = src.replace(old, new, 1)
+if "\nimport shlex" not in src:
+    src = src.replace("\nimport os\n", "\nimport os\nimport shlex\n", 1)
+p.write_text(src)
+PATCH_EOF
+            python3 -c "import py_compile; py_compile.compile('$UNPACKFS_PY', doraise=True)"
+            echo "[mkosi.postinst] patched calamares unpackfs do_count to tolerate EACCES"
+        fi
+    fi
 fi
 
 # ─── Vibbey first-run autostart must SKIP live session ────────────────
