@@ -4,13 +4,15 @@
 
 Download → install in 10 minutes → start coding with Claude in 5 more.
 
-**Status**: v2.0.0 in **active development — NOT yet shippable**. Two bugs outstanding from the latest hardware test on MSI laptop (Plasma 404 on startup; "Install VibeOS" desktop shortcut does nothing — probably polkit). See `memory/handoff-vibeos-v2-day8-stuck.md` for root-cause hypotheses. v1 (Kubuntu 22.04 + Cubic build) is archived at tag `v1.0.4.3-final` under `archive-v1/`.
+**Status**: v2.0.0-rc1 — installable end-to-end on MSI hardware (validated 2026-04-30). Live ISO boots, installer completes, target system boots into Plasma with Vibbey + Claude Code. **One known wart**: the Calamares-time bootloader-fix script silently fails inside the chroot, so the freshly-installed system needs one post-install recovery command before it'll boot — see [Post-install recovery](#post-install-recovery) below. Fix in flight. v1 (Kubuntu 22.04 + Cubic build) is archived at tag `v1.0.4.3-final` under `archive-v1/`.
 
 ---
 
 ## Download
 
-Not yet publicly released. When v2.0.0 ships, it will be at:
+v2.0.0-rc1 ISO is the first hardware-validated build. See [Post-install recovery](#post-install-recovery) for the one currently required post-install step.
+
+When the final v2.0.0 ships, it will be at:
 
 ```bash
 curl -LO https://iso.mwmai.no/vibeos-v2.0.0.iso
@@ -147,11 +149,26 @@ The marker file is dropped during ISO build by `scripts/bake-extras.sh` and remo
 
 ---
 
-## Known issues (still outstanding as of 2026-04-16)
+## Post-install recovery
 
-- **Bug A** — Plasma session startup shows "Error 404" (source unconfirmed, likely Vibbey install-helper during a startup race or Firefox fallback). Pickup in `memory/handoff-vibeos-v2-day8-stuck.md`.
-- **Bug B** — Desktop shortcut "Install VibeOS" does nothing when clicked. Likely polkit auth agent not running in live session. Fix = add `polkit-kde-agent-1` to `mkosi.conf` Packages=.
-- **Bug 1** (deferred to v2.1) — systemd-boot splash image is stretched/distorted on non-1080p displays. Cosmetic only.
+After Calamares finishes and you reboot to the NVMe, the system will currently come up to a black screen. This is a known regression in the install-time bootloader fix path: the `vibeos-bootloader-fix.sh` script runs inside Calamares' chroot but can't reliably locate the live ESP from there, so it skips the `/vibeos/` initrd-tree copy and the target ESP ends up with kernel + bogus `root=UUID=` and no initrd lines.
+
+To recover, **boot from the same USB stick**, open Konsole in the live session, and run:
+
+```bash
+sudo vibeos-recover-bootloader
+```
+
+It auto-detects the target disk (newest install), copies the full `/vibeos/` tree (kernel + initrd + microcode + kernel-modules.initrd) from the live ESP to the target ESP, patches the loader entry with the correct root UUID, reinstalls `systemd-bootx64.efi`, and retypes the GPT root partition. Takes ~30 seconds. Reboot, F11 → pick the NVMe entry, system comes up to Plasma.
+
+If you installed onto multiple disks, the script fixes only the most recently installed one. Run it once per target.
+
+## Known issues (2026-04-30)
+
+- **Install-time bootloader fix is unreliable** (see Post-install recovery above). The recovery script in `/usr/local/bin/vibeos-recover-bootloader` is the documented workaround. Source-side fix is to refactor `vibeos-bootloader-fix.sh` to use the same logic as the recovery script (which runs in the live session's normal namespace and works).
+- **`/usr/share/ollama` ownership** — mkosi.postinst chowns to `ollama:ollama` at build time but UIDs get renumbered later when sddm-greeter is added; ends up `greeter:render`. First-boot service re-chown is the planned fix.
+- **`systemd-resolved` not present** as a service on the installed system despite being in `mkosi.conf` Packages=. Probable Noble package-name change. Investigate.
+- **systemd-boot splash** is stretched on non-1080p displays. Cosmetic, deferred to v2.1.
 
 ---
 
