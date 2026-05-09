@@ -1,6 +1,15 @@
 name: test
 
 on:
+  # Pre-build tests (mkosi configs, debian metadata, systemd units) run on
+  # every push + PR. They take ~3 s and gate merges without waiting for the
+  # 60-min ISO build.
+  push:
+    branches: [v2, main]
+  pull_request:
+    branches: [v2, main]
+  # Post-build smoke test runs after build.yml completes successfully —
+  # boots the produced ISO in QEMU.
   workflow_run:
     workflows: ['build']
     types: [completed]
@@ -15,6 +24,39 @@ permissions:
   actions: read
 
 jobs:
+  unit-tests:
+    name: Pre-build unit + integration tests
+    # Skip the workflow_run trigger here — the smoke-test job below handles
+    # that path; running unit tests twice (once on push, once on workflow_run)
+    # adds noise without catching anything new.
+    if: ${{ github.event_name != 'workflow_run' }}
+    runs-on: ubuntu-24.04
+    timeout-minutes: 10
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+          cache: pip
+
+      - name: Install test deps
+        run: pip install -r tests/requirements.txt
+
+      - name: Confirm systemd-analyze available (integration job needs it)
+        run: |
+          systemd-analyze --version | head -1
+
+      # No --cov-fail-under: vibeos ships no Python source (mkosi configs +
+      # debian packaging + bash). Coverage of the test harness itself is
+      # not a meaningful gate. The unit job's value is in catching config
+      # regressions, not in % coverage.
+      - name: Run unit + integration tests
+        run: pytest tests/ -v --tb=short
+
   smoke-test:
     name: Headless smoke test (multi-user.target)
     # Only fire on successful build runs. Dispatch runs skip the guard.

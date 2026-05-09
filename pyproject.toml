@@ -1,0 +1,23 @@
+# =============================================================================
+# vibeos — pytest + ruff config (build-time test harness only)
+# -----------------------------------------------------------------------------
+# vibeos itself is a debian-packaging + mkosi project, not a Python app. This
+# pyproject.toml only configures the pre-build test harness in tests/, which
+# validates mkosi configs, debian metadata, and systemd unit files.
+# =============================================================================
+
+[tool.pytest.ini_options]
+minversion = "7.0"
+testpaths = ["tests"]
+addopts = "-ra -q --strict-markers"
+markers = [
+  "integration: requires systemd-analyze on PATH (skipped if missing)",
+]
+
+[tool.coverage.run]
+branch = true
+source = ["tests"]
+
+[tool.coverage.report]
+show_missing = true
+skip_empty = true
