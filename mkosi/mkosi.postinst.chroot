@@ -15,6 +15,13 @@ echo "[mkosi.postinst] starting vibeos-specific postinst"
 [ -f /usr/local/sbin/vibeos-bootloader-fix.sh ] && \
     chmod 0755 /usr/local/sbin/vibeos-bootloader-fix.sh && \
     echo "[mkosi.postinst] vibeos-bootloader-fix.sh +x"
+# vibeos-bootloader-deploy.sh is the HOST-SIDE replacement (dontChroot:true)
+# that Calamares' shellprocess@bootctl now invokes. This is the plug-and-play
+# black-screen fix; the chroot-side fix script above is kept only as a
+# reference sibling and is no longer wired into the install sequence.
+[ -f /usr/local/sbin/vibeos-bootloader-deploy.sh ] && \
+    chmod 0755 /usr/local/sbin/vibeos-bootloader-deploy.sh && \
+    echo "[mkosi.postinst] vibeos-bootloader-deploy.sh +x"
 
 # ─── Display manager: SDDM is our greeter ────────────────────────────
 # Ubuntu 24.04 may install gdm3 alongside SDDM depending on metapackage

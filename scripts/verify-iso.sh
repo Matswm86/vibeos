@@ -8,7 +8,18 @@
 # Exit 0 = ISO is safe to burn.
 # Exit 1 = FATAL, do NOT burn this ISO.
 #
-# Requires: sudo (loop mount + reading root-owned files from ext4).
+# ROOT WITHOUT A PASSWORD:
+#   Reading the baked image needs root (loop-mount + the ollama model
+#   store is mode 0700 owned by the ollama user). Rather than prompt for
+#   sudo, this script re-execs itself inside the privileged mkosi builder
+#   container (docker runs passwordless on the build host), where it is
+#   already root. That removes the sudo password prompt that made the
+#   post-build verify step fail in non-interactive shells.
+#
+#   Resolution order:
+#     1. already root  -> run directly ($SUDO empty)
+#     2. docker present -> re-exec in vibeos-builder container as root
+#     3. fallback       -> use sudo (interactive password)
 
 set -euo pipefail
 
@@ -16,6 +27,7 @@ cd "$(dirname "$0")/.."
 REPO_ROOT="$(pwd)"
 
 ISO="${1:-mkosi.output/vibeos.raw}"
+BUILDER_IMAGE="vibeos-builder:latest"
 
 err()  { printf '\e[31m✗ %s\e[0m\n' "$*" >&2; FAIL=1; }
 info() { printf '\e[36m→\e[0m %s\n' "$*"; }
@@ -23,44 +35,57 @@ ok()   { printf '\e[32m✓\e[0m %s\n' "$*"; }
 
 [ -f "$ISO" ] || { printf '\e[31m✗ %s\e[0m\n' "ISO missing: $ISO" >&2; exit 1; }
 
-command -v sudo >/dev/null || { err "sudo required"; exit 1; }
+# ── Get root without a password ────────────────────────────────────────
+# If we are not root and not already inside the re-exec, prefer the
+# passwordless docker path; only fall back to sudo if docker is absent.
+if [ "$(id -u)" -ne 0 ] && [ -z "${VIBEOS_VERIFY_IN_CONTAINER:-}" ]; then
+    if command -v docker >/dev/null 2>&1 && [ -n "$(docker image ls -q "$BUILDER_IMAGE" 2>/dev/null)" ]; then
+        info "re-exec in $BUILDER_IMAGE as root (passwordless, no sudo)"
+        exec docker run --rm --privileged \
+            -e VIBEOS_VERIFY_IN_CONTAINER=1 \
+            -v "$REPO_ROOT:/work" -w /work \
+            "$BUILDER_IMAGE" \
+            bash scripts/verify-iso.sh "$ISO"
+    fi
+    info "docker/builder image not available — falling back to sudo (will prompt)"
+fi
 
-# The raw has GPT with ESP + root. We want the root partition — partition
-# 2 in the current mkosi layout. `partx` resolves offsets without needing
-# losetup -P (which requires a pre-created loop device).
+# $SUDO is empty when we are root (the common case after re-exec), so no
+# password is ever required on the docker path.
+SUDO=""
+[ "$(id -u)" -ne 0 ] && SUDO="sudo"
+
+# ── Mount the root partition of the GPT raw image ──────────────────────
+# Pick the largest partition (the ext4 root) and mount it by byte offset
+# with the kernel's internal loop, which works in a privileged container
+# without depending on udev to create /dev/loopNpX partition nodes.
 MNT=$(mktemp -d)
-LOOP=$(sudo losetup --find --show --partscan "$ISO")
-info "attached $ISO → $LOOP (partscan)"
+
+read -r ROOT_START < <(
+    partx -g -o NR,START,SECTORS --raw "$ISO" 2>/dev/null \
+        | sort -k3 -n | tail -1 | awk '{print $2}'
+)
+[ -n "${ROOT_START:-}" ] || { printf '\e[31m✗ could not read partition table from %s\e[0m\n' "$ISO" >&2; rmdir "$MNT"; exit 1; }
+ROOT_OFFSET=$(( ROOT_START * 512 ))
+info "root partition starts at sector $ROOT_START (offset $ROOT_OFFSET bytes)"
 
 cleanup() {
-    sudo umount "$MNT" 2>/dev/null || true
-    sudo losetup -d "$LOOP" 2>/dev/null || true
+    $SUDO umount "$MNT" 2>/dev/null || true
     rmdir "$MNT" 2>/dev/null || true
 }
 trap cleanup EXIT
 
-# Root partition is the largest one — let lsblk pick it.
-ROOT_PART=$(lsblk -nlpo NAME,SIZE "$LOOP" \
-    | awk 'NR>1' \
-    | sort -k2 -h \
-    | tail -1 \
-    | awk '{print $1}')
-
-if [ -z "$ROOT_PART" ] || [ "$ROOT_PART" = "$LOOP" ]; then
-    err "couldn't identify root partition on $LOOP"
-    exit 1
-fi
-
-info "mounting $ROOT_PART → $MNT (ro)"
-sudo mount -o ro "$ROOT_PART" "$MNT"
+info "mounting $ISO root → $MNT (ro, loop, offset)"
+$SUDO mount -o ro,loop,offset="$ROOT_OFFSET" "$ISO" "$MNT" \
+    || { printf '\e[31m✗ mount failed\e[0m\n' >&2; exit 1; }
 
 FAIL=0
 
 # ─── 1. Ollama model ──────────────────────────────────────────────────
 MODEL_MANIFEST="$MNT/usr/share/ollama/.ollama/models/manifests/registry.ollama.ai/library/qwen2.5/3b"
-if sudo test -f "$MODEL_MANIFEST"; then
+if $SUDO test -f "$MODEL_MANIFEST"; then
     # Verify all blobs named in the manifest exist
-    BLOBS=$(sudo python3 -c "
+    BLOBS=$($SUDO python3 -c "
 import json
 m = json.load(open('$MODEL_MANIFEST'))
 digests = [m['config']['digest']] + [l['digest'] for l in m.get('layers', [])]
@@ -69,7 +94,7 @@ for d in digests:
 ")
     MISSING=0
     for blob in $BLOBS; do
-        if ! sudo test -f "$MNT/usr/share/ollama/.ollama/models/blobs/$blob"; then
+        if ! $SUDO test -f "$MNT/usr/share/ollama/.ollama/models/blobs/$blob"; then
             err "blob missing: $blob"
             MISSING=1
         fi
@@ -80,41 +105,45 @@ else
 fi
 
 # ─── 2. Claude Code CLI ───────────────────────────────────────────────
-if sudo test -L "$MNT/usr/bin/claude" && \
-   sudo test -f "$MNT/usr/lib/node_modules/@anthropic-ai/claude-code/cli.js"; then
-    VER=$(sudo cat "$MNT/usr/share/vibeos/CLAUDE_BAKED_VERSION" 2>/dev/null || echo "unknown")
+# Version-agnostic: assert /usr/bin/claude is a symlink that resolves to a
+# real file. `test -f` follows the link, and the relative target
+# (../lib/node_modules/@anthropic-ai/claude-code/...) resolves inside the
+# mounted root. This survives the npm-layout change: Claude Code <=2.0 used
+# a node `cli.js` entry; 2.1+ ships a single bundled `bin/claude.exe`.
+if $SUDO test -L "$MNT/usr/bin/claude" && $SUDO test -f "$MNT/usr/bin/claude"; then
+    VER=$($SUDO cat "$MNT/usr/share/vibeos/CLAUDE_BAKED_VERSION" 2>/dev/null || echo "unknown")
     ok "claude CLI baked: $VER"
 else
-    err "claude CLI missing (expected /usr/bin/claude → /usr/lib/node_modules/@anthropic-ai/claude-code/cli.js)"
+    err "claude CLI missing or dangling (expected /usr/bin/claude symlink → resolvable entrypoint)"
 fi
 
 # ─── 3. Live-session marker ───────────────────────────────────────────
-if sudo test -f "$MNT/etc/vibeos/live-session"; then
+if $SUDO test -f "$MNT/etc/vibeos/live-session"; then
     ok "live-session marker present"
 else
     err "live-session marker missing: /etc/vibeos/live-session"
 fi
 
 # ─── 4. Calamares autostart ──────────────────────────────────────────
-if sudo test -f "$MNT/etc/xdg/autostart/vibeos-live-installer.desktop" && \
-   sudo test -x "$MNT/usr/libexec/vibeos/live-autostart"; then
+if $SUDO test -f "$MNT/etc/xdg/autostart/vibeos-live-installer.desktop" && \
+   $SUDO test -x "$MNT/usr/libexec/vibeos/live-autostart"; then
     ok "calamares + vibbey install-helper autostart wired"
 else
     err "calamares autostart missing (expected /etc/xdg/autostart/vibeos-live-installer.desktop + /usr/libexec/vibeos/live-autostart)"
 fi
 
 # ─── 5. Calamares + config ───────────────────────────────────────────
-if sudo test -x "$MNT/usr/bin/calamares" && \
-   sudo test -f "$MNT/etc/calamares/settings.conf" && \
-   sudo test -f "$MNT/etc/calamares/modules/contextualprocess.conf"; then
+if $SUDO test -x "$MNT/usr/bin/calamares" && \
+   $SUDO test -f "$MNT/etc/calamares/settings.conf" && \
+   $SUDO test -f "$MNT/etc/calamares/modules/contextualprocess.conf"; then
     ok "calamares installed + config mounted + contextualprocess wired"
 else
     err "calamares not fully wired — check /usr/bin/calamares + /etc/calamares/{settings.conf,modules/contextualprocess.conf}"
 fi
 
 # ─── 6. Vibbey install-helper HTML + endpoint ────────────────────────
-if sudo test -f "$MNT/usr/share/vibeos/vibbey/static/install-helper.html" && \
-   sudo grep -q '/api/calamares-step' "$MNT/usr/share/vibeos/vibbey/server.py"; then
+if $SUDO test -f "$MNT/usr/share/vibeos/vibbey/static/install-helper.html" && \
+   $SUDO grep -q '/api/calamares-step' "$MNT/usr/share/vibeos/vibbey/server.py"; then
     ok "vibbey install-helper HTML + calamares-step endpoint present"
 else
     err "vibbey install-helper missing (html or server.py endpoint)"
@@ -122,8 +151,8 @@ fi
 
 # ─── 7. Vibbey first-run gated on live-session marker ────────────────
 VFR="$MNT/etc/xdg/autostart/vibbey-first-run.desktop"
-if sudo test -f "$VFR"; then
-    if sudo grep -q 'live-session' "$VFR"; then
+if $SUDO test -f "$VFR"; then
+    if $SUDO grep -q 'live-session' "$VFR"; then
         ok "vibbey first-run skips live session"
     else
         err "vibbey first-run does NOT gate on live-session marker — would chat-spam live ISO"
@@ -133,12 +162,12 @@ else
 fi
 
 # ─── 8. Ollama systemd unit + correct user ownership ─────────────────
-if sudo test -f "$MNT/lib/systemd/system/ollama.service"; then
+if $SUDO test -f "$MNT/lib/systemd/system/ollama.service"; then
     # Resolve the UID on disk via the ISO's /etc/passwd, not the host's —
     # system UIDs differ between host and target (host 999 may be
     # `greeter`; target 999 is `ollama`).
-    ISO_UID=$(sudo stat -c '%u' "$MNT/usr/share/ollama/.ollama/models")
-    ISO_OWNER=$(sudo awk -F: -v u="$ISO_UID" '$3==u {print $1; exit}' "$MNT/etc/passwd")
+    ISO_UID=$($SUDO stat -c '%u' "$MNT/usr/share/ollama/.ollama/models")
+    ISO_OWNER=$($SUDO awk -F: -v u="$ISO_UID" '$3==u {print $1; exit}' "$MNT/etc/passwd")
     if [ "$ISO_OWNER" = "ollama" ]; then
         ok "ollama model store owned by ollama user (uid=$ISO_UID in target /etc/passwd)"
     else
@@ -146,6 +175,18 @@ if sudo test -f "$MNT/lib/systemd/system/ollama.service"; then
     fi
 else
     err "ollama systemd unit missing"
+fi
+
+# ─── 9. Bootloader deploy wired host-side (v2.0.0-rc1 black-screen fix) ─
+# The installed-system-won't-boot bug was the chroot bootloader fix never
+# copying the kernel to the target ESP. Assert the host-side deploy is in
+# place AND the installer is wired to run it with dontChroot:true.
+if $SUDO test -x "$MNT/usr/local/sbin/vibeos-bootloader-deploy.sh" && \
+   $SUDO grep -q '^dontChroot:[[:space:]]*true' "$MNT/etc/calamares/modules/shellprocess_bootctl.conf" && \
+   $SUDO grep -q 'vibeos-bootloader-deploy.sh' "$MNT/etc/calamares/modules/shellprocess_bootctl.conf"; then
+    ok "host-side bootloader deploy wired (dontChroot:true → vibeos-bootloader-deploy.sh)"
+else
+    err "bootloader deploy NOT wired — installed system will black-screen on first boot"
 fi
 
 if [ "$FAIL" -eq 0 ]; then

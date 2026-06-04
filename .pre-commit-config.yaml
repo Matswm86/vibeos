@@ -25,12 +25,20 @@ repos:
         args: [--maxkb=1024]
       - id: check-merge-conflict
 
-  - repo: https://github.com/Yelp/detect-secrets
-    rev: v1.5.0
+  # detect-secrets — scan-only local wrapper (not the upstream hook).
+  # Upstream Yelp/detect-secrets v1.5.0 auto-trims .secrets.baseline mid-commit,
+  # which fights the locked-baseline policy. The wrapper snapshots the baseline,
+  # delegates to detect-secrets-hook against the snapshot, and exits 1 only on
+  # NEW secrets. The real .secrets.baseline file is never modified.
+  # To regenerate the baseline on purpose, run outside any commit:
+  #   detect-secrets scan --baseline .secrets.baseline
+  - repo: local
     hooks:
-      - id: detect-secrets
+      - id: detect-secrets-scan
+        name: Detect secrets (scan-only, baseline-locked)
+        entry: /home/mats/MWM-AI/scripts/detect-secrets-scan.sh
+        language: system
         stages: [pre-commit, pre-push]
-        args: [--baseline, .secrets.baseline]
         exclude: |
           (?x)^(
               \.secrets\.baseline|
