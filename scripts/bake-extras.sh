@@ -102,10 +102,10 @@ echo "$CLAUDE_VER" > "$EXTRA/usr/share/vibeos/CLAUDE_BAKED_VERSION"
 ok "Claude CLI baked: $CLAUDE_VER"
 
 # ─── 3. Live-session marker ────────────────────────────────────────────
-# Dropped in /etc so it survives mkosi.extra copy. Calamares
-# contextualprocess module must `rm /target/etc/vibeos/live-session`
-# during install. If the file is absent → we are on the installed
-# system; if present → live session.
+# Dropped in /etc so it survives mkosi.extra copy. Stripped from the
+# target by vibeos-target-cleanup.sh (Calamares post-unpackfs
+# shellprocess) during install. If the file is absent → we are on the
+# installed system; if present → live session.
 mkdir -p "$EXTRA/etc/vibeos"
 echo "1" > "$EXTRA/etc/vibeos/live-session"
 

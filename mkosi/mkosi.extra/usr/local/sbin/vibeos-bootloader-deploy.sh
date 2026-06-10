@@ -157,9 +157,19 @@ done
 shopt -u nullglob
 
 # -- 6. systemd-boot install + firmware fallback ------------------------
-bootctl --esp-path="$TARGET_ESP" --no-variables install 2>&1 | tee -a "$TARGET_LOG" \
-    || bootctl --esp-path="$TARGET_ESP" install 2>&1 | tee -a "$TARGET_LOG" \
-    || log "WARN: bootctl install non-zero (ok if EFI files are present)"
+# WITH NVRAM variables first: this creates a "Linux Boot Manager" EFI boot
+# entry for the target disk and puts it FIRST in BootOrder, so the
+# installed system wins over the live USB and over any older VibeOS
+# install on another disk (the MSI has two). Host-side we have rw
+# efivarfs. Fall back to --no-variables (fallback BOOTX64.EFI path only)
+# if the firmware refuses variable writes.
+if bootctl --esp-path="$TARGET_ESP" install 2>&1 | tee -a "$TARGET_LOG"; then
+    log "bootctl install OK — NVRAM entry created, target disk is first in BootOrder"
+else
+    log "WARN: bootctl with NVRAM failed; retrying --no-variables (fallback boot path only)"
+    bootctl --esp-path="$TARGET_ESP" --no-variables install 2>&1 | tee -a "$TARGET_LOG" \
+        || log "WARN: bootctl install non-zero (ok if EFI files are present)"
+fi
 mkdir -p "$TARGET_ESP/EFI/BOOT" "$TARGET_ESP/EFI/systemd"
 cp -f /usr/lib/systemd/boot/efi/systemd-bootx64.efi "$TARGET_ESP/EFI/systemd/systemd-bootx64.efi"
 cp -f /usr/lib/systemd/boot/efi/systemd-bootx64.efi "$TARGET_ESP/EFI/BOOT/BOOTX64.EFI"

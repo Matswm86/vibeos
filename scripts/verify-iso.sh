@@ -132,13 +132,26 @@ else
     err "calamares autostart missing (expected /etc/xdg/autostart/vibeos-live-installer.desktop + /usr/libexec/vibeos/live-autostart)"
 fi
 
-# ─── 5. Calamares + config ───────────────────────────────────────────
+# ─── 5. Calamares + config + target cleanup wired ────────────────────
+# The cleanup MUST be the shellprocess pair (strip post-unpackfs +
+# @cleanup --verify at the end). The old contextualprocess config was
+# written in shellprocess syntax, silently no-op'd on every install, and
+# shipped installed systems that booted back into the live install page —
+# assert it can never come back.
 if $SUDO test -x "$MNT/usr/bin/calamares" && \
    $SUDO test -f "$MNT/etc/calamares/settings.conf" && \
-   $SUDO test -f "$MNT/etc/calamares/modules/contextualprocess.conf"; then
-    ok "calamares installed + config mounted + contextualprocess wired"
+   $SUDO test -f "$MNT/etc/calamares/modules/shellprocess_cleanup.conf" && \
+   $SUDO test -f "$MNT/etc/calamares/modules/displaymanager.conf" && \
+   $SUDO test -x "$MNT/usr/local/sbin/vibeos-target-cleanup.sh" && \
+   $SUDO grep -q 'shellprocess@cleanup' "$MNT/etc/calamares/settings.conf" && \
+   $SUDO grep -q '^[[:space:]]*- displaymanager' "$MNT/etc/calamares/settings.conf" && \
+   $SUDO grep -q 'vibeos-target-cleanup.sh' "$MNT/etc/calamares/modules/shellprocess.conf"; then
+    ok "calamares + live-session target cleanup wired (strip + @cleanup verify + displaymanager)"
 else
-    err "calamares not fully wired — check /usr/bin/calamares + /etc/calamares/{settings.conf,modules/contextualprocess.conf}"
+    err "target cleanup NOT wired — installed system would boot back into the live install page"
+fi
+if $SUDO grep -q 'contextualprocess' "$MNT/etc/calamares/settings.conf" 2>/dev/null; then
+    err "contextualprocess back in settings.conf sequence — it silently no-ops; use the shellprocess cleanup pair"
 fi
 
 # ─── 6. Vibbey install-helper HTML + endpoint ────────────────────────
@@ -187,6 +200,42 @@ if $SUDO test -x "$MNT/usr/local/sbin/vibeos-bootloader-deploy.sh" && \
     ok "host-side bootloader deploy wired (dontChroot:true → vibeos-bootloader-deploy.sh)"
 else
     err "bootloader deploy NOT wired — installed system will black-screen on first boot"
+fi
+
+# ─── 10. Live user groups (read-only $GROUPS bash bug guard) ──────────
+# Every build through day 10 shipped the live user in group root(0)
+# because the postinst assigned to the read-only bash special GROUPS.
+# Assert the fix: vibeos must be in sudo, and NOT in root.
+if $SUDO grep -q '^sudo:.*\bvibeos\b' "$MNT/etc/group"; then
+    ok "live user in sudo group (GROUPS-variable bug fixed)"
+else
+    err "live user NOT in sudo group — read-only \$GROUPS bash bug is back (check mkosi.postinst.chroot)"
+fi
+if $SUDO grep -q '^root:.*\bvibeos\b' "$MNT/etc/group"; then
+    err "live user is in group root(0) — read-only \$GROUPS bash bug regressed"
+fi
+
+# ─── 11. launch-calamares never fails silently ────────────────────────
+# Guards: installed-system refusal (settings.conf check), single-instance,
+# persistent log (NOT tmpfs /tmp), kdialog/zenity feedback on errors.
+LC="$MNT/usr/libexec/vibeos/launch-calamares"
+if $SUDO test -x "$LC" && \
+   $SUDO grep -q '/etc/calamares/settings.conf' "$LC" && \
+   $SUDO grep -q 'pgrep -x calamares' "$LC" && \
+   $SUDO grep -q 'XDG_CACHE_HOME' "$LC" && \
+   $SUDO grep -q 'kdialog' "$LC"; then
+    ok "launch-calamares has installed-system + single-instance guards, persistent log, visible errors"
+else
+    err "launch-calamares missing silent-failure guards (installed-system check / pgrep / persistent log / kdialog)"
+fi
+
+# ─── 12. Bootloader deploy creates an NVRAM entry ─────────────────────
+# bootctl WITH variables first (BootOrder priority over USB + stale
+# disks), --no-variables only as fallback.
+if $SUDO grep -q 'bootctl --esp-path="\$TARGET_ESP" install' "$MNT/usr/local/sbin/vibeos-bootloader-deploy.sh"; then
+    ok "bootloader deploy tries NVRAM boot entry first (BootOrder priority)"
+else
+    err "bootloader deploy missing NVRAM-first bootctl install — boot order stays luck-based"
 fi
 
 if [ "$FAIL" -eq 0 ]; then

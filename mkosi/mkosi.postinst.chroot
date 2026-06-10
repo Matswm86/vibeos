@@ -22,6 +22,14 @@ echo "[mkosi.postinst] starting vibeos-specific postinst"
 [ -f /usr/local/sbin/vibeos-bootloader-deploy.sh ] && \
     chmod 0755 /usr/local/sbin/vibeos-bootloader-deploy.sh && \
     echo "[mkosi.postinst] vibeos-bootloader-deploy.sh +x"
+# Target-side live-session cleanup (post-unpackfs strip + final --verify
+# assert). Replaces the old contextualprocess config that silently no-op'd.
+if [ ! -f /usr/local/sbin/vibeos-target-cleanup.sh ]; then
+    echo "[mkosi.postinst] FATAL: vibeos-target-cleanup.sh missing from mkosi.extra" >&2
+    exit 1
+fi
+chmod 0755 /usr/local/sbin/vibeos-target-cleanup.sh
+echo "[mkosi.postinst] vibeos-target-cleanup.sh +x"
 
 # ─── Display manager: SDDM is our greeter ────────────────────────────
 # Ubuntu 24.04 may install gdm3 alongside SDDM depending on metapackage
@@ -54,20 +62,30 @@ if ! id vibeos >/dev/null 2>&1; then
     # the chroot — NetworkManager's `netdev` group is created by its postinst
     # which needs dbus, and dbus isn't running in the chroot. Same caveat for
     # `plugdev`. Missing groups get added at first boot by systemd-sysusers.
-    GROUPS=""
+    #
+    # Must NOT be named GROUPS: that is a read-only bash special variable,
+    # assignments to it silently fail, and `useradd -G "$GROUPS"` then
+    # expands to the current (root) group array — which is how every build
+    # through day 10 shipped the live user in group root(0) instead of
+    # sudo/audio/video. Confirmed in the flashed image's /etc/group.
+    EXTRA_GROUPS=""
     for g in sudo audio video plugdev netdev; do
-        getent group "$g" >/dev/null 2>&1 && GROUPS="${GROUPS:+$GROUPS,}$g"
+        getent group "$g" >/dev/null 2>&1 && EXTRA_GROUPS="${EXTRA_GROUPS:+$EXTRA_GROUPS,}$g"
     done
-    useradd -m -s /bin/bash -G "$GROUPS" vibeos
+    useradd -m -s /bin/bash ${EXTRA_GROUPS:+-G "$EXTRA_GROUPS"} vibeos
+    if ! id -nG vibeos | grep -qw sudo; then
+        echo "[mkosi.postinst] FATAL: live user not in sudo group (groups: $(id -nG vibeos))" >&2
+        exit 1
+    fi
     echo 'vibeos:vibeos' | chpasswd
     # Passwordless sudo for the live user so the Install flow never
     # depends on polkit agents, pkexec env preservation, or typed
-    # passwords. Calamares strips this via its contextualprocess hook
-    # when installing to the target.
+    # passwords. Stripped from the target by vibeos-target-cleanup.sh
+    # (post-unpackfs shellprocess) during install.
     install -d -m 0755 /etc/sudoers.d
     cat > /etc/sudoers.d/99-vibeos-live <<'SUDO_EOF'
 # VibeOS live session — passwordless sudo for the live user.
-# Removed on installed systems by Calamares' contextualprocess module.
+# Removed on installed systems by vibeos-target-cleanup.sh.
 vibeos ALL=(ALL) NOPASSWD: ALL
 SUDO_EOF
     chmod 0440 /etc/sudoers.d/99-vibeos-live
@@ -85,7 +103,7 @@ fi
 # On the live ISO, we autostart Calamares + Vibbey's install-helper
 # sidebar the moment Plasma loads. The wrapper script checks for the
 # /etc/vibeos/live-session marker (present only on the live ISO; removed
-# from the target by Calamares' contextualprocess during install) so
+# from the target by vibeos-target-cleanup.sh during install) so
 # nothing autostarts on the real installed system.
 if [ -f /usr/bin/calamares ]; then
     install -d -m 0755 /usr/libexec/vibeos
@@ -99,36 +117,74 @@ if [ -f /usr/bin/calamares ]; then
     cat > /usr/libexec/vibeos/launch-calamares <<'LAUNCH_EOF'
 #!/bin/bash
 # Launch Calamares as root. Prefers NOPASSWD sudo (set up for the live
-# user by mkosi.postinst.chroot), falls back to pkexec if sudo is
-# unavailable. sudo -E preserves DISPLAY/XAUTHORITY so the Qt GUI
-# actually renders.
-LOG=/tmp/vibeos-launch-calamares.log
+# user by mkosi.postinst.chroot), falls back to pkexec. sudo -E preserves
+# DISPLAY/XAUTHORITY so the Qt GUI actually renders.
+#
+# HARD RULE: this script NEVER fails silently. Every refuse/fail path
+# shows a kdialog/zenity message, and the log survives reboots (the old
+# /tmp log was tmpfs — gone before anyone could read it).
+LOG="${XDG_CACHE_HOME:-$HOME/.cache}/vibeos-launch-calamares.log"
+mkdir -p "$(dirname "$LOG")" 2>/dev/null || LOG=/tmp/vibeos-launch-calamares.log
 exec >>"$LOG" 2>&1
 echo "=== $(date -Is) launch-calamares PID=$$ ==="
 echo "USER=${USER:-?} UID=$(id -u) DISPLAY=${DISPLAY:-unset} XDG_SESSION_TYPE=${XDG_SESSION_TYPE:-?}"
 
+notify() { # $1=icon-mode(error|info) $2=message — user-visible, never silent
+    if command -v kdialog >/dev/null 2>&1; then
+        if [ "$1" = error ]; then kdialog --error "$2"; else kdialog --msgbox "$2"; fi
+    elif command -v zenity >/dev/null 2>&1; then
+        zenity "--$1" --text "$2"
+    fi
+}
+
+# Guard 1 — installed system. unpackfs deliberately excludes
+# /etc/calamares from the copy, so on an installed VibeOS the installer
+# has no configuration and would exit instantly ("the icon does nothing").
+if [ ! -f /etc/calamares/settings.conf ]; then
+    echo "refuse: no /etc/calamares/settings.conf (installed system)"
+    notify info "VibeOS is already installed on this machine — the live installer only runs from the USB stick."
+    exit 0
+fi
+
+# Guard 2 — single instance (autostart may already have launched it).
+if pgrep -x calamares >/dev/null 2>&1; then
+    echo "refuse: calamares already running"
+    notify info "The VibeOS installer is already running — check your taskbar."
+    exit 0
+fi
+
 # Path A — passwordless sudo (live session default).
 if sudo -n /bin/true 2>/dev/null; then
     echo "auth=sudo (NOPASSWD available)"
-    exec sudo -E \
+    sudo -E \
         DISPLAY="${DISPLAY:-:0}" \
         XAUTHORITY="${XAUTHORITY:-}" \
         XDG_RUNTIME_DIR="${XDG_RUNTIME_DIR:-/run/user/$(id -u)}" \
         /usr/bin/calamares
+    RC=$?
+else
+    # Path B — pkexec fallback. Wait for the polkit agent to register so
+    # the password prompt can actually appear.
+    echo "auth=pkexec (sudo unavailable)"
+    for i in $(seq 1 50); do
+        pgrep -f polkit-kde-authentication-agent-1 >/dev/null && break
+        sleep 0.2
+    done
+    pkexec env \
+        DISPLAY="${DISPLAY:-:0}" \
+        XAUTHORITY="${XAUTHORITY:-}" \
+        XDG_RUNTIME_DIR="${XDG_RUNTIME_DIR:-/run/user/$(id -u)}" \
+        /usr/bin/calamares
+    RC=$?
 fi
 
-# Path B — pkexec fallback (only reached on an installed system where
-# NOPASSWD has been revoked; Calamares there is a re-run edge case).
-echo "auth=pkexec (sudo unavailable)"
-for i in $(seq 1 50); do
-    pgrep -f polkit-kde-authentication-agent-1 >/dev/null && break
-    sleep 0.2
-done
-exec pkexec env \
-    DISPLAY="${DISPLAY:-:0}" \
-    XAUTHORITY="${XAUTHORITY:-}" \
-    XDG_RUNTIME_DIR="${XDG_RUNTIME_DIR:-/run/user/$(id -u)}" \
-    /usr/bin/calamares
+echo "calamares exited rc=$RC"
+# 126/127 = pkexec auth dismissed/failed — the user saw that dialog
+# themselves; anything else non-zero deserves an error popup.
+if [ "$RC" -ne 0 ] && [ "$RC" -ne 126 ] && [ "$RC" -ne 127 ]; then
+    notify error "The VibeOS installer exited with an error (code $RC). Log: $LOG"
+fi
+exit "$RC"
 LAUNCH_EOF
     chmod 0755 /usr/libexec/vibeos/launch-calamares
 
