@@ -150,7 +150,9 @@ if $SUDO test -x "$MNT/usr/bin/calamares" && \
 else
     err "target cleanup NOT wired — installed system would boot back into the live install page"
 fi
-if $SUDO grep -q 'contextualprocess' "$MNT/etc/calamares/settings.conf" 2>/dev/null; then
+# Match only a real sequence/instance entry ("- contextualprocess"), not
+# the settings.conf comment that documents why the module was removed.
+if $SUDO grep -qE '^[[:space:]]*-[[:space:]]*contextualprocess' "$MNT/etc/calamares/settings.conf" 2>/dev/null; then
     err "contextualprocess back in settings.conf sequence — it silently no-ops; use the shellprocess cleanup pair"
 fi
 
