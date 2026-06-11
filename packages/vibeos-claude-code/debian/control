@@ -1,7 +1,7 @@
 Source: vibeos-claude-code
 Section: misc
 Priority: optional
-Maintainer: Mats Mjåtvedt <matswm86@yahoo.no>
+Maintainer: VibeOS Project <vibeos@mwmai.no>
 Build-Depends: debhelper-compat (= 13)
 Standards-Version: 4.6.2
 Homepage: https://vibeos.mwmai.no/

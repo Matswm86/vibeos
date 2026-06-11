@@ -9,4 +9,4 @@ vibeos-claude-code (2.0.0-day4) noble; urgency=medium
   * Claude Code quickstart docs bundled at /usr/share/vibeos/claude-code-docs/.
   * @anthropic-ai/claude-code npm package baked via mkosi.postinst.chroot.
 
- -- Mats Mjåtvedt <matswm86@yahoo.no>  Wed, 15 Apr 2026 00:00:00 +0200
+ -- VibeOS Project <vibeos@mwmai.no>  Wed, 15 Apr 2026 00:00:00 +0200

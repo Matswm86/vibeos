@@ -9,4 +9,4 @@ vibeos-vibbey (2.0.0-day3) noble; urgency=medium
   * /api/config endpoint exposes active model to frontend.
   * Acceptance: grep -r gemma3 /usr/share/vibeos returns nothing.
 
- -- Mats Mjåtvedt <matswm86@yahoo.no>  Mon, 14 Apr 2026 00:00:00 +0200
+ -- VibeOS Project <vibeos@mwmai.no>  Mon, 14 Apr 2026 00:00:00 +0200

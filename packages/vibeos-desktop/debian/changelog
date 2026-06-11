@@ -4,7 +4,7 @@ vibeos-desktop (2.0.0-day9c) noble; urgency=medium
     may have been silently misrendered by libply on some Plymouth
     builds.
 
- -- Mats Mjåtvedt <matswm86@yahoo.no>  Fri, 17 Apr 2026 01:00:00 +0200
+ -- VibeOS Project <vibeos@mwmai.no>  Fri, 17 Apr 2026 01:00:00 +0200
 
 vibeos-desktop (2.0.0-day9b) noble; urgency=medium
 
@@ -15,7 +15,7 @@ vibeos-desktop (2.0.0-day9b) noble; urgency=medium
     matching the runtime, so Image.Text drifted. PNGs remove all
     font-at-boot dependency.
 
- -- Mats Mjåtvedt <matswm86@yahoo.no>  Fri, 17 Apr 2026 00:00:00 +0200
+ -- VibeOS Project <vibeos@mwmai.no>  Fri, 17 Apr 2026 00:00:00 +0200
 
 vibeos-desktop (2.0.0-day5) noble; urgency=medium
 
@@ -29,7 +29,7 @@ vibeos-desktop (2.0.0-day5) noble; urgency=medium
   * Add four Konsole color schemes (Pacific Dawn + three new themes).
   * Ship /usr/bin/vibeos-theme-switch wrapper for safe lookandfeeltool calls.
 
- -- Mats Mjåtvedt <matswm86@yahoo.no>  Wed, 15 Apr 2026 00:00:00 +0200
+ -- VibeOS Project <vibeos@mwmai.no>  Wed, 15 Apr 2026 00:00:00 +0200
 
 vibeos-desktop (2.0.0-day2) noble; urgency=medium
 
@@ -42,4 +42,4 @@ vibeos-desktop (2.0.0-day2) noble; urgency=medium
   * Orbitron + JetBrains Mono fonts.
   * VibeOS /etc/os-release.
 
- -- Mats Mjåtvedt <matswm86@yahoo.no>  Tue, 14 Apr 2026 00:00:00 +0200
+ -- VibeOS Project <vibeos@mwmai.no>  Tue, 14 Apr 2026 00:00:00 +0200
