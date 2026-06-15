@@ -30,9 +30,11 @@ import secrets
 import sqlite3
 import sys
 import threading
+import time
 import urllib.error
 import urllib.request
-from datetime import datetime, timezone
+from collections import deque
+from datetime import UTC, datetime
 from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 from pathlib import Path
 
@@ -53,6 +55,16 @@ USER_AGENT = "VibeOS-BootstrapProxy/0.1 (+https://groq.mwmai.no)"
 # Sensible request-size cap: Groq's own limits are generous but we do not
 # want to forward unbounded payloads.
 MAX_REQUEST_BYTES = 256 * 1024  # 256 KB — plenty for chat messages
+
+# Rate limiting (stdlib sliding-window, per-IP). Mirrors the proven pytor
+# tutor limiter. Closes the open-relay hole: /bootstrap was unauthenticated
+# and unlimited, so anyone could mint unlimited 300-message tokens and burn
+# our Groq quota. GLOBAL_DAILY_CAP is a hard bill ceiling across all callers.
+BOOTSTRAP_RATE_MAX = int(os.environ.get("BOOTSTRAP_RATE_MAX", "5"))  # tokens / IP
+BOOTSTRAP_RATE_WINDOW = float(os.environ.get("BOOTSTRAP_RATE_WINDOW", "86400"))  # per 24h
+CHAT_RATE_MAX = int(os.environ.get("CHAT_RATE_MAX", "20"))  # chat calls / IP
+CHAT_RATE_WINDOW = float(os.environ.get("CHAT_RATE_WINDOW", "60"))  # per minute
+GLOBAL_DAILY_CAP = int(os.environ.get("GLOBAL_DAILY_CAP", "5000"))  # 0 disables
 
 # ---------------------------------------------------------------------------
 # Landing page
@@ -114,6 +126,65 @@ logging.basicConfig(
 log = logging.getLogger("groq-proxy")
 
 # ---------------------------------------------------------------------------
+# Rate limiting
+# ---------------------------------------------------------------------------
+# Per-IP sliding window (in-memory, resets on restart — acceptable) plus a
+# global per-day call cap. Counters are surfaced in /health so a tripped
+# limit is observable, never silent.
+
+_rate_buckets: dict[tuple[str, str], deque] = {}
+_rate_lock = threading.Lock()
+_rate_tripped = 0
+
+_global_lock = threading.Lock()
+_global_day = ""
+_global_count = 0
+_global_tripped = 0
+
+
+def rate_limit_ok(client_ip: str, route: str, max_requests: int, window: float) -> tuple[bool, int]:
+    """Sliding-window per-IP limiter. Returns ``(ok, retry_after_seconds)``.
+
+    Localhost bypasses (internal health checks / same-host calls).
+    """
+    global _rate_tripped
+    if client_ip in ("127.0.0.1", "::1", ""):
+        return True, 0
+    now = time.monotonic()
+    key = (client_ip, route)
+    with _rate_lock:
+        bucket = _rate_buckets.get(key)
+        if bucket is None:
+            bucket = deque()
+            _rate_buckets[key] = bucket
+        while bucket and now - bucket[0] >= window:
+            bucket.popleft()
+        if len(bucket) >= max_requests:
+            _rate_tripped += 1
+            retry = int(window - (now - bucket[0])) + 1
+            return False, max(retry, 1)
+        bucket.append(now)
+        return True, 0
+
+
+def global_cap_ok() -> bool:
+    """Hard daily call ceiling across all callers. ``GLOBAL_DAILY_CAP<=0`` disables."""
+    global _global_day, _global_count, _global_tripped
+    if GLOBAL_DAILY_CAP <= 0:
+        return True
+    today = datetime.now(UTC).strftime("%Y-%m-%d")
+    with _global_lock:
+        if today != _global_day:
+            _global_day = today
+            _global_count = 0
+        if _global_count >= GLOBAL_DAILY_CAP:
+            _global_tripped += 1
+            return False
+        _global_count += 1
+        return True
+
+
+# ---------------------------------------------------------------------------
 # SQLite quota store
 # ---------------------------------------------------------------------------
 
@@ -147,7 +218,7 @@ def _init_schema() -> None:
 
 def issue_token(label: str | None = None) -> dict[str, object]:
     token = secrets.token_urlsafe(32)
-    now = datetime.now(timezone.utc).isoformat(timespec="seconds")
+    now = datetime.now(UTC).isoformat(timespec="seconds")
     with _db_lock, _db_connect() as conn:
         conn.execute(
             "INSERT INTO tokens (token, used_count, quota, first_seen, label) VALUES (?, 0, ?, ?, ?)",
@@ -164,7 +235,7 @@ def consume_token(token: str) -> tuple[bool, dict[str, object]]:
     is already exhausted. ``info`` contains quota state for the response
     header or error detail.
     """
-    now = datetime.now(timezone.utc).isoformat(timespec="seconds")
+    now = datetime.now(UTC).isoformat(timespec="seconds")
     with _db_lock, _db_connect() as conn:
         row = conn.execute(
             "SELECT used_count, quota FROM tokens WHERE token = ?",
@@ -199,6 +270,10 @@ def health_snapshot() -> dict[str, object]:
         "total_calls": int(row["used"]),
         "quota_per_token": BOOTSTRAP_QUOTA,
         "groq_model": GROQ_MODEL_DEFAULT,
+        "rate_limited_hits": _rate_tripped,
+        "global_calls_today": _global_count,
+        "global_daily_cap": GLOBAL_DAILY_CAP,
+        "global_cap_hits": _global_tripped,
     }
 
 
@@ -234,13 +309,25 @@ def call_groq(body: dict[str, object]) -> tuple[int, bytes, str | None]:
     except urllib.error.HTTPError as exc:
         detail = exc.read() if hasattr(exc, "read") else b""
         log.warning("Groq HTTP %s: %s", exc.code, detail[:200])
-        return exc.code, detail or json.dumps({"error": f"groq_http_{exc.code}"}).encode(), "application/json"
+        return (
+            exc.code,
+            detail or json.dumps({"error": f"groq_http_{exc.code}"}).encode(),
+            "application/json",
+        )
     except urllib.error.URLError as exc:
         log.error("Groq unreachable: %s", exc)
-        return 502, json.dumps({"error": "groq_unreachable", "detail": str(exc)}).encode(), "application/json"
+        return (
+            502,
+            json.dumps({"error": "groq_unreachable", "detail": str(exc)}).encode(),
+            "application/json",
+        )
     except OSError as exc:
         log.error("Groq OSError: %s", exc)
-        return 502, json.dumps({"error": "groq_os_error", "detail": str(exc)}).encode(), "application/json"
+        return (
+            502,
+            json.dumps({"error": "groq_os_error", "detail": str(exc)}).encode(),
+            "application/json",
+        )
 
 
 # ---------------------------------------------------------------------------
@@ -282,6 +369,29 @@ class ProxyHandler(BaseHTTPRequestHandler):
         self.send_header("Cache-Control", "public, max-age=300")
         self.end_headers()
         self.wfile.write(body)
+
+    def _send_429(self, retry_after: int, detail: str) -> None:
+        body = json.dumps(
+            {"error": "rate_limited", "detail": detail, "retry_after": retry_after}
+        ).encode()
+        self.send_response(429)
+        self.send_header("Content-Type", "application/json")
+        self.send_header("Content-Length", str(len(body)))
+        self.send_header("Retry-After", str(retry_after))
+        self.send_header("Cache-Control", "no-store")
+        self.end_headers()
+        self.wfile.write(body)
+
+    def _client_ip(self) -> str:
+        """Real client IP. Caddy fronts this on 127.0.0.1 and appends the
+        true peer last in X-Forwarded-For, so the rightmost hop is the
+        trustworthy value (a client-spoofed XFF entry sits to its left)."""
+        xff = self.headers.get("X-Forwarded-For", "")
+        if xff:
+            parts = [p.strip() for p in xff.split(",") if p.strip()]
+            if parts:
+                return parts[-1]
+        return self.client_address[0] if self.client_address else ""
 
     def _read_body(self) -> bytes | None:
         length = int(self.headers.get("Content-Length") or 0)
@@ -335,6 +445,15 @@ class ProxyHandler(BaseHTTPRequestHandler):
     # --- handlers ----------------------------------------------------------
 
     def _handle_bootstrap(self) -> None:
+        ip = self._client_ip()
+        ok, retry = rate_limit_ok(ip, "/bootstrap", BOOTSTRAP_RATE_MAX, BOOTSTRAP_RATE_WINDOW)
+        if not ok:
+            log.warning("bootstrap rate-limited ip=%s retry=%ss", ip, retry)
+            self._send_429(
+                retry,
+                f"max {BOOTSTRAP_RATE_MAX} bootstrap tokens per IP per {int(BOOTSTRAP_RATE_WINDOW)}s",
+            )
+            return
         raw = self._read_body()
         if raw is None:
             return
@@ -352,7 +471,18 @@ class ProxyHandler(BaseHTTPRequestHandler):
 
     def _handle_chat(self) -> None:
         if not GROQ_API_KEY:
-            self._send_json(503, {"error": "proxy_not_configured", "detail": "GROQ_API_KEY missing on server"})
+            self._send_json(
+                503, {"error": "proxy_not_configured", "detail": "GROQ_API_KEY missing on server"}
+            )
+            return
+
+        ip = self._client_ip()
+        ok, retry = rate_limit_ok(ip, "/v1/chat/completions", CHAT_RATE_MAX, CHAT_RATE_WINDOW)
+        if not ok:
+            log.warning("chat rate-limited ip=%s retry=%ss", ip, retry)
+            self._send_429(
+                retry, f"max {CHAT_RATE_MAX} chat calls per IP per {int(CHAT_RATE_WINDOW)}s"
+            )
             return
 
         token = self._extract_bearer()
@@ -376,6 +506,17 @@ class ProxyHandler(BaseHTTPRequestHandler):
             self._send_json(status, info)
             return
 
+        if not global_cap_ok():
+            log.error("global daily cap reached (%d) — refusing chat ip=%s", GLOBAL_DAILY_CAP, ip)
+            self._send_json(
+                429,
+                {
+                    "error": "global_daily_cap",
+                    "detail": f"server daily cap {GLOBAL_DAILY_CAP} reached, retry tomorrow",
+                },
+            )
+            return
+
         status, body, content_type = call_groq(parsed)
         # Surface quota headers so clients can warn the user as they approach zero
         self.send_response(status)
@@ -396,9 +537,13 @@ class ProxyHandler(BaseHTTPRequestHandler):
 def main() -> None:
     _init_schema()
     if not GROQ_API_KEY:
-        log.warning("GROQ_API_KEY missing — /v1/chat/completions will return 503. /bootstrap still works.")
+        log.warning(
+            "GROQ_API_KEY missing — /v1/chat/completions will return 503. /bootstrap still works."
+        )
     else:
-        log.info("Groq key loaded (%d chars). Model default: %s", len(GROQ_API_KEY), GROQ_MODEL_DEFAULT)
+        log.info(
+            "Groq key loaded (%d chars). Model default: %s", len(GROQ_API_KEY), GROQ_MODEL_DEFAULT
+        )
     log.info("Quota DB: %s", QUOTA_DB)
     log.info("Bootstrap quota per token: %d", BOOTSTRAP_QUOTA)
     log.info("Listening on 127.0.0.1:%d", PORT)
