@@ -1,0 +1,13 @@
+# vibeos ruff config — inherits the MWM-AI workspace root config and adds
+# vibeos-specific excludes. `extend` keeps us in lockstep with workspace-wide
+# rule changes; only the exclude list is local.
+extend = "../../ruff.toml"
+
+extend-exclude = [
+    # archive-v1/ is the frozen v1 prototype tree (clippy/onboarding). It is no
+    # longer maintained — lint it would only churn dead code. Active code lives
+    # in vibbey/ and packages/.
+    "archive-v1",
+    # debian packaging build artifacts (generated, not source).
+    "packages/*/debian",
+]

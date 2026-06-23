@@ -21,6 +21,7 @@ Model defaults come from os.environ (populated by config.py from
 /etc/vibeos/vibbey.conf).
 """
 
+import contextlib
 import json
 import os
 import socket
@@ -123,11 +124,13 @@ class VibbeyHandler(SimpleHTTPRequestHandler):
 
     def _serve_config(self) -> None:
         """Return active config to the frontend (model name, tier, version)."""
-        body = json.dumps({
-            "model": os.environ.get("VIBEOS_MODEL", "qwen2.5:3b"),
-            "groq_model": os.environ.get("VIBEOS_GROQ_MODEL", "llama-3.3-70b-versatile"),
-            "tier": groq_proxy.get_active_tier(),
-        }).encode()
+        body = json.dumps(
+            {
+                "model": os.environ.get("VIBEOS_MODEL", "qwen2.5:3b"),
+                "groq_model": os.environ.get("VIBEOS_GROQ_MODEL", "llama-3.3-70b-versatile"),
+                "tier": groq_proxy.get_active_tier(),
+            }
+        ).encode()
         self._send_json(200, body)
 
     def _handle_chat(self) -> None:
@@ -157,10 +160,12 @@ class VibbeyHandler(SimpleHTTPRequestHandler):
         sys_injected = False
         for msg in incoming:
             if not sys_injected and msg.get("role") == "system":
-                augmented.append({
-                    "role": "system",
-                    "content": f"{msg.get('content', '')}\n\n{augmentation}",
-                })
+                augmented.append(
+                    {
+                        "role": "system",
+                        "content": f"{msg.get('content', '')}\n\n{augmentation}",
+                    }
+                )
                 sys_injected = True
             else:
                 augmented.append(msg)
@@ -186,10 +191,8 @@ class VibbeyHandler(SimpleHTTPRequestHandler):
             )
             reply_content = (result.get("message") or {}).get("content", "")
             if last_user and reply_content:
-                try:
+                with contextlib.suppress(OSError):
                     vibbey_memory.append_exchange(last_user, reply_content)
-                except OSError:
-                    pass
             self._send_json(200, json.dumps(result).encode())
         else:
             self._send_error_json(
@@ -268,19 +271,25 @@ class VibbeyHandler(SimpleHTTPRequestHandler):
 
     def _serve_tier_info(self) -> None:
         """Report current chat backend tier + tool list for frontend UI."""
-        body = json.dumps({
-            "tier": groq_proxy.get_active_tier(),
-            "default_groq_model": os.environ.get("VIBEOS_GROQ_MODEL", "llama-3.3-70b-versatile"),
-            "tools": vibbey_tools.list_tools(),
-        }).encode()
+        body = json.dumps(
+            {
+                "tier": groq_proxy.get_active_tier(),
+                "default_groq_model": os.environ.get(
+                    "VIBEOS_GROQ_MODEL", "llama-3.3-70b-versatile"
+                ),
+                "tools": vibbey_tools.list_tools(),
+            }
+        ).encode()
         self._send_json(200, body)
 
     def _serve_knowledge(self) -> None:
         """Return the full knowledge pack — useful for debugging."""
-        body = json.dumps({
-            "knowledge": load_knowledge_pack(),
-            "memory_summary": vibbey_memory.summarize_for_prompt(),
-        }).encode()
+        body = json.dumps(
+            {
+                "knowledge": load_knowledge_pack(),
+                "memory_summary": vibbey_memory.summarize_for_prompt(),
+            }
+        ).encode()
         self._send_json(200, body)
 
     def _serve_calamares_step(self) -> None:
@@ -301,13 +310,25 @@ class VibbeyHandler(SimpleHTTPRequestHandler):
             return
 
         known = {
-            "welcome", "locale", "keyboard", "partition",
-            "users", "summary",
+            "welcome",
+            "locale",
+            "keyboard",
+            "partition",
+            "users",
+            "summary",
         }
         exec_markers = {
-            "mount", "unpackfs", "machineid", "fstab", "localecfg",
-            "networkcfg", "hwclock", "services-systemd", "bootloader",
-            "contextualprocess", "umount",
+            "mount",
+            "unpackfs",
+            "machineid",
+            "fstab",
+            "localecfg",
+            "networkcfg",
+            "hwclock",
+            "services-systemd",
+            "bootloader",
+            "contextualprocess",
+            "umount",
         }
         try:
             # Read tail only — 64 KB is plenty (log lines are short)
@@ -376,6 +397,7 @@ def start_server(port: int | None = None) -> tuple[ThreadingHTTPServer, int]:
     def _snapshot_worker() -> None:
         try:
             from . import install_snapshot
+
             install_snapshot.capture_snapshot()
         except Exception:  # noqa: BLE001
             pass

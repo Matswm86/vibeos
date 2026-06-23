@@ -32,7 +32,7 @@ def _parse_ollama_list(output: str) -> list[str]:
     """
     if not output:
         return []
-    lines = [l for l in output.splitlines() if l.strip()]
+    lines = [ln for ln in output.splitlines() if ln.strip()]
     if len(lines) <= 1:
         return []
     models: list[str] = []
@@ -61,7 +61,9 @@ def capture_snapshot() -> dict[str, object]:
     results: dict[str, object] = {}
 
     r = vibbey_tools.run_tool("claude_version")
-    results["claude_version"] = _extract_version(r.get("stdout", "")) if r.get("exit_code") == 0 else None
+    results["claude_version"] = (
+        _extract_version(r.get("stdout", "")) if r.get("exit_code") == 0 else None
+    )
 
     r = vibbey_tools.run_tool("gh_auth_status")
     if r.get("error") == "not_installed":

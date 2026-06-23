@@ -19,7 +19,7 @@ stdlib-only so it runs on a fresh VibeOS install without pip.
 
 import json
 import os
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 from pathlib import Path
 from typing import Any
 
@@ -32,7 +32,7 @@ HISTORY_MAX_LEN = 50
 
 
 def _now_iso() -> str:
-    return datetime.now(timezone.utc).isoformat(timespec="seconds")
+    return datetime.now(UTC).isoformat(timespec="seconds")
 
 
 def _empty_memory() -> dict[str, Any]:
@@ -46,7 +46,7 @@ def _empty_memory() -> dict[str, Any]:
         "user": {
             "name": None,
             "experience_level": None,  # "newbie" | "intermediate" | "advanced"
-            "tone": None,              # "warm" | "terse" | "playful"
+            "tone": None,  # "warm" | "terse" | "playful"
         },
         "facts": {},
         "history": [],
@@ -100,11 +100,13 @@ def save(mem: dict[str, Any]) -> None:
 def append_exchange(user_msg: str, vibbey_reply: str) -> None:
     """Add one user+reply pair to the rolling history, capped at HISTORY_MAX_LEN."""
     mem = load()
-    mem["history"].append({
-        "at": _now_iso(),
-        "user": user_msg,
-        "vibbey": vibbey_reply,
-    })
+    mem["history"].append(
+        {
+            "at": _now_iso(),
+            "user": user_msg,
+            "vibbey": vibbey_reply,
+        }
+    )
     if len(mem["history"]) > HISTORY_MAX_LEN:
         mem["history"] = mem["history"][-HISTORY_MAX_LEN:]
     save(mem)

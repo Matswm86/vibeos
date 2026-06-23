@@ -23,15 +23,16 @@ have to parse user input and can't accidentally allow `gh auth status; rm -rf`.
 import re
 import shutil
 import subprocess
+from collections.abc import Callable
 from dataclasses import dataclass
-from typing import Callable
 
 
 @dataclass
 class ToolSpec:
     """Declarative spec for one allowlisted command."""
-    argv: list[str]                 # exact argv to execute (no shell)
-    description: str                # human-readable (shown in confirm prompt)
+
+    argv: list[str]  # exact argv to execute (no shell)
+    description: str  # human-readable (shown in confirm prompt)
     timeout_s: int = 30
     # Optional: builder for commands that take one user-supplied argument.
     accepts_arg: bool = False
@@ -64,7 +65,6 @@ ALLOWED: dict[str, ToolSpec] = {
         description="Run the Claude Code setup wizard (paste API key, scaffold ~/workspace)",
         detach=True,
     ),
-
     # ── GitHub CLI ─────────────────────────────────────────
     "gh_version": ToolSpec(
         argv=["gh", "--version"],
@@ -74,7 +74,6 @@ ALLOWED: dict[str, ToolSpec] = {
         argv=["gh", "auth", "status"],
         description="Check if GitHub CLI is authenticated",
     ),
-
     # ── Ollama ─────────────────────────────────────────────
     "ollama_list": ToolSpec(
         argv=["ollama", "list"],
@@ -88,7 +87,6 @@ ALLOWED: dict[str, ToolSpec] = {
         arg_pattern=_MODEL_NAME_RE,
         arg_builder=lambda m: ["ollama", "pull", m],
     ),
-
     # ── Docker ─────────────────────────────────────────────
     "docker_info": ToolSpec(
         argv=["docker", "info"],
@@ -98,7 +96,6 @@ ALLOWED: dict[str, ToolSpec] = {
         argv=["docker", "ps"],
         description="List running Docker containers",
     ),
-
     # ── System inspection ──────────────────────────────────
     "os_release": ToolSpec(
         argv=["cat", "/etc/os-release"],
@@ -124,7 +121,6 @@ ALLOWED: dict[str, ToolSpec] = {
         argv=["nvidia-smi"],
         description="Show NVIDIA GPU status (if present)",
     ),
-
     # ── Python / Node ──────────────────────────────────────
     "python_version": ToolSpec(
         argv=["python3", "--version"],
@@ -134,20 +130,17 @@ ALLOWED: dict[str, ToolSpec] = {
         argv=["node", "--version"],
         description="Show Node.js version",
     ),
-
     # ── Theme switch ───────────────────────────────────────
     "theme_switch": ToolSpec(
         argv=["/usr/bin/vibeos-theme-switch"],
         description=(
-            "Switch the active KDE Plasma Look-and-Feel "
-            "(pacific-dawn | outrun | miami | neon-grid)"
+            "Switch the active KDE Plasma Look-and-Feel (pacific-dawn | outrun | miami | neon-grid)"
         ),
         accepts_arg=True,
         arg_pattern=_THEME_NAME_RE,
         arg_builder=lambda t: ["/usr/bin/vibeos-theme-switch", t],
         timeout_s=15,
     ),
-
     # ── Installer ──────────────────────────────────────────
     # Live-session only in practice. pkexec gives polkit auth dialog;
     # the live vibeos user has NOPASSWD rules for it.

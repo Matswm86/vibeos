@@ -19,6 +19,7 @@ First-run marker behaviour:
     should still greet the user on first login to the installed system.
 """
 
+import contextlib
 import sys
 import threading
 import webbrowser
@@ -54,9 +55,10 @@ def _try_webkit2(url: str, *, title: str, install_helper: bool) -> bool:
             gi.require_version("Gtk", "3.0")
             gi.require_version("Gdk", "3.0")
             gi.require_version("WebKit2", webkit_version)
-            from gi.repository import Gtk as _gtk  # type: ignore
             from gi.repository import Gdk as _gdk  # type: ignore
+            from gi.repository import Gtk as _gtk  # type: ignore
             from gi.repository import WebKit2 as _webkit  # type: ignore
+
             gtk = _gtk
             gdk = _gdk
             webkit = _webkit
@@ -118,10 +120,8 @@ def _open_window(url: str, *, title: str, install_helper: bool) -> None:
         print("[vibbey] webkit2gtk unavailable — falling back to system browser")
         webbrowser.open(url)
         print("[vibbey] press Ctrl-C when done (browser path has no lifecycle signal)")
-        try:
+        with contextlib.suppress(KeyboardInterrupt):
             threading.Event().wait()
-        except KeyboardInterrupt:
-            pass
 
 
 def main() -> int:
