@@ -240,6 +240,43 @@ else
     err "bootloader deploy missing NVRAM-first bootctl install — boot order stays luck-based"
 fi
 
+# ─── 13. Network stack complete (wifi + wired + apt) ──────────────────
+# 06-11 field bugs: image shipped with NO wpa_supplicant (Recommends-only
+# in Noble, mkosi skips Recommends → wifi could never scan), NO netplan
+# config (NM stock conf is wifi-only → wired dead too), and NO Ubuntu
+# archive apt sources (couldn't even install the fix online). Assert all
+# three forever.
+if $SUDO test -x "$MNT/usr/sbin/wpa_supplicant"; then
+    ok "wpa_supplicant present (wifi can scan/associate)"
+else
+    err "wpa_supplicant MISSING — wifi dead on live and installed systems"
+fi
+if $SUDO grep -q 'renderer: NetworkManager' "$MNT/etc/netplan/01-network-manager-all.yaml" 2>/dev/null; then
+    ok "netplan hands all devices to NetworkManager (wired + tether managed)"
+else
+    err "netplan NM config missing — ethernet unmanaged (NM stock conf is wifi-only)"
+fi
+if $SUDO grep -q '^URIs: http://archive.ubuntu.com/ubuntu/' "$MNT/etc/apt/sources.list.d/ubuntu.sources" 2>/dev/null; then
+    ok "Ubuntu archive apt sources baked"
+else
+    err "ubuntu.sources missing — installed system cannot apt install anything"
+fi
+
+# ─── 14. Owner account gets sudo ──────────────────────────────────────
+# 06-11 field bug: users.conf defaultGroups was Arch-style (wheel /
+# network / storage) with no 'sudo' → the installed owner had no sudo at
+# all. Assert the config AND the fix-forward net in target-cleanup.
+if $SUDO grep -A20 '^defaultGroups:' "$MNT/etc/calamares/modules/users.conf" | grep -q '^[[:space:]]*-[[:space:]]*sudo$'; then
+    ok "users.conf defaultGroups includes sudo"
+else
+    err "users.conf defaultGroups missing 'sudo' — installed owner gets no sudo"
+fi
+if $SUDO grep -q 'usermod -aG sudo' "$MNT/usr/local/sbin/vibeos-target-cleanup.sh"; then
+    ok "target-cleanup --verify enforces owner sudo membership (fix-forward)"
+else
+    err "target-cleanup missing owner-sudo fix-forward"
+fi
+
 if [ "$FAIL" -eq 0 ]; then
     ok "ALL CHECKS PASSED — ISO is safe to burn"
     exit 0

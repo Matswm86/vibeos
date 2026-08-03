@@ -1,0 +1,9 @@
+# VibeOS: hand ALL networking to NetworkManager (the plasma-nm applet).
+# The netplan boot generator sees "renderer: NetworkManager" and writes an
+# empty /run/NetworkManager/conf.d/10-globally-managed-devices.conf, which
+# shadows Ubuntu's stock wifi-only conf in /usr/lib — so wired, USB-tether
+# and wifi devices are all managed. Without this file the stock conf wins
+# and ethernet gets no DHCP at all (06-11 field bug).
+network:
+  version: 2
+  renderer: NetworkManager

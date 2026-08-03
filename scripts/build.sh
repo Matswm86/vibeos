@@ -70,10 +70,23 @@ case "$ACTION" in
         fi
 
         info "building VibeOS ISO (~10 min first time, faster on rebuild)"
+        # mkosi stages the full ~17G rootfs in /var/tmp INSIDE the container
+        # (i.e. the container's writable layer on the host root disk) before
+        # writing the raw image. On hosts where / is tight that doubles the
+        # footprint and the build dies with ENOSPC at "Copying files into
+        # the device". Set VIBEOS_SCRATCH to a directory on a bigger disk
+        # and it is bind-mounted over /var/tmp instead.
+        SCRATCH_MOUNT=()
+        if [ -n "${VIBEOS_SCRATCH:-}" ]; then
+            mkdir -p "$VIBEOS_SCRATCH"
+            SCRATCH_MOUNT=(-v "$VIBEOS_SCRATCH:/var/tmp")
+            info "mkosi workspace scratch → $VIBEOS_SCRATCH"
+        fi
         docker run --rm -i --privileged \
             -v "$REPO_ROOT:/work" \
+            "${SCRATCH_MOUNT[@]}" \
             "$IMAGE_TAG" \
-            bash -c 'cd /work && mkosi --directory mkosi --force build'
+            bash -c 'cd /work && mkosi --directory mkosi --workspace-directory /var/tmp --force build'
         ;;
     *)
         err "unknown action: $ACTION (try: build / clean / shell)"

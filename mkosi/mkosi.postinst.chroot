@@ -326,6 +326,10 @@ if [ -f /usr/lib/vibeos/os-release ]; then
     install -m 0644 /usr/lib/vibeos/os-release /etc/os-release
 fi
 
+# netplan wants 0600 on its yamls (world-readable triggers a boot
+# warning); the mkosi.extra copy lands as 0644.
+chmod 600 /etc/netplan/*.yaml 2>/dev/null || true
+
 # ─── Baked-extras ownership + HARD assertions ───────────────────────
 # scripts/bake-extras.sh pre-populates:
 #   /usr/share/ollama/.ollama/models/  — qwen2.5:3b (1.9 GB)

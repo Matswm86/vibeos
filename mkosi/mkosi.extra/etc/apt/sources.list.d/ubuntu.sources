@@ -1,0 +1,16 @@
+# Ubuntu archive — baked by mkosi.extra/ during ISO build.
+# mkosi resolves build-time packages against its own repo config, which
+# never lands in the image; without this file the installed system has NO
+# Ubuntu sources at all and `apt install` fails even when online
+# (06-11 field bug). Keyring ships with ubuntu-keyring (ubuntu-minimal).
+Types: deb
+URIs: http://archive.ubuntu.com/ubuntu/
+Suites: noble noble-updates
+Components: main universe multiverse restricted
+Signed-By: /usr/share/keyrings/ubuntu-archive-keyring.gpg
+
+Types: deb
+URIs: http://security.ubuntu.com/ubuntu/
+Suites: noble-security
+Components: main universe multiverse restricted
+Signed-By: /usr/share/keyrings/ubuntu-archive-keyring.gpg

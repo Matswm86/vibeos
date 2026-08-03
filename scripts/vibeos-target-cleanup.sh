@@ -27,6 +27,7 @@
 set -uo pipefail
 
 LOG=/var/log/vibeos-target-cleanup.log
+MODE="${1:-strip}"
 mkdir -p /var/log
 
 log() {
@@ -57,6 +58,27 @@ verify() {
     # runs BEFORE the users module) already hard-fails if userdel cannot
     # remove the live user. If a 'vibeos' account exists at verify time it
     # was created by the users module at the new owner's request.
+    #
+    # ── Owner-account sudo guarantee (--verify only: users module has run) ──
+    # users.conf defaultGroups once shipped an Arch-style list with no
+    # 'sudo' → the installed owner had no sudo at all (06-11 MSI field
+    # bug). Fix-forward here: the owner (uid 1000) MUST be in group sudo
+    # by the end of the install — add it if the users module didn't.
+    if [ "$MODE" = "--verify" ]; then
+        local owner
+        owner=$(awk -F: '$3==1000 {print $1; exit}' /etc/passwd)
+        if [ -z "$owner" ]; then
+            log "FAIL: no uid-1000 owner account exists at verify time"
+            bad=1
+        elif id -nG "$owner" 2>/dev/null | tr ' ' '\n' | grep -qx sudo; then
+            log "owner '$owner' is in sudo group"
+        elif usermod -aG sudo "$owner" 2>>"$LOG"; then
+            log "FIXED: added owner '$owner' to sudo group (users module missed it)"
+        else
+            log "FAIL: owner '$owner' not in sudo group and usermod failed"
+            bad=1
+        fi
+    fi
     if [ "$bad" -ne 0 ]; then
         log "VERIFY FAILED — installed system would boot into the live install page"
         exit 1
