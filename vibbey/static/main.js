@@ -124,15 +124,23 @@ window.addEventListener('resize', () => {
 
 // ── Chat UI ────────────────────────────────────────────────
 function showBubble(text) {
-  bubbleText.textContent = text;
+  // The bubble renders plain text — strip markdown emphasis/code markers
+  // that small models emit so users don't see literal ** and ` clutter.
+  bubbleText.textContent = String(text)
+    .replace(/\*\*([^*]+)\*\*/g, '$1')
+    .replace(/`([^`]+)`/g, '$1')
+    .replace(/^#{1,4}\s+/gm, '');
   bubbleEl.classList.remove('hidden');
+  bubbleEl.scrollTop = 0;
 }
 
 const SYSTEM_PROMPT = (
   "You are Vibbey, VibeOS's friendly Clippy-lineage Linux assistant. " +
   "You are not Claude. Claude Code takes over after onboarding. Keep replies " +
   "to 2-3 sentences. Be warm, slightly cheeky, never corporate. Never use " +
-  "walls of text. When you want to run a system command, include " +
+  "walls of text. Reply in plain text only — no markdown, no bullet lists, " +
+  "no headings; your replies render in a small plain-text bubble. " +
+  "When you want to run a system command, include " +
   "[[RUN: tool_id]] or [[RUN: tool_id arg]] on its own line in your reply — " +
   "the UI will ask the user to confirm before executing."
 );
@@ -321,10 +329,15 @@ async function handleVibbeyReply(data) {
   PENDING_TOOL = { toolId: marker.toolId, arg: marker.arg, description: tool.description };
   const argSuffix = marker.arg ? ` ${marker.arg}` : '';
   showBubble(
-    `${marker.cleanText}\n\n[confirm]: run \`${marker.toolId}${argSuffix}\` ` +
-    `(${tool.description})? Reply **y** to run, anything else cancels.`
+    `${marker.cleanText}\n\nWant me to run ${marker.toolId}${argSuffix} ` +
+    `(${tool.description})? Just say yes or no.`
   );
 }
+
+// Natural-language yes/no for pending tool runs (English + Norwegian).
+// Anything that is neither → normal chat message; the pending run is dropped.
+const AFFIRM_RE = /\b(y|yes|yeah|yep|yup|sure|ok|okay|go|run( it)?|do it|go ahead|please|ja|jo|jepp|greit|kjør|gjør det)\b/i;
+const NEGATE_RE = /\b(n|no|nope|nah|not?|don'?t|stop|cancel|skip|avbryt|nei|ikke|dropp)\b/i;
 
 async function sendChat() {
   const msg = inputEl.value.trim();
@@ -333,19 +346,38 @@ async function sendChat() {
   sendEl.disabled = true;
 
   if (PENDING_TOOL) {
-    const confirm = /^(y|yes|run|ok|go)$/i.test(msg);
     const pending = PENDING_TOOL;
     PENDING_TOOL = null;
+    // Negation wins: "don't run that" must never execute.
+    const negative = NEGATE_RE.test(msg);
+    const affirmative = !negative && AFFIRM_RE.test(msg);
 
-    if (!confirm) {
-      pushConversation('user', `cancelled: ${pending.toolId}`);
-      showBubble(`Cancelled. What else can I help with?`);
+    if (negative) {
+      pushConversation('user', `(user declined running ${pending.toolId})`);
+      showBubble(`No problem, skipping that. What else can I help with?`);
       sendEl.disabled = false;
       inputEl.focus();
       return;
     }
 
-    showBubble(`Running \`${pending.toolId}\`…`);
+    if (!affirmative) {
+      // Neither yes nor no — user changed the subject. Drop the pending
+      // run and treat it as a normal chat message.
+      pushConversation('user', msg);
+      showBubble('…');
+      try {
+        const data = await postChat(CONVERSATION);
+        await handleVibbeyReply(data);
+      } catch (e) {
+        showBubble(`Hmm, ${describeChatError(e)}`);
+      } finally {
+        sendEl.disabled = false;
+        inputEl.focus();
+      }
+      return;
+    }
+
+    showBubble(`Running ${pending.toolId}…`);
     try {
       const result = await runTool(pending.toolId, pending.arg);
       const formatted = formatToolResult(result);
