@@ -7,6 +7,7 @@ Does NOT raise on missing or malformed file — sensible defaults always work.
 Environment variables set before import always take precedence (systemd
 EnvironmentFile= sets them before the Python process starts).
 """
+
 import os
 from pathlib import Path
 
@@ -14,7 +15,7 @@ CONFIG_PATH = Path(os.environ.get("VIBEOS_CONFIG", "/etc/vibeos/vibbey.conf"))
 
 DEFAULTS: dict[str, str] = {
     "VIBEOS_MODEL": "qwen2.5:3b",
-    "VIBEOS_GROQ_MODEL": "llama-3.3-70b-versatile",
+    "VIBEOS_GROQ_MODEL": "openai/gpt-oss-120b",
     "VIBEOS_GROQ_API_KEY": "",
     "VIBEOS_CLAUDE_API_KEY": "",
 }

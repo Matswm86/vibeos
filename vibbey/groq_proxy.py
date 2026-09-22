@@ -32,7 +32,7 @@ GROQ_DIRECT_URL = "https://api.groq.com/openai/v1/chat/completions"
 GROQ_PROXY_URL = "https://groq.mwmai.no/v1/chat/completions"
 OLLAMA_CHAT_URL = "http://localhost:11434/api/chat"
 
-DEFAULT_GROQ_MODEL = "llama-3.3-70b-versatile"
+DEFAULT_GROQ_MODEL = "openai/gpt-oss-120b"
 REQUEST_TIMEOUT_S = 60
 
 # Groq's API sits behind Cloudflare, which blocks the default
@@ -95,7 +95,9 @@ def _normalize_groq_reply(data: dict[str, Any]) -> dict[str, Any]:
     }
 
 
-def _call_groq_direct(messages: list[dict[str, str]], model: str, key: str) -> dict[str, Any] | None:
+def _call_groq_direct(
+    messages: list[dict[str, str]], model: str, key: str
+) -> dict[str, Any] | None:
     """Call Groq with the user's own API key. Returns None on any failure."""
     payload = {
         "model": model or _active_groq_model(),
@@ -121,7 +123,9 @@ def _call_groq_direct(messages: list[dict[str, str]], model: str, key: str) -> d
         return None
 
 
-def _call_groq_proxy(messages: list[dict[str, str]], model: str, token: str) -> dict[str, Any] | None:
+def _call_groq_proxy(
+    messages: list[dict[str, str]], model: str, token: str
+) -> dict[str, Any] | None:
     """Call the VibeOS-hosted proxy with the bootstrap token."""
     payload = {
         "model": model or _active_groq_model(),

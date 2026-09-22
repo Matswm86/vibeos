@@ -127,7 +127,7 @@ class VibbeyHandler(SimpleHTTPRequestHandler):
         body = json.dumps(
             {
                 "model": os.environ.get("VIBEOS_MODEL", "qwen2.5:3b"),
-                "groq_model": os.environ.get("VIBEOS_GROQ_MODEL", "llama-3.3-70b-versatile"),
+                "groq_model": os.environ.get("VIBEOS_GROQ_MODEL", "openai/gpt-oss-120b"),
                 "tier": groq_proxy.get_active_tier(),
             }
         ).encode()
@@ -207,7 +207,7 @@ class VibbeyHandler(SimpleHTTPRequestHandler):
         mem_summary = vibbey_memory.summarize_for_prompt()
         tier = groq_proxy.get_active_tier()
         active_model = os.environ.get("VIBEOS_MODEL", "qwen2.5:3b")
-        groq_model = os.environ.get("VIBEOS_GROQ_MODEL", "llama-3.3-70b-versatile")
+        groq_model = os.environ.get("VIBEOS_GROQ_MODEL", "openai/gpt-oss-120b")
         tier_description = {
             "byo_key": (
                 f"Groq cloud ({groq_model}) via the user's own API key. "
@@ -274,9 +274,7 @@ class VibbeyHandler(SimpleHTTPRequestHandler):
         body = json.dumps(
             {
                 "tier": groq_proxy.get_active_tier(),
-                "default_groq_model": os.environ.get(
-                    "VIBEOS_GROQ_MODEL", "llama-3.3-70b-versatile"
-                ),
+                "default_groq_model": os.environ.get("VIBEOS_GROQ_MODEL", "openai/gpt-oss-120b"),
                 "tools": vibbey_tools.list_tools(),
             }
         ).encode()

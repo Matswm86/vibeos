@@ -1,10 +1,15 @@
 # VibeOS
 
-**AI-native Linux distribution.** Ubuntu 24.04 LTS + KDE Plasma 5.27 + Vibbey (local AI assistant) + Claude Code baked in.
+**AI-native Linux distribution.** Ubuntu 24.04 LTS + KDE Plasma 5.27 + Vibbey (a local AI
+assistant) + an agent CLI, with a model and a provider you choose.
 
-Download → install in 10 minutes → start coding with Claude in 5 more.
+Download, install in 10 minutes, start coding with the assistant of your choice in 5 more.
 
-**Status**: v2.0.0-rc1 — installable end-to-end on MSI hardware (validated 2026-04-30). Live ISO boots, installer completes, target system boots into Plasma with Vibbey + Claude Code. **One known wart**: the Calamares-time bootloader-fix script silently fails inside the chroot, so the freshly-installed system needs one post-install recovery command before it'll boot — see [Post-install recovery](#post-install-recovery) below. Fix in flight. v1 (Kubuntu 22.04 + Cubic build) is archived at tag `v1.0.4.3-final` under `archive-v1/`.
+**You pick the model.** VibeOS is not tied to one vendor. It ships with defaults so the
+first boot works offline, and every one of them is replaceable: see
+[Choosing your model and provider](#choosing-your-model-and-provider).
+
+**Status**: v2.0.0-rc1: installable end-to-end on MSI hardware (validated 2026-04-30). Live ISO boots, installer completes, target system boots into Plasma with Vibbey + Claude Code. **One known wart**: the Calamares-time bootloader-fix script silently fails inside the chroot, so the freshly-installed system needs one post-install recovery command before it'll boot: see [Post-install recovery](#post-install-recovery) below. Fix in flight. v1 (Kubuntu 22.04 + Cubic build) is archived at tag `v1.0.4.3-final` under `archive-v1/`.
 
 ---
 
@@ -45,13 +50,80 @@ sudo apt update
 
 ## What's in the box
 
-- **Ubuntu 24.04 LTS (Noble)** — supported until 2029, kernel 6.8+
+- **Ubuntu 24.04 LTS (Noble)**: supported until 2029, kernel 6.8+
 - **KDE Plasma 5.27** (LTS) with 4 selectable themes: Pacific Dawn (default), Outrun Boulevard, Miami Pastel, Neon Grid
-- **Vibbey** — local AI assistant. qwen2.5:3b (1.9 GB) + Claude Code 2.1.109 are **baked into the ISO** at build time via `scripts/bake-extras.sh` — no chroot-time downloads, no "silent WARNING" failures
-- **Claude Code 2.1.109** pre-installed globally (`/usr/bin/claude`). First-boot wizard asks for your API key
-- **Calamares 3.3.5** installer — auto-launches on live-session login with all three partition modes offered (erase / alongside / manual) + a Vibbey install-helper sidebar explaining each choice
+- **Vibbey**: the built-in assistant. It runs whatever model you point it at. qwen2.5:3b (1.9 GB) and Claude Code 2.1.109 are **baked into the ISO** at build time via `scripts/bake-extras.sh` so the machine is useful with no network on first boot, not because either is required
+- **An agent CLI, pre-installed** (`/usr/bin/claude`, Claude Code 2.1.109). A convenience default. Install Qwen Code, Codex CLI, opencode, aider, Cline or your own instead and nothing in the OS objects. The first-boot wizard offers to store a key and is skippable
+- **Calamares 3.3.5** installer: auto-launches on live-session login with all three partition modes offered (erase / alongside / manual) + a Vibbey install-helper sidebar explaining each choice
 - **Developer baseline**: zsh + oh-my-zsh, VS Code + Kate, Firefox (Mozilla PPA, not snap), Node 22, Python 3.12, Flatpak + Flathub
-- **Updates**: apt repo at `vibeos.mwmai.no` — security patches from Ubuntu + VibeOS-specific packages
+- **Updates**: apt repo at `vibeos.mwmai.no`: security patches from Ubuntu + VibeOS-specific packages
+
+---
+
+## Choosing your model and provider
+
+Nothing in VibeOS is wired to one vendor. Two independent slots, both yours to fill.
+
+### 1. Vibbey, the built-in assistant
+
+Vibbey reads `/etc/vibeos/vibbey.conf` at startup. Every model name in the code is an
+environment-variable lookup with a default, never a constant, so changing a model is
+editing one line and restarting a service.
+
+```ini
+# a local model, no account, no network, nothing leaves the machine
+VIBEOS_MODEL=qwen2.5:3b          # or qwen2.5:7b, llama3.2:3b, mistral, gemma3, phi4...
+
+# optionally, a hosted provider using YOUR key and YOUR account
+VIBEOS_GROQ_API_KEY=
+VIBEOS_GROQ_MODEL=openai/gpt-oss-120b
+```
+
+```bash
+ollama pull qwen2.5:7b
+sudo sed -i 's/^VIBEOS_MODEL=.*/VIBEOS_MODEL=qwen2.5:7b/' /etc/vibeos/vibbey.conf
+sudo systemctl restart vibbey
+```
+
+Vibbey resolves three tiers in order: a hosted provider with your own key, a hosted
+provider through the VibeOS-run proxy, then local Ollama. Leave the key blank and it is
+local only, permanently: no request leaves the machine. The chat window lists every model
+Ollama has pulled and lets you switch between them per conversation, and `/api/config`
+reports which one is actually answering, so you can always tell.
+
+A hosted catalogue can retire a model name out from under you. That is precisely why the
+name lives in a config file: fix the line, restart, done. No rebuild.
+
+### 2. The agent CLI
+
+The ISO pre-installs Claude Code because something has to be there on first boot. It is a
+default, not a dependency. Nothing in the OS, the installer, the theming or Vibbey reads
+it or requires it. Install any of these instead, or alongside:
+
+| CLI | Install |
+|---|---|
+| Qwen Code | `npm i -g @qwen-code/qwen-code` |
+| OpenAI Codex CLI | `npm i -g @openai/codex` |
+| opencode | `npm i -g opencode-ai` |
+| aider | `pipx install aider-chat` |
+| Gemini CLI | `npm i -g @google/gemini-cli` |
+| anything else | it is Ubuntu, install it normally |
+
+If you would rather not have Claude Code on the system at all:
+
+```bash
+sudo apt remove vibeos-claude-code
+```
+
+Nothing else breaks. The Plasma desktop, Vibbey, the themes and the installer are
+independent of it.
+
+### What "AI-native" actually means here
+
+Not "ships with one vendor's product". It means the machine boots with a working local
+model, a GPU-free 3B assistant that answers offline, an Ollama service already running
+and configured, an agent CLI already on `$PATH`, and an assistant that helped you through
+the install itself. Which model does the talking is a line in a config file.
 
 ---
 
@@ -71,10 +143,10 @@ git checkout v2
 
 scripts/build.sh
 # Pipeline:
-#   1. scripts/bake-extras.sh  — pulls qwen model + claude CLI into mkosi.extra/
-#   2. scripts/build-deb.sh    — repacks Ollama tarball + builds 3 vibeos .debs
-#   3. mkosi build             — assembles the rootfs, writes mkosi.output/vibeos.raw
-#   4. scripts/verify-iso.sh   — loop-mounts the .raw and asserts 8 baked artifacts
+#   1. scripts/bake-extras.sh  - pulls qwen model + claude CLI into mkosi.extra/
+#   2. scripts/build-deb.sh    - repacks Ollama tarball + builds 3 vibeos .debs
+#   3. mkosi build             - assembles the rootfs, writes mkosi.output/vibeos.raw
+#   4. scripts/verify-iso.sh   - loop-mounts the .raw and asserts 8 baked artifacts
 #                                (hard-fails the build on anything missing)
 
 # Smoke-test in QEMU (headless, 10 min on TCG):
@@ -82,9 +154,9 @@ scripts/smoke-test.sh
 ```
 
 Env vars:
-- `SKIP_BAKE=1` — reuse existing `mkosi/mkosi.extra/` (fast iteration on mkosi config)
-- `SKIP_DEB=1` — reuse existing `packages/local/*.deb`
-- `SKIP_VERIFY=1` — skip post-build assertions (not recommended)
+- `SKIP_BAKE=1`: reuse existing `mkosi/mkosi.extra/` (fast iteration on mkosi config)
+- `SKIP_DEB=1`: reuse existing `packages/local/*.deb`
+- `SKIP_VERIFY=1`: skip post-build assertions (not recommended)
 
 ---
 
@@ -95,7 +167,7 @@ Env vars:
 ├── mkosi/                          # Declarative build config
 │   ├── mkosi.conf                  # Packages= list + kernel cmdline
 │   ├── mkosi.extra/                # Files injected into rootfs (GITIGNORED
-│   │   │                           # — populated by bake-extras.sh)
+│   │   │                           # - populated by bake-extras.sh)
 │   │   ├── etc/vibeos/live-session    # Live-ISO marker, stripped by Calamares
 │   │   ├── usr/bin/claude             # Claude Code CLI symlink
 │   │   ├── usr/lib/node_modules/...   # Claude Code 2.1.109
@@ -109,7 +181,7 @@ Env vars:
 │   └── vibeos-claude-code/         # Claude Code wizard + keyring + profile hook
 ├── vibbey/                         # Python source for Vibbey server
 │   ├── server.py                   # HTTP server + /api/chat + /api/calamares-step
-│   ├── launcher.py                 # GTK+webkit2gtk window — chat OR --install-helper
+│   ├── launcher.py                 # GTK+webkit2gtk window - chat OR --install-helper
 │   ├── static/install-helper.html  # 7-step live-install sidebar
 │   └── ...
 ├── calamares-config/               # Installer config
@@ -129,7 +201,7 @@ Env vars:
 ├── landing/                        # vibeos.mwmai.no landing page
 ├── keys/                           # Public signing key (fingerprint above)
 ├── .github/workflows/              # CI: build + test + release
-├── archive-v1/                     # v1 (Kubuntu 22.04 era) — reference only
+├── archive-v1/                     # v1 (Kubuntu 22.04 era) - reference only
 ├── v2-plan.md                      # v2 build plan with exit criteria
 └── README.md                       # you're here
 ```
@@ -166,7 +238,7 @@ If you installed onto multiple disks, the script fixes only the most recently in
 ## Known issues (2026-04-30)
 
 - **Install-time bootloader fix is unreliable** (see Post-install recovery above). The recovery script in `/usr/local/bin/vibeos-recover-bootloader` is the documented workaround. Source-side fix is to refactor `vibeos-bootloader-fix.sh` to use the same logic as the recovery script (which runs in the live session's normal namespace and works).
-- **`/usr/share/ollama` ownership** — mkosi.postinst chowns to `ollama:ollama` at build time but UIDs get renumbered later when sddm-greeter is added; ends up `greeter:render`. First-boot service re-chown is the planned fix.
+- **`/usr/share/ollama` ownership**: mkosi.postinst chowns to `ollama:ollama` at build time but UIDs get renumbered later when sddm-greeter is added; ends up `greeter:render`. First-boot service re-chown is the planned fix.
 - **`systemd-resolved` not present** as a service on the installed system despite being in `mkosi.conf` Packages=. Probable Noble package-name change. Investigate.
 - **systemd-boot splash** is stretched on non-1080p displays. Cosmetic, deferred to v2.1.
 
@@ -174,7 +246,7 @@ If you installed onto multiple disks, the script fixes only the most recently in
 
 ## Contributing
 
-Not yet accepting external contributions — v2.0.0 needs to ship first. Issues welcome for bugs / feature requests.
+Not yet accepting external contributions: v2.0.0 needs to ship first. Issues welcome for bugs / feature requests.
 
 ---
 
