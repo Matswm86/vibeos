@@ -1,5 +1,16 @@
 # Handoff: Network audit — why the installed MSI has no wifi (2026-08-03)
 
+> **UPDATE 18:30: ALL FIXES SHIPPED + IMAGE REBUILT GREEN.** Commit `a28c13f` on v2
+> (pushed). New image `mkosi.output/vibeos.raw` (17.9GB, built 18:20) passed all 20
+> verify-iso checks incl. 5 new network/sudo regression guards. A 5th bug found after
+> the audit below: **the installed owner account had no sudo** (users.conf
+> defaultGroups was Arch-style, no 'sudo') — fixed + fix-forward in target-cleanup.
+> Build-host lesson: mkosi stages ~17G in the container's /var/tmp → ENOSPC on tight
+> roots; build.sh now supports VIBEOS_SCRATCH + pins --workspace-directory (do NOT
+> point scratch at a USB stick — 5x slower). Next: dd to the SanDisk Ultra (by-id
+> usb-SanDisk_Ultra_4C530001170104122363), reinstall on MSI (Erase → Kingston),
+> reboot without USB, Vibbey onboarding auto-opens, then "Start Coding with Claude".
+
 Audited the 06-11 08:51 USB build (SanDisk Ultra, sdc: ESP + root-x86-64) and current source.
 The install itself SUCCEEDED (ESP deploy log 2026-06-11T08:32 "done OK", NVRAM entry, Kingston nvme0n1).
 Model qwen2.5:3b IS baked (750/ollama-owned dir hides it from unprivileged `du` — do not re-flag), claude CLI at /usr/bin/claude, autologin config correct.

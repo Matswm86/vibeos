@@ -4,7 +4,7 @@
 # work on Ubuntu 22.04/24.04 and Kubuntu).
 #
 # Installs: cubic (Custom Ubuntu ISO Creator), qemu + KVM, OVMF (UEFI firmware).
-# Fetches: Kubuntu 22.04.5 LTS desktop amd64 ISO into ~/vibeos-build/base/
+# Fetches: Kubuntu 22.04.5 LTS desktop amd64 ISO into ~/MWM/data/vibeos-build/base/
 # Verifies: SHA256 against Canonical's published checksum.
 #
 # Run once before Phase A.
@@ -15,7 +15,7 @@ ok()   { printf '\e[32m  ✓\e[0m %s\n' "$*"; }
 warn() { printf '\e[33m  !\e[0m %s\n' "$*" >&2; }
 die()  { printf '\e[31m  ✗\e[0m %s\n' "$*" >&2; exit 1; }
 
-BUILD_DIR="$HOME/vibeos-build"
+BUILD_DIR="$HOME/MWM/data/vibeos-build"
 BASE_DIR="$BUILD_DIR/base"
 ISO_NAME="kubuntu-22.04.5-desktop-amd64.iso"
 ISO_URL="https://cdimage.ubuntu.com/kubuntu/releases/22.04/release/${ISO_NAME}"
@@ -59,7 +59,7 @@ else
 fi
 
 # --- Step 3: build dirs ---
-say "step 3 — prepare ~/vibeos-build/ tree"
+say "step 3 — prepare ~/MWM/data/vibeos-build/ tree"
 mkdir -p "$BASE_DIR" "$BUILD_DIR/output" "$BUILD_DIR/work"
 ok "build dirs ready at $BUILD_DIR"
 
@@ -99,7 +99,7 @@ printf '  OVMF:        %s\n' "$([ -f /usr/share/OVMF/OVMF_CODE.fd ] && echo pres
 printf '  KVM:         %s\n' "$([ -r /dev/kvm ] && echo accessible || echo INACCESSIBLE)"
 printf '  base ISO:    %s\n' "$ISO_PATH"
 printf '\nnext:\n'
-printf '  1. cubic --newproject  # point at ~/vibeos-build/work/\n'
+printf '  1. cubic --newproject  # point at ~/MWM/data/vibeos-build/work/\n'
 printf '  2. in the chroot shell, run scripts/chroot-inject.sh\n'
-printf '  3. let cubic build the ISO into ~/vibeos-build/output/\n'
+printf '  3. let cubic build the ISO into ~/MWM/data/vibeos-build/output/\n'
 printf '  4. QEMU smoke test: qemu-system-x86_64 -enable-kvm -m 8G -bios OVMF_CODE.fd -cdrom vibeos-0.4.0.iso -boot d\n'
