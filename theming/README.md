@@ -30,17 +30,20 @@ theming/
 │   ├── color-schemes/       VibeOS-Neon.colors               → /usr/share/color-schemes/
 │   ├── desktoptheme/        VibeOS-Neon/ (panel/widget SVGs) → /usr/share/plasma/desktoptheme/
 │   ├── aurorae/themes/      VibeOS-Neon/ (window deco)       → /usr/share/aurorae/themes/
+│   ├── look-and-feel/       org.vibeos.neon (Look-and-Feel package, applied with lookandfeeltool)
 │   └── Kvantum/             VibeOS-Neon/ (GTK+Qt unify)      → /usr/share/Kvantum/
 ├── konsole/                 VibeOS.{profile,colorscheme}     → /usr/share/konsole/
 ├── sddm/vibeos/             SDDM login theme (QML)           → /usr/share/sddm/themes/vibeos/
 ├── grub/vibeos/             GRUB boot menu theme             → /boot/grub/themes/vibeos/
 ├── plymouth/vibeos/         Plymouth boot splash             → /usr/share/plymouth/themes/vibeos/
+├── calamares/               installer branding + welcome module → /etc/calamares/
 ├── fonts/                   Orbitron, JetBrains Mono, VT323  → /usr/share/fonts/truetype/vibeos/
-├── wallpapers/              cc0/CC-BY synthwave packs        → /usr/share/wallpapers/VibeOS/
+├── wallpapers/              5 generated cc0 synthwave wallpapers → /usr/share/wallpapers/VibeOS/
 ├── fastfetch/               config.jsonc + ASCII logo        → /etc/fastfetch/ + /usr/share/fastfetch/
 ├── os-release/              os-release, lsb-release, issue   → /etc/*
-├── skel/                    Default user config (kdeglobals, plasmarc, kwinrc, konsolerc, Kvantum, autostart) → /etc/skel/.config/
-└── icons/                   Icon theme stub (see TODO)
+├── xdg/                     System-wide defaults (kdeglobals, plasmarc, kwinrc, kcminputrc) → /etc/xdg/
+├── skel/                    Per-user state (autostart, konsolerc, Kvantum kvconfig) → /etc/skel/.config/
+└── icons/                   cursors/Bibata-Modern-Ice cursor theme
 ```
 
 ## Provenance
@@ -53,7 +56,7 @@ theming/
 | Bibata Modern Ice cursor | GPL-3.0 | github.com/ful1e5/Bibata_Cursor |
 | Breeze (theme base for forks) | LGPL 2.1+ | KDE |
 | Plasma theme pattern | LGPL 2.1+ | KDE |
-| Synthwave wallpapers | cc0 / CC-BY | see `wallpapers/CREDITS.md` |
+| Synthwave wallpapers | cc0 (generated, no external assets) | `scripts/generate_wallpapers.py`, see `wallpapers/CREDITS.md` |
 
 ## Testing (not possible on dev workstation)
 
@@ -63,7 +66,7 @@ apply via `kcmshell5 colors`, `kcmshell5 kwindecoration`, etc. See handoff note.
 
 ## Not built yet
 
-- **Icon theme fork**: Papirus-Dark recolor is thousands of SVGs; deferred. Ships as stub that falls back to Papirus-Dark upstream.
+- **Icon theme fork**: Papirus-Dark recolor is thousands of SVGs; deferred. The ISO build installs upstream `papirus-icon-theme` from apt instead.
 - **Plymouth PNG frames**: the .plymouth + .script config exists; the actual 30-frame PNG sequence is placeholder.
 - **GRUB background PNG**: theme.txt exists; background image is placeholder.
 - **SDDM background**: theme.conf exists; background image is placeholder.

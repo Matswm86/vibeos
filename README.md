@@ -8,11 +8,13 @@
 
 VibeOS turns a fresh Linux machine into a fully configured Claude Code workspace — with local AI models, persistent memory, tool-aware onboarding, and just the MCP servers you actually need. **Vibbey**, your nostalgic desktop assistant, lives in the bottom-right corner of your screen and walks you through setup.
 
+> **Which branch?** `main` is the v1 line (Kubuntu 22.04 base), frozen at tag `v1.0.4.3-final`. The Ubuntu 24.04 rebuild (v2, built with mkosi) is developed on the [`v2` branch](https://github.com/Matswm86/vibeos/tree/v2); its latest tag is `v2.0.0-rc1`.
+
 ## Choose your path
 
 ### 🐧 Path A — "I already have Linux"
 
-One command on your existing Ubuntu, Pop!\_OS, Debian, Mint, or Kubuntu install:
+One command on your existing Ubuntu 22.04+ (including Kubuntu), Pop!\_OS 22.04+, or Debian 12+ install:
 
 ```bash
 curl -sSL https://raw.githubusercontent.com/Matswm86/vibeos/main/install.sh | bash
@@ -26,18 +28,18 @@ Takes ~10 minutes (apt + npm + Ollama model pull). After it finishes, Vibbey pop
 
 ### 💿 Path B — "Start from scratch"
 
-**[Download vibeos-0.4.1.iso (4.7 GB)](https://iso.mwmai.no/vibeos-0.4.1.iso)** · [SHA256SUMS](https://iso.mwmai.no/SHA256SUMS) · [landing page](https://iso.mwmai.no/)
+**The v0.4.1 ISO (4.7 GB) has no working download link right now.** It was published at `iso.mwmai.no`, which was taken offline on 2026-06-11. Build the ISO from this repo instead (see [Path B (ISO build): test locally](#path-b-iso-build--test-locally)). The SHA-256 of the released ISO is recorded in [`deploy/iso-landing/SHA256SUMS`](deploy/iso-landing/SHA256SUMS).
 
-Flash it to a USB with [balenaEtcher](https://www.balena.io/etcher/), boot your machine from the USB, and land in a fully-themed VibeOS desktop. Zero terminal steps. Ideal for users who have never installed Linux and want the "just works" experience.
+Flash the ISO to a USB with [balenaEtcher](https://www.balena.io/etcher/), boot your machine from the USB, and land in a fully-themed VibeOS desktop. Zero terminal steps. Ideal for users who have never installed Linux and want the "just works" experience.
 
 What you get:
 
 - 🎨 Full Neon Grid rebrand — custom GRUB menu, Plymouth splash, SDDM login, KDE Plasma theme, fonts, wallpapers
 - 🤖 Vibbey anchored to the bottom-right of your desktop on first login (layer-shell, no window chrome)
-- 🧠 Everything from Path A preinstalled: Claude Code, Ollama, Docker, GitHub CLI, Node.js, Python, Git
+- 🧠 Ollama, Docker, GitHub CLI, Node.js, Python and Git preinstalled. Claude Code is not part of the ISO build (`scripts/chroot-inject.sh` installs none): run the Path A one-liner after first boot to add it and the default MCP stack
 - 🔑 Hybrid Groq + Ollama with 300 free bootstrap messages, then bring-your-own-key
 
-**Status**: v0.4.1 ISO shipped 2026-04-12 (Calamares installer verified) at [`iso.mwmai.no`](https://iso.mwmai.no/). Kubuntu 22.04 LTS + KDE Plasma base, full Neon Grid rebrand (theme, fonts, wallpapers, GRUB, Plymouth, SDDM), Vibbey auto-launching on first login. Early release — report issues at [github.com/Matswm86/vibeos/issues](https://github.com/Matswm86/vibeos/issues).
+**Status**: v0.4.1 ISO shipped 2026-04-12 (Calamares installer verified). Kubuntu 22.04 LTS + KDE Plasma base, full Neon Grid rebrand (theme, fonts, wallpapers, GRUB, Plymouth, SDDM), Vibbey auto-launching on first login. Early release — report issues at [github.com/Matswm86/vibeos/issues](https://github.com/Matswm86/vibeos/issues).
 
 ---
 
@@ -86,7 +88,7 @@ The onboarding model (Gemma3 4B) runs on CPU-only. Claude Code itself requires n
 
 **Path A today (v0.4.1)** — an installer + configuration layer on top of any Debian/Ubuntu-family distro. Everything downloads at install time, so you always get the latest Claude Code and latest MCPs. Vibbey runs as a chrome-stripped webkit2gtk widget after the install finishes.
 
-**Path B in active development (v0.4.1, Stage 4)** — a bootable `.iso` image based on **Kubuntu 22.04 LTS (KDE Plasma)** with a full VibeOS rebrand: custom GRUB, Plymouth boot splash, SDDM login theme, VibeOS-Neon Plasma theme + Aurorae window decorations + Kvantum for GTK apps, custom icons, cursors, fonts (Orbitron / JetBrains Mono / VT323), Tron-grid wallpapers, and Vibbey auto-launching on first login **as a true layer-shell desktop widget** (no window chrome, no Alt-Tab entry, anchored to the bottom-right corner).
+**Path B (Stage 4; v0.4.1 released, source on `main` at v0.4.3)** — a bootable `.iso` image based on **Kubuntu 22.04 LTS (KDE Plasma)** with a full VibeOS rebrand: custom GRUB, Plymouth boot splash, SDDM login theme, VibeOS-Neon Plasma theme + Aurorae window decorations + Kvantum for GTK apps, custom icons, cursors, fonts (Orbitron / JetBrains Mono / VT323), Tron-grid wallpapers, and Vibbey auto-launching on first login **as a true layer-shell desktop widget** (no window chrome, no Alt-Tab entry, anchored to the bottom-right corner).
 
 Why Kubuntu + KDE and not GNOME or COSMIC? We tested. KDE's KWin is currently the only widely-deployed Linux compositor with **mature, rendered layer-shell support**, which is the Wayland protocol that lets Vibbey be a true desktop widget instead of a window. GNOME Mutter rejects layer-shell, and COSMIC (Pop!\_OS's new compositor) accepts the protocol but doesn't yet render GTK3 layer surfaces visually. Kubuntu gets us working integration today.
 
@@ -115,7 +117,7 @@ Vibbey is VibeOS's onboarding character: nostalgic nod to Microsoft's old paperc
 
 **Memory** — persists across sessions in `~/.vibeos/vibbey-memory.json` (mode 0600). Stores user profile, chat history (last 50 exchanges), learned facts, and a cached install-state snapshot. Wipe it with `rm` any time.
 
-**Tool use** — Vibbey can run ~15 allowlisted read-only commands (`claude --version`, `gh auth status`, `ollama list`, `docker info`, `free -h`, `nvidia-smi`, `cat /etc/os-release`, etc.) via `POST /api/run`. Every execution requires user confirmation in the chat bubble first. No writes, no sudo, no network calls outside Groq/Ollama.
+**Tool use** — Vibbey can run 17 allowlisted commands via `POST /api/run`. 15 are read-only checks (`claude --version`, `gh auth status`, `ollama list`, `docker info`, `free -h`, `nvidia-smi`, `cat /etc/os-release`, etc.). The other two are `ollama_pull` (pulls one model whose name matches a strict pattern) and `install_vibeos` (opens the Calamares installer through `pkexec`, meant for the live ISO). Every execution requires user confirmation in the chat bubble first, and anything outside the allowlist is rejected.
 
 **UI** — she lives in a floating webkit2gtk widget anchored to the bottom-right of your desktop via the Wayland layer-shell protocol (on KDE Plasma and other compositors that support it) or as a chrome-stripped toplevel on X11/XWayland. The 3D Clippy-lineage model renders via Three.js + GLTFLoader with neon magenta + cyan rim lighting and a gentle idle bob.
 
@@ -177,20 +179,21 @@ Or skip Docker entirely and point your `settings.json` at any hosted MCP provide
 - [x] Stage 2.6: install.sh hardening (v0.3.1) — `/dev/tty` curl-pipe fallback, dual memory-location docs, `vibe` alias
 - [x] **Stage 3: Vibbey Phase B** (v0.3.2) — real 3D Clippy-lineage model in a webkit2gtk desktop window, Three.js + GLTFLoader, local Ollama chat proxy, model auto-detect, python3 auto-reexec. "Clippy, but it actually works now."
 - [x] **Stage 3.5: Vibbey brain upgrade** (2026-04-10) — Groq + Ollama hybrid routing (BYO key → bootstrap proxy → local fallback), static knowledge pack injected into system prompt, persistent memory at `~/.vibeos/vibbey-memory.json`, tool-use allowlist via `POST /api/run` with user confirmation, widget-mode chrome-stripped launcher. Vibbey now knows her OS, install state, and roadmap — and can execute safe commands.
-- [x] **Stage 4: Kubuntu-based VibeOS ISO + full OS rebrand** (v0.4.1, 2026-04-12) — bootable `.iso` based on Kubuntu 22.04 LTS (KDE Plasma), custom GRUB, Plymouth, SDDM, VibeOS-Neon Plasma theme + Aurorae + Kvantum, icons, cursors, fonts, wallpapers, and Vibbey auto-launching as a layer-shell desktop widget on first login. ISO live at [`iso.mwmai.no`](https://iso.mwmai.no/).
+- [x] **Stage 4: Kubuntu-based VibeOS ISO + full OS rebrand** (v0.4.1, 2026-04-12) — bootable `.iso` based on Kubuntu 22.04 LTS (KDE Plasma), custom GRUB, Plymouth, SDDM, VibeOS-Neon Plasma theme + Aurorae + Kvantum, icons, cursors, fonts, wallpapers, and Vibbey auto-launching as a layer-shell desktop widget on first login. The ISO was hosted at `iso.mwmai.no`, which was taken offline on 2026-06-11 (see Path B above).
   - [x] **Phase A — build rig script** (2026-04-10): `scripts/install-build-rig.sh` one-shot host setup (cubic PPA + qemu + ovmf, fetches Kubuntu 22.04.5 base ISO, sha256-verifies)
   - [x] **Phase B — Vibbey desktop widget** (v0.3.2): webkit2gtk + layer-shell window, Three.js scene, chat bubble, autostart
   - [x] **Phase C — VibeOS-Neon KDE theme pack authored** (2026-04-10): full `theming/` tree — Plasma color scheme + desktoptheme (3 SVG 9-patches), Aurorae window decoration, Kvantum kvconfig (+ `scripts/kvantum-recolor.py` KvGnomeDark fork), Konsole profile + colorscheme, SDDM login theme (`Main.qml` with Tron grid overlay + magenta focus ring + clock), GRUB theme, Plymouth splash (pulsing wordmark + orbital dots + luks prompt), fastfetch config + ASCII logo, `os-release` rebrand, `/etc/skel/.config/` defaults. See `theming/README.md`.
   - [x] **Phase D — chroot injection script** (2026-04-10): `scripts/chroot-inject.sh` 8-step idempotent installer that runs inside Cubic's chroot terminal (deps → git clone → theming → `/etc/skel` → Plymouth + GRUB + SDDM activation).
   - [x] **Phase D — QEMU smoke test + ISO build** (2026-04-11): Kubuntu 22.04.5 booted in QEMU via `install-build-rig.sh`, `chroot-inject.sh` run inside Cubic, v0.4.0 ISO (4.6 GB) built.
   - [x] **Phase E — validate** (2026-04-12): v0.4.1 installer test-flown on MSI hardware end-to-end (Calamares branding + autologin + live user + Vibbey PYTHONPATH fixes shipped as 8 bug fixes between 0.4.0 and 0.4.1).
-  - [x] **Phase F — ship** (2026-04-12): Caddy vhost at [`iso.mwmai.no`](https://iso.mwmai.no/) live, v0.4.1 tag pushed, GitHub release with SHA256SUMS.
+  - [x] **Phase F — ship** (2026-04-12): Caddy vhost at `iso.mwmai.no` live (taken offline 2026-06-11), v0.4.1 tag pushed.
+  - [x] **v0.4.2 / v0.4.3 source fixes** (2026-04-13 to 2026-04-14): Three.js vendored under `clippy/static/vendor/` so Vibbey no longer hangs offline, an "Install VibeOS" button on the live ISO, a build-time Ollama + `qwen2.5:3b` bake (`chroot-inject.sh` step 7.5), and a Plasma Look-and-Feel package plus system-wide `/etc/xdg` defaults to fix the 0.4.2 black screen. Frozen at tag `v1.0.4.3-final`; `deploy/iso-landing/SHA256SUMS` still lists only the v0.4.1 ISO.
 
 ---
 
 ## Contributing
 
-Issues and PRs welcome. The installer targets Ubuntu 22.04+ / Pop!\_OS 22.04+ / Kubuntu 22.04+.
+Issues and PRs welcome. The installer targets Ubuntu 22.04+ / Pop!\_OS 22.04+ / Kubuntu 22.04+ / Debian 12+.
 
 ### Path A (curl install) — test locally
 
@@ -234,12 +237,18 @@ vibeos/
 ├── clippy/                     Vibbey: launcher, server, Three.js scene, brain
 │   ├── knowledge/              static knowledge pack injected into system prompt
 │   ├── memory.py               persistent memory at ~/.vibeos/vibbey-memory.json
-│   ├── tools.py                15-command allowlist (read-only)
+│   ├── tools.py                17-command allowlist (15 read-only, plus ollama_pull and install_vibeos)
 │   ├── groq_proxy.py           3-tier chat router (BYO key → bootstrap → Ollama)
 │   ├── widget_mode.py          layer-shell chrome-stripped widget launcher
 │   └── static/                 webkit2gtk frontend
+├── onboarding/                 Stage 2 Ollama onboarding agent (python3 -m onboarding)
+├── services/groq-proxy/        bootstrap Groq proxy behind groq.mwmai.no
+├── templates/                  CLAUDE.md, settings.json, .mcp.json copied by install.sh
+├── deploy/iso-landing/         v0.4.1 ISO landing page + SHA256SUMS
 ├── theming/                    Stage 4 Phase C — VibeOS-Neon KDE theme pack
-│   ├── plasma/                 color scheme, desktoptheme, Aurorae, Kvantum
+│   ├── plasma/                 color scheme, desktoptheme, Aurorae, Kvantum, Look-and-Feel
+│   ├── calamares/              installer branding + welcome module
+│   ├── xdg/                    system-wide KDE defaults copied to /etc/xdg
 │   ├── sddm/vibeos/            login theme (QML)
 │   ├── konsole/                profile + colorscheme
 │   ├── grub/vibeos/            boot menu theme
@@ -252,7 +261,10 @@ vibeos/
     ├── chroot-inject.sh        runs inside cubic chroot during ISO build
     ├── kvantum-recolor.py      fork KvGnomeDark.svg → VibeOS-Neon.svg
     ├── fetch-fonts.sh          Orbitron + JetBrains Mono + VT323 + Bibata
-    └── fetch-wallpapers.sh     5 cc0 synthwave wallpapers
+    ├── fetch-wallpapers.sh     5 cc0 synthwave wallpapers (generated by generate_wallpapers.py)
+    ├── preflight.sh            host-side theme pack checks before an ISO build
+    ├── validate-theming.sh     fails if an asset the Look-and-Feel package or xdg configs need is missing
+    └── fix-calamares-live.sh   patches Calamares branding into a running live USB (no rebuild)
 ```
 
 ---
@@ -264,4 +276,4 @@ MIT — see [LICENSE](LICENSE).
 ### Third-party assets
 
 - **`clippy.glb`** — "Rigged Microsoft Clippy/Clippit" by [Freedumbanimates](https://sketchfab.com/Freedumbanimates) on Sketchfab, used under the [Sketchfab Standard](https://sketchfab.com/licenses) license. Textures were stripped for size; Vibbey animates the rig via Three.js root-transform. Full attribution in [`clippy/ATTRIBUTION.md`](clippy/ATTRIBUTION.md).
-- **Concept image** (`clippy/reference/concept.jpg`) — visual direction reference for Phase 1 / Stage 4; Mats Mjåtvedt, 2026-04.
+- **Concept image** (`clippy/reference/concept.jpg`) — visual direction reference for Phase 1 / Stage 4; shared by the project author, 2026-04.

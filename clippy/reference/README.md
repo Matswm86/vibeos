@@ -2,7 +2,7 @@
 
 ## `concept.jpg`
 
-Inspiration mockup shared by Mats on 2026-04-09 / integrated on 2026-04-10.
+Inspiration mockup shared by the project author on 2026-04-09 / integrated on 2026-04-10.
 
 - A 3D paperclip character (Vibbey) in a retro "VibeOS Assistant" window
 - Synthwave / terminal-dark aesthetic, cyan + yellow accents
@@ -14,7 +14,7 @@ Inspiration mockup shared by Mats on 2026-04-09 / integrated on 2026-04-10.
 
 This is a **direction-setting reference**, not a pixel-perfect target:
 
-- The 3D model is already in the repo at `projects/vibeos/clippy.glb` (408KB,
+- The 3D model is already in the repo at `clippy.glb` (408KB,
   glTF 2.0 binary). Phase 1 loads that via Three.js + GLTFLoader.
 - Match the window chrome: dark background, subtle cyan glow, yellow title
   accent, classic minimize/close buttons in the top-right.

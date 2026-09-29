@@ -101,7 +101,7 @@ ssh <user>@<your-vps> "sqlite3 ~/services/groq-proxy/quota.db \
 
 - **Token entropy**: 32-byte URL-safe random = 256 bits (`secrets.token_urlsafe`)
 - **Token storage**: SQLite WAL mode, file perms 0600 (systemd `PrivateTmp`)
-- **Groq key**: lives in `/etc/mwmai/vibeos.env` with `0640 root:mats`; never reaches the ISO or the client
+- **Groq key**: lives in `/etc/mwmai/vibeos.env` with `0640 root:<service-user>`; never reaches the ISO or the client
 - **Rate limiting**: per-token quota (300) — not per-IP. If someone floods `/bootstrap` to mint tokens, that's bounded by Groq's free-tier limits on the workspace account. Upgrade path: add per-IP limiter if abuse appears
 - **No CORS**: API is only meant for direct Vibbey calls, not browser JS
 
