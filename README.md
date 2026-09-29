@@ -15,19 +15,14 @@ first boot works offline, and every one of them is replaceable: see
 
 ## Download
 
-v2.0.0-rc1 ISO is the first hardware-validated build. See [Post-install recovery](#post-install-recovery) for the one currently required post-install step.
+There is no public ISO download. The old download host, `iso.mwmai.no`, was taken offline on 2026-06-11. v2.0.0-rc1 is the first hardware-validated build: build it yourself with the steps in [Build it yourself](#build-it-yourself), then do the one step in [Post-install recovery](#post-install-recovery).
 
-When the final v2.0.0 ships, it will be at:
+Builds are signed with this key, so you can check a signed ISO you got from someone else:
 
 ```bash
-curl -LO https://iso.mwmai.no/vibeos-v2.0.0.iso
-curl -LO https://iso.mwmai.no/vibeos-v2.0.0.iso.sha256
-curl -LO https://iso.mwmai.no/vibeos-v2.0.0.iso.asc
-
-# Verify signature (D7C1 0B36 D2A7 CC98 253E A01D 8F08 022E 65BC 5F8F)
+# D7C1 0B36 D2A7 CC98 253E A01D 8F08 022E 65BC 5F8F
 gpg --keyserver keyserver.ubuntu.com --recv-keys 8F08022E65BC5F8F
 gpg --verify vibeos-v2.0.0.iso.asc vibeos-v2.0.0.iso
-sha256sum -c vibeos-v2.0.0.iso.sha256
 ```
 
 Write to USB with `dd`, Ventoy, or Balena Etcher.
